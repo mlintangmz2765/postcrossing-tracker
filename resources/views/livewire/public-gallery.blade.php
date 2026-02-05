@@ -398,7 +398,7 @@
     let markers = [];
     const isChina = {{ $isChina ? 'true' : 'false' }}; 
 
-    async function initMap() {
+    function initMap() {
         if (rawMarkers.length === 0) return;
 
         if (isChina) {
@@ -429,9 +429,7 @@
 
         } else {
             // --- GOOGLE MAPS Logic ---
-            const { Map } = await google.maps.importLibrary("maps");
-
-            map = new Map(document.getElementById("map"), {
+            map = new google.maps.Map(document.getElementById("map"), {
                 zoom: 2, 
                 center: { lat: 20, lng: 0 }, 
                 maxZoom: 10, 
@@ -454,7 +452,7 @@
         }
     }
 
-    async function updateMarkers(fitMap = false) {
+    function updateMarkers(fitMap = false) {
         if (isChina) return;
         
         // Clear existing markers

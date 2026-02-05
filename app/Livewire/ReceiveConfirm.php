@@ -66,27 +66,20 @@ class ReceiveConfirm extends Component
 
     public function detectChinaViewer()
     {
+        // 1. URL Override
         if (request()->has('china')) {
-            $val = request()->query('china') == '1';
-            $this->isChina = $val;
-            session()->put('is_cn_viewer', $val);
+            $this->isChina = (request()->query('china') == '1');
             return;
         }
 
-        if (session()->has('is_cn_viewer')) {
-            $this->isChina = session('is_cn_viewer');
-            return;
-        }
-
+        // 2. Cloudflare IP Detection
         $cfCountry = request()->header('CF-IPCountry');
         if ($cfCountry === 'CN') {
             $this->isChina = true;
-            session()->put('is_cn_viewer', true);
             return;
         }
 
         $this->isChina = false;
-        session()->put('is_cn_viewer', false);
     }
 
     public function calculateDistance($lat1, $lon1, $lat2, $lon2)

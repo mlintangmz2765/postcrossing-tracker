@@ -224,16 +224,14 @@
     <script src="https://maps.googleapis.com/maps/api/js?key={{ config('app.google_api_key') }}&libraries=marker&callback=initMap&loading=async" async defer></script>
     <script>
         @if($postcard && !$alreadyConfirmed && !$justConfirmed)
-        async function initMap() {
+        function initMap() {
             var container = document.getElementById('map-confirm');
             if (!container) return;
-
-            const { Map } = await google.maps.importLibrary("maps");
 
             var myPos = { lat: myLat, lng: myLng };
             var targetPos = { lat: targetLat, lng: targetLng };
             
-            var map = new Map(container, {
+            var map = new google.maps.Map(container, {
                 zoom: 2, 
                 center: myPos, 
                 disableDefaultUI: true,
