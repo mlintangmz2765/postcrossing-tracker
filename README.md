@@ -4,13 +4,23 @@ A personal postcard collection management system built with Laravel and Livewire
 
 ## Features
 
+### Core Features
 - 📮 **Postcard Management** - Register sent/received postcards with photos
-- 🗺️ **Interactive Maps** - Google Maps & AMap integration for location tracking
+- 🗺️ **Interactive Maps** - Visualize postcard destinations on maps
 - 📊 **Statistics** - View travel distances, delivery times, and country stats
 - 🖼️ **Photo Gallery** - Browse your postcard and stamp collection
 - 🌍 **Public Gallery** - Share your collection with the world
 - 📱 **Responsive Design** - Works on desktop and mobile
 - 🔐 **Secure** - Authentication with ReCaptcha protection
+
+### Unique Features
+- 🇨🇳 **Dual Map System** - Google Maps for global + AMap for China viewers
+- 💱 **Multi-Currency Support** - Record stamp values in any currency with IDR conversion
+- 📍 **Distance Tracking** - Calculate travel distance from your home location
+- 📧 **Arrival Notifications** - Email alerts when recipients confirm delivery
+- 🌏 **China Viewer Detection** - Auto-switches to AMap for China visitors
+
+> 📖 See [Configuration Guide](docs/CONFIGURATION.md) for customization options
 
 ## Requirements
 
@@ -84,7 +94,20 @@ php artisan migrate
 php artisan storage:link
 ```
 
-### 6. (Optional) Cache for production
+### 6. Create admin user (first-time only)
+Access the setup page in your browser:
+```
+https://your-domain.com/postcrossing/setup/register.php
+```
+Fill in your desired username and password to initialize the system.
+
+> ⚠️ **SECURITY WARNING:** Delete the entire `setup/` folder immediately after creating your admin account!
+> ```bash
+> rm -rf setup/
+> ```
+> Leaving this file on your server is a security risk as anyone could create new accounts.
+
+### 7. (Optional) Cache for production
 ```bash
 php artisan config:cache
 php artisan route:cache
@@ -101,7 +124,20 @@ php artisan view:cache
 
 ## Screenshots
 
-*Coming soon*
+### Home Page
+![Home Page](docs/screenshots/home.png)
+
+### Login
+![Login](docs/screenshots/login.png)
+
+### Dashboard
+![Dashboard Overview](docs/screenshots/dashboard1.png)
+![Dashboard Stats](docs/screenshots/dashboard2.png)
+![Dashboard Table](docs/screenshots/dashboard3.png)
+
+### Gallery
+![Gallery Grid](docs/screenshots/gallery1.png)
+![Gallery Detail](docs/screenshots/gallery2.png)
 
 ## License
 
@@ -109,4 +145,4 @@ This project is open-sourced software licensed under the [MIT license](LICENSE).
 
 ## Author
 
-Built with ❤️ by [Lintang Maulana](https://github.com/mlintangmz2765)
+Built with ❤️ by [mlintangmz](https://github.com/mlintangmz2765)

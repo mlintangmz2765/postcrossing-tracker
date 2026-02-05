@@ -22,13 +22,15 @@ class ReceiveConfirm extends Component
     public $distance = 0;
     
     // Map markers
-    public $myLat = -7.756378;
-    public $myLng = 110.376618;
+    public $myLat;
+    public $myLng;
     public $targetLat = 0;
     public $targetLng = 0;
 
     public function mount($uid)
     {
+        $this->myLat = (float) env('HOME_LAT', 0);
+        $this->myLng = (float) env('HOME_LNG', 0);
         $this->uid = $uid;
         $this->postcard = Postcard::where('uid', $uid)->where('type', 'sent')->firstOrFail();
         
@@ -113,8 +115,11 @@ class ReceiveConfirm extends Component
         // Send Email
         try {
             // Simplified mail for now, can use Mailable class later
-            Mail::raw("Hello Lintang,\n\nYour postcard has arrived safely!\n\nID: {$this->postcard->postcard_id}\nRecipient: {$this->postcard->nama_kontak}\n\nMessage: \"{$this->message}\"", function ($message) {
-                $message->to('lintangmaulanazulfan@gmail.com')
+            $ownerName = config('app.owner_name', 'Owner');
+            $ownerEmail = config('app.owner_email', config('mail.from.address'));
+            
+            Mail::raw("Hello {$ownerName},\n\nYour postcard has arrived safely!\n\nID: {$this->postcard->postcard_id}\nRecipient: {$this->postcard->nama_kontak}\n\nMessage: \"{$this->message}\"", function ($message) use ($ownerEmail) {
+                $message->to($ownerEmail)
                         ->subject("📬 Postcard Arrived! [{$this->postcard->negara}]");
                         // from() uses MAIL_FROM_ADDRESS and MAIL_FROM_NAME from .env automatically
             });

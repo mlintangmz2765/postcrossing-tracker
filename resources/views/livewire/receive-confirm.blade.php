@@ -145,7 +145,7 @@
             </div>
 
             <div class="footer-text">
-                mlintangmz Postcard Tracker &bull; {{ date('Y') }}
+                {{ config('app.owner_username') }} Postcard Tracker &bull; {{ date('Y') }}
             </div>
         </div>
 
@@ -167,7 +167,7 @@
             <div class="modal-overlay">
                 <div class="modal-box">
                     <h2 class="text-xl font-bold mb-2">Add a Note?</h2>
-                    <p class="mb-4">Would you like to send a message to Lintang?</p>
+                    <p class="mb-4">Would you like to send a message to {{ config('app.owner_name') }}?</p>
                     <div class="modal-btns">
                         <button class="btn-action" @click="goToStep3()">Write Message</button>
                         <button class="btn-action bg-gray-500 hover:bg-gray-600" @click="submitFinal()">No, just register</button>

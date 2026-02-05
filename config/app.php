@@ -17,6 +17,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Site Owner Information
+    |--------------------------------------------------------------------------
+    |
+    | These values are used throughout the application to personalize
+    | the site for the owner (email notifications, public pages, etc.)
+    |
+    */
+
+    'owner_name' => env('OWNER_NAME', 'Site Owner'),
+    'owner_email' => env('OWNER_EMAIL', 'owner@example.com'),
+    'owner_username' => env('OWNER_USERNAME', 'postcrossing'),
+    'owner_contact_email' => env('OWNER_CONTACT_EMAIL', env('OWNER_EMAIL', 'owner@example.com')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

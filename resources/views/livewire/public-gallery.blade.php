@@ -218,7 +218,7 @@
     <div class="paravion-top"></div>
 
     <header class="gallery-header">
-        <h1>mlintangmz Mailbox</h1>
+        <h1>{{ config('app.owner_username') }} Mailbox</h1>
         <div class="paravion-badge">
             <svg width="45" height="45" viewBox="0 0 24 24">
                 <path d="M21,16L21,14L13,9L13,3.5C13,2.67 12.33,2 11.5,2C10.67,2 10,2.67 10,3.5L10,9L2,14L2,16L10,13.5L10,19L8,20.5L8,22L11.5,21L15,22L15,20.5L13,19L13,13.5L21,16Z" fill="#457b9d" />
@@ -360,7 +360,7 @@
     </main>
 
     <footer style="text-align:center; padding: 80px 20px; opacity: 0.5; font-family: 'Special Elite'; font-size: 0.9rem;">
-        <p>&copy; {{ date('Y') }} mlintangmz Postcrossing Archive • All Rights Reserved.</p>
+        <p>&copy; {{ date('Y') }} {{ config('app.owner_username') }} Postcrossing Archive • All Rights Reserved.</p>
     </footer>
 
     <!-- Alpine Modal -->

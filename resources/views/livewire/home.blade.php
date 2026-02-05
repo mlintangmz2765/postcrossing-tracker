@@ -403,7 +403,7 @@
                 <p id="offer-desc">
                     Saya sangat terbuka untuk melakukan <strong>Direct Swap</strong> (pertukaran langsung). Jika Anda ingin bertukar kartu pos bertema pemandangan Indonesia, budaya, atau apa pun dengan saya, jangan ragu untuk menghubungi!
                 </p>
-                <a href="mailto:lintangmaulanazulfan@gmail.com?subject=Postcrossing%20Swap%20Request" class="btn-contact" id="btn-contact">
+                <a href="mailto:{{ config('app.owner_contact_email') }}?subject=Postcrossing%20Swap%20Request" class="btn-contact" id="btn-contact">
                     <i class="bi bi-envelope-fill"></i> Hubungi Saya via Email
                 </a>
             </div>
@@ -411,7 +411,7 @@
     </main>
 
     <footer class="footer-legacy">
-        <p id="footer-owner">Dikelola dengan <i class="bi bi-heart-fill text-danger"></i> oleh M Lintang Maulana Zulfan</p>
+        <p id="footer-owner">Dikelola dengan <i class="bi bi-heart-fill text-danger"></i> oleh {{ config('app.owner_name') }}</p>
         <p id="footer-disclaimer" style="font-size: 11px; opacity: 0.7; margin-top:10px;">
             Situs ini adalah proyek hobi pribadi. Kami tidak mengumpulkan data pribadi pengunjung publik.<br>
             Postcrossing adalah merek dagang terdaftar. Situs ini tidak berafiliasi secara resmi dengan Postcrossing.com.
@@ -439,7 +439,7 @@
                 offerTitle: "Tertarik Bertukar Kartu Pos?",
                 offerDesc: "Saya sangat terbuka untuk melakukan <strong>Direct Swap</strong> (pertukaran langsung). Jika Anda ingin bertukar kartu pos bertema pemandangan Indonesia, budaya, atau apa pun dengan saya, jangan ragu untuk menghubungi!",
                 btnContact: "<i class='bi bi-envelope-fill'></i> Hubungi Saya via Email",
-                footerOwner: "Dikelola dengan <i class='bi bi-heart-fill text-danger'></i> oleh M Lintang Maulana Zulfan",
+                footerOwner: "Dikelola dengan <i class='bi bi-heart-fill text-danger'></i> oleh {{ config('app.owner_name') }}",
                 footerDisclaimer: "Situs ini adalah proyek hobi pribadi. Kami tidak mengumpulkan data pribadi pengunjung publik.<br>Postcrossing adalah merek dagang terdaftar. Situs ini tidak berafiliasi secara resmi dengan Postcrossing.com."
             },
             en: {
@@ -455,7 +455,7 @@
                 offerTitle: "Interested in a Swap?",
                 offerDesc: "I am very open to <strong>Direct Swaps</strong>. If you would like to exchange postcards featuring Indonesian landscapes, culture, or anything else, please don't hesitate to reach out!",
                 btnContact: "<i class='bi bi-envelope-fill'></i> Contact Me via Email",
-                footerOwner: "Managed with <i class='bi bi-heart-fill text-danger'></i> by M Lintang Maulana Zulfan",
+                footerOwner: "Managed with <i class='bi bi-heart-fill text-danger'></i> by {{ config('app.owner_name') }}",
                 footerDisclaimer: "This is a private hobby project. We do not collect personal data from public visitors.<br>Postcrossing is a registered trademark. This site is not officially affiliated with Postcrossing.com."
             },
             zh: {
@@ -471,7 +471,7 @@
                 offerTitle: "有兴趣交换吗？",
                 offerDesc: "我非常欢迎<strong>直接交换 (Direct Swap)</strong>。如果您想交换印尼风景、文化或任何主题的明信片，请随时与我联系！",
                 btnContact: "<i class='bi bi-envelope-fill'></i> 通过电子邮件联系我",
-                footerOwner: "由 M Lintang Maulana Zulfan 用 <i class='bi bi-heart-fill text-danger'></i> 管理",
+                footerOwner: "由 {{ config('app.owner_name') }} 用 <i class='bi bi-heart-fill text-danger'></i> 管理",
                 footerDisclaimer: "这是一个私人爱好项目。我们不收集公众访客的个人数据。<br>Postcrossing 是注册商标。本网站与 Postcrossing.com 官方无关。"
             }
         };
