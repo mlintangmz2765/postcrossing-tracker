@@ -42,13 +42,12 @@
             .nav-container {
                 max-width: 1280px;
                 margin: 0 auto;
-                padding: 0 15px;
+                padding: 0 20px;
                 min-height: 70px;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                flex-wrap: wrap;
-                gap: 10px;
+                gap: 20px;
             }
 
             .nav-brand {
