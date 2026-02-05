@@ -322,7 +322,7 @@
                 var node = document.getElementById('qr-download-area');
                 if (!node) { alert('Node not found'); return; }
 
-                htmlToImage.toPng(node)
+                htmlToImage.toPng(node, { skipFonts: true })
                     .then(function (dataUrl) {
                         var link = document.createElement('a');
                         link.download = 'Label_{{ $card->uid }}.png';
