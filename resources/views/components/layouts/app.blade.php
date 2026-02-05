@@ -42,21 +42,23 @@
             .nav-container {
                 max-width: 1280px;
                 margin: 0 auto;
-                padding: 0 20px;
-                height: 70px;
+                padding: 0 15px;
+                min-height: 70px;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 10px;
             }
 
             .nav-brand {
                 font-family: 'Special Elite', monospace;
-                font-size: 1.5rem;
+                font-size: 1.25rem;
                 color: #fff;
                 text-decoration: none;
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: 8px;
                 text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
             }
             
@@ -64,31 +66,42 @@
 
             .nav-links {
                 display: flex;
-                gap: 5px;
+                gap: 2px;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding: 5px 0;
             }
+
+            .nav-links::-webkit-scrollbar { display: none; }
 
             .nav-item {
                 font-family: 'Special Elite', monospace;
                 color: #ecf0f1;
                 text-decoration: none;
-                padding: 8px 15px;
+                padding: 6px 12px;
                 border-radius: 4px;
-                font-size: 0.9rem;
+                font-size: 0.85rem;
                 transition: all 0.3s;
                 border: 1px solid transparent;
+                white-space: nowrap;
+                display: flex;
+                align-items: center;
+                gap: 6px;
             }
 
             .nav-item:hover, .nav-item.active {
                 background: rgba(255, 255, 255, 0.1);
                 border-color: rgba(255, 255, 255, 0.3);
                 color: #fff;
-                transform: translateY(-2px);
+                transform: translateY(-1px);
             }
              
             .nav-item.active {
                 background: #e63946; /* Accent Red */
                 border-color: #e63946;
-                box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+                box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
             }
 
             .btn-new-entry {
@@ -107,9 +120,30 @@
             .user-menu {
                 display: flex;
                 align-items: center;
-                gap: 10px;
-                font-size: 0.8rem;
+                gap: 8px;
+                font-size: 0.75rem;
                 color: #bdc3c7;
+            }
+
+            @media (max-width: 640px) {
+                .nav-container {
+                    padding: 10px;
+                    height: auto;
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+                .nav-brand { justify-content: center; }
+                .nav-links { 
+                    justify-content: flex-start;
+                    border-top: 1px solid rgba(255,255,255,0.05);
+                    padding-top: 10px;
+                }
+                .flex.items-center.gap-4 {
+                    justify-content: center;
+                    border-top: 1px solid rgba(255,255,255,0.05);
+                    padding-top: 10px;
+                    margin-top: 10px;
+                }
             }
         </style>
     </head>
