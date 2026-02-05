@@ -32,6 +32,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Third-Party API Keys
+    |--------------------------------------------------------------------------
+    |
+    | These values are used for external services like Google Maps, AMap,
+    | and ReCaptcha. Setting them here ensures they are accessible
+    | even when configuration is cached in production.
+    |
+    */
+
+    'google_api_key' => env('GOOGLE_API_KEY'),
+    'amap_js_key' => env('AMAP_JS_KEY'),
+    'amap_web_key' => env('AMAP_WEB_KEY'),
+    'recaptcha_site_key' => env('RECAPTCHA_SITE_KEY'),
+    'recaptcha_secret_key' => env('RECAPTCHA_SECRET_KEY'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

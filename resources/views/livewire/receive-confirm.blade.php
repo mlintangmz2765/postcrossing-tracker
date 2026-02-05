@@ -200,9 +200,9 @@
 
     @if ($isChina)
     <script type="text/javascript">
-        window._AMapSecurityConfig = { securityJsCode: '{{ env('AMAP_WEB_KEY') }}' };
+        window._AMapSecurityConfig = { securityJsCode: '{{ config('app.amap_web_key') }}' };
     </script>
-    <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key={{ env('AMAP_JS_KEY') }}"></script>
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key={{ config('app.amap_js_key') }}"></script>
     <script>
         @if($postcard && !$alreadyConfirmed && !$justConfirmed)
         window.onload = function() {
@@ -221,7 +221,7 @@
         @endif
     </script>
     @else
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_API_KEY') }}&libraries=marker&callback=initMap&loading=async" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('app.google_api_key') }}&libraries=marker&callback=initMap&loading=async" async defer></script>
     <script>
         @if($postcard && !$alreadyConfirmed && !$justConfirmed)
         async function initMap() {

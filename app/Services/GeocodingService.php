@@ -12,8 +12,8 @@ class GeocodingService
 
     public function __construct()
     {
-        $this->amapWebKey = env('AMAP_WEB_KEY');
-        $this->googleApiKey = env('GOOGLE_API_KEY'); // Ensure this is in .env if used
+        $this->amapWebKey = config('app.amap_web_key');
+        $this->googleApiKey = config('app.google_api_key');
     }
 
     public function getCoordinates($alamat, $negara)

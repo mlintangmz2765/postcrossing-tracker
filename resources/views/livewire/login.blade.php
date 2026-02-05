@@ -256,7 +256,7 @@
                     <div class="d-flex justify-content-center mb-3">
                     <div wire:ignore>
                             <div class="g-recaptcha" 
-                                 data-sitekey="{{ env('RECAPTCHA_SITE_KEY') }}" 
+                                 data-sitekey="{{ config('app.recaptcha_site_key') }}" 
                                  data-callback="onRecaptchaSuccess"
                                  data-expired-callback="onRecaptchaExpired">
                             </div>

@@ -24,7 +24,7 @@ class Login extends Component
         $this->validate();
 
         // 1. Verify ReCaptcha
-        $secret = env('RECAPTCHA_SECRET_KEY');
+        $secret = config('app.recaptcha_secret_key');
         if(!$secret) {
              $this->error = "Configuration Error: ReCaptcha Secret missing.";
              return;
