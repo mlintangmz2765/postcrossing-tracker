@@ -205,17 +205,19 @@
     <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key={{ env('AMAP_JS_KEY') }}"></script>
     <script>
         @if($postcard && !$alreadyConfirmed && !$justConfirmed)
-        const container = document.getElementById('map-confirm');
-        if (container) {
-            var map = new AMap.Map('map-confirm', { zoom: 2, center: [105, 10], mapStyle: 'amap://styles/light' });
-            var start = new AMap.LngLat(myLng, myLat);
-            var end = new AMap.LngLat(targetLng, targetLat);
-            new AMap.CircleMarker({ center: start, radius: 5, strokeColor: '#ff4b4b', fillColor: '#ff4b4b', fillOpacity: 0.8 }).setMap(map);
-            new AMap.CircleMarker({ center: end, radius: 5, strokeColor: '#4f46e5', fillColor: '#4f46e5', fillOpacity: 0.8 }).setMap(map);
-            var polyline = new AMap.Polyline({ path: [start, end], strokeColor: '#4f46e5', strokeWeight: 2, strokeStyle: 'dashed', strokeDasharray: [5, 10] });
-            map.add(polyline);
-            map.setFitView([polyline], true, [30, 30, 30, 30]);
-        }
+        window.onload = function() {
+            const container = document.getElementById('map-confirm');
+            if (container && typeof AMap !== 'undefined') {
+                var map = new AMap.Map('map-confirm', { zoom: 2, center: [105, 10], mapStyle: 'amap://styles/light' });
+                var start = new AMap.LngLat(myLng, myLat);
+                var end = new AMap.LngLat(targetLng, targetLat);
+                new AMap.CircleMarker({ center: start, radius: 5, strokeColor: '#ff4b4b', fillColor: '#ff4b4b', fillOpacity: 0.8 }).setMap(map);
+                new AMap.CircleMarker({ center: end, radius: 5, strokeColor: '#4f46e5', fillColor: '#4f46e5', fillOpacity: 0.8 }).setMap(map);
+                var polyline = new AMap.Polyline({ path: [start, end], strokeColor: '#4f46e5', strokeWeight: 2, strokeStyle: 'dashed', strokeDasharray: [5, 10] });
+                map.add(polyline);
+                map.setFitView([polyline], true, [30, 30, 30, 30]);
+            }
+        };
         @endif
     </script>
     @else

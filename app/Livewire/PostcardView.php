@@ -15,12 +15,14 @@ class PostcardView extends Component
     public $distance = 0;
     public $travelTime = 0;
 
-    // Origin (Yogyakarta)
-    public $originLat = -7.756378;
-    public $originLng = 110.376618;
+    // Origin (Home)
+    public $originLat;
+    public $originLng;
 
     public function mount($id)
     {
+        $this->originLat = (float) env('HOME_LAT', 0);
+        $this->originLng = (float) env('HOME_LNG', 0);
         $this->postcardId = $id;
         
         $this->card = DB::table('postcards')

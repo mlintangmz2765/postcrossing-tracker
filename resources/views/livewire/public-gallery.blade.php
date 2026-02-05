@@ -387,9 +387,7 @@
         <script type="text/javascript">
             window._AMapSecurityConfig = { securityJsCode: '{{ env('AMAP_WEB_KEY') }}' };
         </script>
-        <script src="https://webapi.amap.com/maps?v=2.0&key={{ env('AMAP_JS_KEY') }}&callback=initMap"></script>
-    @else
-        <script src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_API_KEY') }}&libraries=marker&callback=initMap&loading=async" async defer></script>
+        <script src="https://webapi.amap.com/maps?v=2.0&key={{ env('AMAP_JS_KEY') }}"></script>
     @endif
 
 </div>
@@ -400,7 +398,7 @@
     let markers = [];
     const isChina = {{ $isChina ? 'true' : 'false' }}; 
 
-    async function initMap() {
+    function initMap() {
         if (rawMarkers.length === 0) return;
 
         if (isChina) {
@@ -530,6 +528,15 @@
             });
         }
     }
+
+    // Initialize map on page load
+    @if ($isChina)
+        window.onload = function() { initMap(); };
+    @endif
 </script>
+
+@if (!$isChina)
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_API_KEY') }}&libraries=marker&callback=initMap&loading=async" async defer></script>
+@endif
 
 </div>
