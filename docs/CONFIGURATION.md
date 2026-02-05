@@ -39,8 +39,8 @@ The app calculates travel distance from your home location to each postcard dest
 
 Set your home coordinates in `.env`:
 ```env
-HOME_LAT=-7.756378
-HOME_LNG=110.376618
+HOME_LAT=0.000000
+HOME_LNG=0.000000
 ```
 
 > 💡 **Tip:** Find your coordinates at [latlong.net](https://www.latlong.net/)
