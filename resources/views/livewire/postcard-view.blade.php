@@ -248,7 +248,7 @@
     <!-- SCRIPTS -->
     <script src="{{ asset('vendor/qrcode/qrcode.min.js') }}"></script>
     <script src="{{ asset('vendor/html-to-image/html-to-image.js') }}"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_API_KEY') }}&libraries=marker&callback=initViewMap&loading=async" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('app.google_api_key') }}&libraries=marker&callback=initViewMap&loading=async" async defer></script>
 
     <script>
         function openLightbox(src) {
@@ -262,13 +262,11 @@
         }
 
         // Map using Google Maps
-        async function initViewMap() {
+        function initViewMap() {
             const myPos = { lat: {{ $originLat }}, lng: {{ $originLng }} };
             const targetPos = { lat: {{ $card->lat }}, lng: {{ $card->lng }} };
 
-            const { Map } = await google.maps.importLibrary("maps");
-
-            const map = new Map(document.getElementById('google-map-view'), {
+            const map = new google.maps.Map(document.getElementById('google-map-view'), {
                 zoom: 3,
                 center: myPos,
                 streetViewControl: false,

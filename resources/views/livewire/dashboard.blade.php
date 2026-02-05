@@ -254,7 +254,7 @@
 
     <!-- SCRIPTS -->
     <script src="{{ asset('vendor/chartjs/chart.js') }}"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_API_KEY') }}&callback=initDashboardMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('app.google_api_key') }}&callback=initDashboardMap&loading=async" async defer></script>
 
     <script>
         // --- MAP LOGIC using Google Maps ---
