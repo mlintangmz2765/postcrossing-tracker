@@ -1,0 +1,144 @@
+@import "tailwindcss";
+
+@theme {
+    --font-sans: "Inter", sans-serif;
+    --font-handwriting: "Dancing Script", cursive;
+    --font-chinese: "Ma Shan Zheng", serif;
+    --font-postcard: "Special Elite", monospace;
+    --font-display: "Quicksand", sans-serif;
+
+    --color-pc-red: #e63946;
+    --color-pc-blue: #457b9d;
+    --color-pc-paper: #fdf6e3;
+    --color-pc-ink: #2c3e50;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('../fonts/Inter-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('../fonts/Inter-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Dancing Script';
+    src: url('../fonts/dancing-script.woff2') format('woff2');
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ma Shan Zheng';
+    src: url('../fonts/ma-shan-zheng.woff2') format('woff2');
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Quicksand';
+    src: url('../fonts/quicksand.woff2') format('woff2');
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Special Elite';
+    src: url('../fonts/special-elite.woff2') format('woff2');
+    font-display: swap;
+}
+
+/* Postcrossing Global Theme Utilities */
+@layer base {
+    :root {
+        --pc-red: #e63946;
+        --pc-blue: #457b9d;
+        --pc-paper: #fdf6e3;
+        --pc-ink: #2c3e50;
+    }
+
+    .paper-texture {
+        background-color: var(--pc-paper);
+        background-image: linear-gradient(#e5e5e5 1.1px, transparent 1.1px), linear-gradient(90deg, #e5e5e5 1.1px, transparent 1.1px);
+        background-size: 30px 30px;
+    }
+
+    .airmail-border {
+        position: relative;
+        padding: 10px;
+        border-radius: 8px;
+    }
+
+    .airmail-border::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border: 12px solid transparent;
+        border-image: repeating-linear-gradient(45deg, var(--pc-red), var(--pc-red) 20px, #fff 20px, #fff 40px, var(--pc-blue) 40px, var(--pc-blue) 60px, #fff 60px, #fff 80px) 15;
+        pointer-events: none;
+        border-radius: 8px;
+        z-index: 1;
+    }
+
+    .vintage-label {
+        font-family: 'Special Elite', monospace;
+        font-weight: bold;
+        color: var(--pc-blue);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 14px;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .vintage-input {
+        font-family: 'Quicksand', sans-serif;
+        background: #fafafa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 12px;
+        transition: all 0.3s;
+        width: 100%;
+    }
+
+    .vintage-input:focus {
+        outline: none;
+        border-color: var(--pc-blue);
+        box-shadow: 0 0 0 3px rgba(69, 123, 157, 0.1);
+        background: #fff;
+    }
+
+    .vintage-btn {
+        font-family: 'Special Elite', monospace;
+        background: var(--pc-blue);
+        color: white;
+        padding: 18px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 0px #2d5a75;
+        transition: all 0.2s;
+        text-align: center;
+    }
+
+    .vintage-btn:hover {
+        background: #3a6885;
+        transform: translateY(2px);
+        box-shadow: 0 2px 0px #2d5a75;
+    }
+
+    .vintage-btn:active {
+        transform: translateY(4px);
+        box-shadow: none;
+    }
+}
