@@ -1,0 +1,48 @@
+# Routes Documentation
+
+## Public Routes (No Authentication Required)
+
+| Method | URI | Component | Description |
+|--------|-----|-----------|-------------|
+| GET | `/` | Redirect | Redirects to `/login` |
+| GET | `/login` | `Login` | User login page |
+| GET | `/gallery` | `PublicGallery` | Public postcard gallery |
+| GET | `/receive/{uid}` | `ReceiveConfirm` | Postcard arrival confirmation page |
+
+## Protected Routes (Authentication Required)
+
+| Method | URI | Component | Description |
+|--------|-----|-----------|-------------|
+| GET | `/dashboard` | `Dashboard` | Main dashboard with statistics |
+| GET | `/table` | `DashboardTable` | Searchable postcard table |
+| GET | `/new` | `RegisterPostcard` | Register new postcard |
+| GET | `/view/{id}` | `PostcardView` | View postcard details |
+| GET | `/edit/{id}` | `EditPostcard` | Edit existing postcard |
+| GET | `/statistics` | `Statistics` | Detailed statistics view |
+| GET | `/postcards` | `PostcardGallery` | Private postcard gallery |
+| GET | `/stamps` | `StampGallery` | Stamp collection gallery |
+| POST | `/logout` | - | Logout action |
+
+## Route Middleware
+
+- `auth` - Requires authenticated session
+- `guest` - Only accessible when not logged in
+
+## Livewire Components
+
+All pages are built with Livewire components located in `app/Livewire/`:
+
+```
+app/Livewire/
+├── Dashboard.php          # Main dashboard
+├── DashboardTable.php     # Sortable/searchable table
+├── EditPostcard.php       # Edit postcard form
+├── Login.php              # Authentication
+├── PostcardGallery.php    # Private gallery
+├── PostcardView.php       # Single postcard view
+├── PublicGallery.php      # Public gallery
+├── ReceiveConfirm.php     # Arrival confirmation
+├── RegisterPostcard.php   # New postcard form
+├── StampGallery.php       # Stamp collection
+└── Statistics.php         # Statistics page
+```
