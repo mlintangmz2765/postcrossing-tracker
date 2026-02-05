@@ -97,7 +97,7 @@ php artisan storage:link
 ### 6. Create admin user (first-time only)
 Access the setup page in your browser:
 ```
-https://your-domain.com/postcrossing/setup/register.php
+https://your-domain.com/setup/register.php
 ```
 Fill in your desired username and password to initialize the system.
 
