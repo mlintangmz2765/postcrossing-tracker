@@ -29,8 +29,8 @@ class ReceiveConfirm extends Component
 
     public function mount($uid)
     {
-        $this->myLat = (float) env('HOME_LAT', 0);
-        $this->myLng = (float) env('HOME_LNG', 0);
+        $this->myLat = (float) config('app.home_lat');
+        $this->myLng = (float) config('app.home_lng');
         $this->uid = $uid;
         $this->postcard = Postcard::where('uid', $uid)->where('type', 'sent')->firstOrFail();
         
@@ -40,17 +40,17 @@ class ReceiveConfirm extends Component
         // Detect China Viewer
         $this->detectChinaViewer();
 
-        // China keyword check for destination (useful for map style)
+        // China keyword check for destination (AMap is better for China addresses)
         $isToChina = false;
         $chinaKeywords = ['china', 'tiongkok', 'prc', 'people\'s republic of china'];
+        $countryName = $this->postcard->negara ?? '';
         foreach ($chinaKeywords as $kw) {
-            if (stripos($this->postcard->negara, $kw) !== false || stripos($this->postcard->alamat, $kw) !== false) {
+            if (stripos($countryName, $kw) !== false) {
                 $isToChina = true;
                 break;
             }
         }
         
-        // If it's TO China, we use AMap even if the viewer isn't in China (for better local detail)
         if ($isToChina) {
             $this->isChina = true;
         }

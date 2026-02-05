@@ -398,7 +398,7 @@
     let markers = [];
     const isChina = {{ $isChina ? 'true' : 'false' }}; 
 
-    function initMap() {
+    async function initMap() {
         if (rawMarkers.length === 0) return;
 
         if (isChina) {

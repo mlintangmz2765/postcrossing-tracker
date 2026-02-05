@@ -39,8 +39,8 @@ class DashboardTable extends Component
     public function render()
     {
         $user_id = Auth::id();
-        $myLat = (float) env('HOME_LAT', 0);
-        $myLng = (float) env('HOME_LNG', 0);
+        $myLat = (float) config('app.home_lat');
+        $myLng = (float) config('app.home_lng');
 
         // Base Query
         $query = DB::table('postcards')

@@ -21,8 +21,8 @@ class PostcardView extends Component
 
     public function mount($id)
     {
-        $this->originLat = (float) env('HOME_LAT', 0);
-        $this->originLng = (float) env('HOME_LNG', 0);
+        $this->originLat = (float) config('app.home_lat');
+        $this->originLng = (float) config('app.home_lng');
         $this->postcardId = $id;
         
         $this->card = DB::table('postcards')

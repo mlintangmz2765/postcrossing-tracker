@@ -18,8 +18,8 @@ class Dashboard extends Component
     public function mount()
     {
         $user_id = Auth::id();
-        $myLat = (float) env('HOME_LAT', 0);
-        $myLng = (float) env('HOME_LNG', 0);
+        $myLat = (float) config('app.home_lat');
+        $myLng = (float) config('app.home_lng');
 
         // 1. Stats Calculation
         $this->statsSent = $this->getSummaryStats('sent', $user_id, $myLat, $myLng);
