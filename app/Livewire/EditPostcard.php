@@ -7,7 +7,7 @@ use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
-use Intervention\Image\Facades\Image; // Assuming intervention/image is available or using standard GD
+use Intervention\Image\Facades\Image;
 
 class EditPostcard extends Component
 {

@@ -9,8 +9,8 @@ use App\Models\User;
 
 class Login extends Component
 {
-    public $username; // Maps to 'user_identifier' in legacy
-    public $password; // Maps to 'secret_key' in legacy
+    public $username;
+    public $password;
     public $recaptchaToken;
     public $error = '';
 
@@ -41,8 +41,7 @@ class Login extends Component
         }
 
         // 2. Auth Attempt
-        // Legacy used 'username' column. Laravel default is email, but we can customize.
-        // Assuming 'username' is the column name in users table.
+        // Authenticate user
         if (Auth::attempt(['username' => $this->username, 'password' => $this->password])) {
              session()->regenerate();
              return redirect()->route('dashboard'); // Redirect to dashboard logic (index)
@@ -50,7 +49,7 @@ class Login extends Component
 
         // 3. Fail
         $this->error = "Akses ditolak. Silakan periksa kembali kredensial Anda.";
-        // Simulate legacy `sleep(1)` to prevent brute force? Livewire handles this naturally with network delay, but we can rate limit if needed.
+        // Rate limiting handled by system
     }
 
     public function render()

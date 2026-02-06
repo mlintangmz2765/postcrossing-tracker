@@ -80,7 +80,7 @@ class ImportPostcards extends Component
                 $coords = $geoService->getCoordinates($almt, $neg);
 
                 $newPostcard = Postcard::create([
-                    'user_id' => 1, // Legacy hardcoded user
+                    'user_id' => 1,
                     'uid' => uniqid('pc_'),
                     'postcard_id' => $pc_id,
                     'type' => $type,

@@ -115,7 +115,7 @@
                         <th>Rate</th>
                     @endif
                     <th>Total (IDR)</th>
-                    <!-- Legacy Action Column: Title was empty in legacy, but for accessiblity we can keep it empty or use 'Actions' -->
+                    <th>Actions</th>
                     <th style="width: 80px;"></th> 
                 </tr>
             </thead>

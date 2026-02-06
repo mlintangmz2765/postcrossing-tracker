@@ -1,6 +1,6 @@
 
     <style>
-        /* --- 1. SETUP FONT LOKAL --- */
+        /* Fonts */
         @font-face {
             font-family: 'Dancing Script';
             src: url('{{ asset('fonts/dancing-script.woff2') }}') format('woff2');
@@ -30,7 +30,7 @@
             font-display: swap;
         }
 
-        /* --- 2. CSS UTAMA --- */
+        /* Main Styles */
         :root {
             --primary: #2c3e50;
             --accent-blue: #457b9d;
@@ -59,7 +59,7 @@
         /* Helper for legacy text-danger */
         .text-danger { color: var(--accent-red); }
 
-        /* --- DEKORASI PAR AVION (Strip Atas) --- */
+        /* Par Avion Decoration */
         .par-avion-strip {
             position: fixed; top: 0; left: 0; right: 0; height: 10px;
             background: repeating-linear-gradient(
@@ -73,7 +73,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        /* --- NAVIGATION (Top Right) --- */
+        /* Top Navigation */
         .top-nav-legacy {
             position: absolute;
             top: 25px;
@@ -141,7 +141,7 @@
             letter-spacing: 1px;
         }
 
-        /* --- TOMBOL UTAMA (Public Gallery) --- */
+        /* Gallery Button */
         .btn-gallery {
             display: inline-block;
             background: #fff;
@@ -228,7 +228,7 @@
             font-family: 'Special Elite', monospace;
         }
 
-        /* --- DEKORASI PRANGKO CSS --- */
+        /* Stamp Decoration */
         .stamp-decor {
             position: absolute;
             top: -20px;
@@ -237,7 +237,7 @@
             height: 90px;
             background: white;
             border: 4px solid var(--paper-bg);
-            /* Gerigi Prangko */
+            /* Stamp Edges */
             background-image: 
                 radial-gradient(var(--paper-bg) 30%, transparent 30%),
                 radial-gradient(var(--paper-bg) 30%, transparent 30%);
@@ -335,7 +335,7 @@
             color: white;
         }
 
-        /* --- FOOTER --- */
+        /* Footer */
         .footer-legacy {
             padding: 50px 20px;
             text-align: center;
@@ -351,9 +351,11 @@
             .hero { padding-top: 120px; }
             .hero h1 { font-size: 3rem; }
             .card-info { padding: 30px 20px; }
+            /* Helper for text-danger */
+            .text-danger { color: var(--accent-red); }
             .stamp-decor { display: none; } /* Hide decorative stamp on mobile */
-            .top-nav-legacy { top: 20px; right: 20px; gap: 10px; }
-            .nav-link-legacy { padding: 6px 12px; font-size: 0.8rem; }
+            .top-nav-vintage { top: 20px; right: 20px; gap: 10px; }
+            .nav-link-vintage { padding: 6px 12px; font-size: 0.8rem; }
         }
     </style>
     <link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.css') }}">
@@ -361,9 +363,9 @@
 <div class="home-wrapper">
     <div class="par-avion-strip"></div>
 
-    <nav class="top-nav-legacy">
-        <a href="{{ route('gallery', ['china' => $isChina ? 1 : null]) }}" class="nav-link-legacy" style="background:rgba(230, 57, 70, 0.8);">Public Gallery</a>
-        <a href="{{ route('login') }}" id="nav-admin" class="nav-link-legacy">Admin Login</a> 
+    <nav class="top-nav-vintage">
+        <a href="{{ route('gallery', ['china' => $isChina ? 1 : null]) }}" class="nav-link-vintage" style="background:rgba(230, 57, 70, 0.8);">Public Gallery</a>
+        <a href="{{ route('login') }}" id="nav-admin" class="nav-link-vintage">Admin Login</a> 
     </nav>
 
     <header class="hero">
@@ -483,7 +485,7 @@
             document.getElementById('nav-admin').innerText = translations[lang].navAdmin;
             heroTitle.innerText = translations[lang].heroTitle;
             document.getElementById('hero-desc').innerText = translations[lang].heroDesc;
-            // No Icon as per legacy match
+            // Update Button Text
             document.getElementById('btn-gallery-text').innerText = translations[lang].btnGallery;
             document.getElementById('title-what').innerText = translations[lang].titleWhat;
             document.getElementById('desc-what').innerHTML = translations[lang].descWhat;

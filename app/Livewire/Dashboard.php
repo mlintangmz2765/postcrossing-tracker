@@ -32,7 +32,7 @@ class Dashboard extends Component
             ->whereNotNull('tanggal_terima')
             ->where('notif_read', 0)
             ->limit(5)
-            ->get(); // Using 'sent' arrived as notification based on legacy logic roughly
+            ->get();
 
         // 3. Chart Data
         $this->prepareChartData($user_id);
@@ -43,7 +43,7 @@ class Dashboard extends Component
 
     private function getSummaryStats($type, $user_id, $lat, $lng)
     {
-        // Legacy Formula: 6371 * acos(cos(radians($myLat)) * cos(radians(lat)) * cos(radians(lng) - radians($myLng)) + sin(radians($myLat)) * sin(radians(lat)))
+        // Distance Formula (Haversine)
         $distanceQuery = "SUM(6371 * acos(cos(radians($lat)) * cos(radians(lat)) * cos(radians(lng) - radians($lng)) + sin(radians($lat)) * sin(radians(lat)))) as total_km";
 
         $res = DB::table('postcards')
@@ -146,7 +146,7 @@ class Dashboard extends Component
                 return [
                     'lat' => (float)$m->lat,
                     'lng' => (float)$m->lng,
-                    'color' => ($m->type == 'sent') ? '#007bff' : '#28a745', // Legacy: Blue=Sent, Green=Received
+                    'color' => ($m->type == 'sent') ? '#007bff' : '#28a745',
                     'content' => "<b>".htmlspecialchars($m->nama_kontak)."</b><br>".htmlspecialchars($m->alamat)
                 ];
             })

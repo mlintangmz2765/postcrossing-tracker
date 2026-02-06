@@ -1,5 +1,5 @@
 <div class="gallery-wrapper">
-    <!-- Local Styles specific to Gallery to match legacy exactly -->
+    <!-- Styles -->
     <style>
         :root { 
             --post-red: #e63946;

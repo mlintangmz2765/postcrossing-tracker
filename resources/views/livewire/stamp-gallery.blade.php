@@ -19,8 +19,7 @@
             width: 100%;
         }
 
-        /* Decoration: Airmail Top Border REMOVED as requested */
-        /* .stamp-gallery-wrapper::before { content: ""; ... } */
+        /* Top Border Airmail */
 
         .stamp-header { text-align: center; margin: 40px 0 30px; position: relative; }
         .stamp-header h1 { font-family: 'Dancing Script', cursive; font-size: 4.5rem; margin: 0; color: #1e293b; text-shadow: 2px 2px #fff; }
@@ -73,7 +72,7 @@
         .stamp-card-slider {
             width: var(--stamp-w); height: 140px; margin: 0 15px;
             background: white; padding: 10px;
-            /* Simple border, removed serrated hack */
+            /* Simple border */
             border: 1px solid #ccc; border-radius: 2px;
             box-shadow: 3px 3px 10px rgba(0,0,0,0.3);
             flex-shrink: 0;
@@ -85,7 +84,7 @@
         .stamp-card-slider img { max-width: 100%; max-height: 100%; object-fit: contain; z-index: 1; }
         .stamp-card-slider:hover { transform: scale(1.1) rotate(0deg); z-index: 10; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
 
-        /* --- GRID STYLES RESTORED --- */
+        /* Gallery Grid */
         .gallery-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 30px;
             max-width: 1200px; margin: 0 auto; padding: 0 20px;

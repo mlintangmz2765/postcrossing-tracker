@@ -67,17 +67,15 @@ class PublicGallery extends Component
         })->distinct()->pluck('nama_inggris')->sort();
 
         // 2. Query Postcards
-        $query = Postcard::with('country_data') // Assuming relationship name
+        $query = Postcard::with('country_data')
             ->where('type', 'received');
 
         if ($this->viewMode === 'all' || $this->viewMode === 'postcard') {
             $query->whereNotNull('foto_depan')->where('foto_depan', '!=', '');
         } 
-        // Note: Legacy logic for 'stamp' view mode queries postcard_stamps joined with postcards.
-        // But here we are querying Postcards primarily. 
-        // If viewMode is stamp, legacy did: SELECT ps.* FROM postcard_stamps ps JOIN postcards p ...
+        // Logic for stamp view mode
         // We might need a separate query or handle it in blade. 
-        // Let's follow legacy structure: data is $postcards array.
+        // Let's follow structure: data is $postcards array.
 
         // Filter Logic
         if (!empty($this->filterInput)) {
@@ -102,7 +100,7 @@ class PublicGallery extends Component
         $stampsByCard = [];
 
         if ($this->viewMode === 'stamp') {
-             // Legacy: SELECT ps.foto_prangko... FROM postcard_stamps ps ...
+             // Fetch stamp images
              // Eloquent equivalent:
              $stamps = PostcardStamp::with(['postcard.country_data'])
                 ->whereHas('postcard', function($q) use ($query) {
@@ -152,11 +150,11 @@ class PublicGallery extends Component
              foreach($cards as $p) {
                  $cName = $p->country_data->nama_inggris ?? $p->negara;
                  
-                 // EXACT LEGACY LOGIC: Calculate Aspect Ratio
-                 // Legacy: function getAspectRatioStyle($filePath)
+                 // Calculate optimal aspect ratio
+                 // Path resolution for local storage
                  $imgRatioStyle = "aspect-ratio: 4/3;"; // Default
                  $relPath = $p->foto_depan;
-                 // Assuming foto_depan is relative to public like 'uploads/...'
+                 // Path resolution for local storage
                  // We need absolute path for getimagesize
                  if (!empty($relPath)) {
                      $absPath = public_path($relPath);

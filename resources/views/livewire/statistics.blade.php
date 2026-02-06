@@ -77,7 +77,7 @@
     </style>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{ activeTab: 'sent' }">
-        <!-- Dashboard Button REMOVED as requested -->
+        <div class="stats-actions">
         
         <h1 class="stats-header">Detailed Statistics</h1>
 

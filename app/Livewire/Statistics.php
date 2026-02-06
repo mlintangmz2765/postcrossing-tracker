@@ -15,7 +15,7 @@ class Statistics extends Component
     {
         $user_id = Auth::id();
 
-        // queries mirroring legacy stats_pivot.php
+        // Get collection statistics
 
         // SENT Statistics
         $this->sentStats = DB::table('postcards')
@@ -37,9 +37,7 @@ class Statistics extends Component
             ->get()
             ->toArray();
 
-        // RECEIVED Statistics
-        // Note: For 'received', tanggal_terima is usually set, but we perform similar checks for consistency if needed.
-        // The legacy SQL checked total_diterima counts mostly.
+        // Total count
         $this->receivedStats = DB::table('postcards')
             ->select(
                 'negara',

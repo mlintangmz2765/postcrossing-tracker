@@ -77,12 +77,12 @@ class GeocodingService
 
     protected function getCoordinatesGoogle($alamat, $negara)
     {
-        // Replicating logic, but checking if Google Key exists
+        // Use Google Maps as primary if key is available
         if (!$this->googleApiKey) return ['lat' => 0.0, 'lng' => 0.0];
 
         $full_query = $alamat . ", " . $negara;
 
-        // TAHAP 1: POI SEARCH (Google Places - Text Search)
+        // Search by location name (Google)
         $urlPlaces = "https://maps.googleapis.com/maps/api/place/textsearch/json";
         $resPlaces = Http::get($urlPlaces, [
             'query' => $full_query,

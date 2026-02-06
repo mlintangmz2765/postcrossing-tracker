@@ -67,9 +67,8 @@ class RegisterPostcard extends Component
 
     public function detectCurrency($countryName)
     {
-        // Simple mapping or call external API via JS in view
-        // Legacy used restcountries.com in JS. We can keep it in JS or do it here.
-        // Let's stick to JS for "maintaining logic" as per request.
+        // Auto-fill metadata logic
+        // Fetch location data
         $this->dispatch('check-currency', country: $countryName); 
     }
 
@@ -111,7 +110,7 @@ class RegisterPostcard extends Component
             'biaya_prangko' => 'required|numeric',
         ]);
 
-        // Geocoding
+        // Resolve coordinates
         $coords = $geoService->getCoordinates($this->alamat, $this->negara);
         $lat = $coords['lat'];
         $lng = $coords['lng'];
@@ -119,7 +118,7 @@ class RegisterPostcard extends Component
         $newPostcardId = null;
 
         DB::transaction(function () use ($lat, $lng, &$newPostcardId) {
-            // Save Images
+            // Process Attachments
             $foto_depan = $this->saveImage($this->img_d_data, 'f');
             $foto_belakang = $this->saveImage($this->img_b_data, 'b');
             

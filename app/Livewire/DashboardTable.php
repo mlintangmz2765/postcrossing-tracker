@@ -47,7 +47,7 @@ class DashboardTable extends Component
             ->where('user_id', $user_id)
             ->where('type', $this->type);
 
-        // Apply Filters (replicating legacy buildQuery logic)
+        // Apply Filters
         if ($this->start_kirim && $this->end_kirim) {
             $query->whereBetween('tanggal_kirim', [$this->start_kirim, $this->end_kirim]);
         }
@@ -77,7 +77,7 @@ class DashboardTable extends Component
         }
 
         // Sorting
-        // Legacy: 6371 * acos(...)
+        // Distance Formula
         $distanceRaw = "(6371 * acos(cos(radians($myLat)) * cos(radians(lat)) * cos(radians(lng) - radians($myLng)) + sin(radians($myLat)) * sin(radians(lat))))";
         
         // We select it to use in view
@@ -97,7 +97,7 @@ class DashboardTable extends Component
         // Pagination
         $rows = $query->paginate($this->perPage);
 
-        // Calculate Grand Total for Footer (Legacy does sum of ALL matching rows, not just current page)
+        // Calculate Grand Totals
         // Optimization: Run a separate simple aggregation query with same filters
         $totalQuery = DB::table('postcards')->where('user_id', $user_id)->where('type', $this->type);
         // ... apply exact same filters ... (abstracting filter logic would be better but keeping it simple/inline for now)
@@ -120,7 +120,7 @@ class DashboardTable extends Component
     public function getDuration($start, $end)
     {
         if (empty($end) || $end == '0000-00-00') {
-            return "-"; // Hidden as requested for traveling postcards
+            return "-";
         }
         $start = \Carbon\Carbon::parse($start);
         $end = \Carbon\Carbon::parse($end);
