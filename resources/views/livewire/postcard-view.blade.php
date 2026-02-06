@@ -71,9 +71,6 @@
 
     <div class="view-container airmail-border">
         <div class="view-inner">
-        <!-- Dashboard Button Removed as per request (or keeps legacy 'Back to Dashboard'?) -->
-        <!-- User said "hapus tombol ke postcard gallery", assuming they meant the big button at bottom. -->
-        <!-- Legacy had a "Dashboard" back link at top. I'll keep a small text link or remove entire nav if they want pure view. -->
 
 
         <!-- HEADER -->

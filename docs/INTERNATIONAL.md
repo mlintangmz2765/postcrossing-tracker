@@ -98,5 +98,42 @@ The Mass Data Import feature uses a CSV file with Indonesian header names. Here 
 
 ---
 
-## �🛠️ Contribution
+## 🖼️ UI / User-Facing Layer
+
+### Home Page Language Switcher
+The **Public Home Page** (`resources/views/livewire/home.blade.php`) defaults to **Indonesian (ID)** but includes a built-in language switcher supporting:
+- **ID** (Bahasa Indonesia) - Default
+- **EN** (English)
+- **CN** (Chinese / 中文)
+
+The language preference is stored in `localStorage`. If you want to change the default language to English, modify line 517:
+```javascript
+const savedLang = localStorage.getItem('preferredLang') || 'en'; // Change 'id' to 'en'
+```
+
+### Stamp Decoration Text
+The decorative CSS stamp on the home page displays `"IDN"` (ISO code for Indonesia). This is purely cosmetic (CSS `::after` content) in line 255 of `home.blade.php`.
+
+---
+
+## 💻 Source Code Layer
+
+### Indonesian CSS Comments
+Several Blade files contain **Indonesian CSS comments**. These are development notes and do not affect functionality:
+
+| File | Example Comment |
+|------|-----------------|
+| `home.blade.php` | `/* --- SETUP FONT LOKAL --- */`, `/* --- DEKORASI PRANGKO CSS --- */` |
+| `public-gallery.blade.php` | `/* --- CSS UTAMA --- */` |
+
+### Image Asset Names
+Some image files are named in Indonesian:
+- `images/prangko.png` → "Stamp" image
+- `images/cardboard.png` → Cardboard texture
+
+These are purely cosmetic and do not require changes.
+
+---
+
+## 🛠️ Contribution
 We are working towards making the database schema and currency service fully dynamic. If you'd like to help translate the remaining Indonesian comments or refactor the currency logic, pull requests are welcome!
