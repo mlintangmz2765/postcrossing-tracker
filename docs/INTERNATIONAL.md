@@ -12,8 +12,11 @@ You don't necessarily need to change the code to use your local currency. You ca
 2. All calculations (`Original Value` × `Rate`) will result in your local currency value, even if the label says IDR.
 
 ### Hardcoded Logic:
-- `app/Services/CurrencyService.php`: Hardcoded to fetch rates against IDR.
-- `app/Models/Postcard.php`: Casts column `kurs_idr`.
+- **Automated Fetching**: `app/Services/CurrencyService.php` is hardcoded to fetch exchange rates against **IDR**. If you use a different base currency, the automatic "Fetch Rate" feature will still retrieve IDR rates.
+- **Model Casting**: `app/Models/Postcard.php` casts the exchange rate column as `kurs_idr`.
+- **Database Column**: The column is named `kurs_idr` in the `postcards` table.
+
+> 🛠️ **Developer Note:** To change the automated base currency, you need to modify the `getHistoricalRate` method in `app/Services/CurrencyService.php` and replace all instances of `'IDR'` with your preferred ISO currency code.
 
 ---
 
