@@ -22,20 +22,48 @@ You don't necessarily need to change the code to use your local currency. You ca
 
 ## 🗺️ Database Translation Map
 
-If you are modifying the database or reading the source code, here is a translation of the Indonesian column names:
+Below is a translation of all Indonesian column names across all tables. Use this as a reference when modifying the database or reading the source code.
 
+### `postcards` Table (Primary data for sent/received postcards)
 | Indonesian Column | English Context |
 |-------------------|-----------------|
 | `tanggal_kirim` | Send Date |
 | `tanggal_terima` | Receive Date |
+| `deskripsi_gambar` | Image Description |
+| `pesan_penerima` | Message from Recipient |
 | `nama_kontak` | Contact Name |
+| `alamat` | Address |
+| `negara` | Country |
+| `nomor_telepon` | Phone Number |
 | `biaya_prangko` | Stamp Cost (Base Currency) |
 | `nilai_asal` | Original Value (Foreign Currency) |
 | `mata_uang` | Currency Code |
 | `kurs_idr` | Exchange Rate (to Base) |
 | `foto_depan` | Front Photo |
 | `foto_belakang` | Back Photo |
+| `notif_read` | Notification Read Status |
+
+### `contacts` Table (Address book)
+| Indonesian Column | English Context |
+|-------------------|-----------------|
+| `nama_kontak` | Contact Name |
+| `alamat` | Address |
+| `negara` | Country |
+| `nomor_telepon` | Phone Number |
+
+### `countries` Table (Country data for maps & stats)
+| Indonesian Column | English Context |
+|-------------------|-----------------|
 | `nama_indonesia` | Country Name (Indonesian) |
+| `nama_inggris` | Country Name (English) |
+| `kode_iso` | ISO 3166-1 Alpha-2 Code |
+| `benua` | Continent |
+| `subbenua` | Subregion / Subcontinent |
+
+### `postcard_stamps` Table (Stamp photos for each postcard)
+| Indonesian Column | English Context |
+|-------------------|-----------------|
+| `foto_prangko` | Stamp Photo |
 
 ---
 
