@@ -20,7 +20,7 @@ A personal postcard collection management system built with Laravel and Livewire
 - 📧 **Arrival Notifications** - Email alerts when recipients confirm delivery
 - 🌏 **China Viewer Detection** - Auto-switches to AMap for China visitors
 
-> 📖 See [Configuration Guide](docs/CONFIGURATION.md) for customization options
+> 📖 See [Configuration Guide](docs/CONFIGURATION.md) and [International Usage Guide](docs/INTERNATIONAL.md) for customization and i18n instructions.
 
 ## Requirements
 
