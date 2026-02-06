@@ -76,5 +76,27 @@ The app maps postcards to countries using the `nama_indonesia` field in the `cou
 
 ---
 
-## 🛠️ Contribution
+## � CSV Import Structure
+
+The Mass Data Import feature uses a CSV file with Indonesian header names. Here is the translation:
+
+| CSV Column | English Context | Notes |
+|------------|-----------------|-------|
+| `type` | Type | "sent" or "received" |
+| `postcard_id` | Postcrossing ID | e.g., ID-123456 |
+| `tgl_kirim` | Send Date | DD/MM/YYYY |
+| `tgl_terima` | Receive Date | DD/MM/YYYY (optional) |
+| `deskripsi` | Description | Subject or picture description |
+| `nama` | Contact Name | |
+| `alamat` | Address | Full address for geocoding |
+| `negara` | Country | Must match `nama_indonesia` in `countries` table |
+| `telepon` | Phone Number | **ONLY for "sent" type (11 cols)** |
+| `biaya_asal` | Original Cost | Digits only (e.g., 10000 or 1.50) |
+| `mata_uang` | Currency Code | ISO 4217 code (USD, EUR, CNY, etc.) |
+
+> ⚠️ **Important**: The semicolon (`;`) is used as the column separator, not a comma.
+
+---
+
+## �🛠️ Contribution
 We are working towards making the database schema and currency service fully dynamic. If you'd like to help translate the remaining Indonesian comments or refactor the currency logic, pull requests are welcome!
