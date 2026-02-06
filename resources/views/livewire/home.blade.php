@@ -56,7 +56,7 @@
             -moz-osx-font-smoothing: auto;
         }
         
-        /* Helper for legacy text-danger */
+        /* Text Helper */
         .text-danger { color: var(--accent-red); }
 
         /* Par Avion Decoration */
@@ -74,7 +74,7 @@
         }
 
         /* Top Navigation */
-        .top-nav-legacy {
+        .top-nav {
             position: absolute;
             top: 25px;
             right: 25px;
@@ -83,7 +83,7 @@
             gap: 15px;
         }
 
-        .nav-link-legacy {
+        .nav-link {
             text-decoration: none;
             color: #fff;
             font-family: 'Special Elite', monospace;
@@ -96,7 +96,7 @@
             transition: 0.3s;
         }
 
-        .nav-link-legacy:hover {
+        .nav-link:hover {
             background: var(--accent-red);
             border-color: var(--accent-red);
         }
@@ -169,11 +169,11 @@
         }
         
         .btn-gallery::before {
-             content: none; /* Legacy CSS content was invalid/broken, so no icon */
+             content: none;
         }
 
         /* --- CONTENT SECTION --- */
-        .section-legacy {
+        .content-section {
             padding: 60px 20px;
             max-width: 1000px;
             margin: auto;
@@ -336,7 +336,7 @@
         }
 
         /* Footer */
-        .footer-legacy {
+        .footer-section {
             padding: 50px 20px;
             text-align: center;
             font-family: 'Special Elite', monospace;
@@ -351,11 +351,11 @@
             .hero { padding-top: 120px; }
             .hero h1 { font-size: 3rem; }
             .card-info { padding: 30px 20px; }
-            /* Helper for text-danger */
+            /* Text Helper */
             .text-danger { color: var(--accent-red); }
-            .stamp-decor { display: none; } /* Hide decorative stamp on mobile */
-            .top-nav-vintage { top: 20px; right: 20px; gap: 10px; }
-            .nav-link-vintage { padding: 6px 12px; font-size: 0.8rem; }
+            .stamp-decor { display: none; }
+            .top-nav { top: 20px; right: 20px; gap: 10px; }
+            .nav-link { padding: 6px 12px; font-size: 0.8rem; }
         }
     </style>
     <link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.css') }}">
@@ -363,9 +363,9 @@
 <div class="home-wrapper">
     <div class="par-avion-strip"></div>
 
-    <nav class="top-nav-vintage">
-        <a href="{{ route('gallery', ['china' => $isChina ? 1 : null]) }}" class="nav-link-vintage" style="background:rgba(230, 57, 70, 0.8);">Public Gallery</a>
-        <a href="{{ route('login') }}" id="nav-admin" class="nav-link-vintage">Admin Login</a> 
+    <nav class="top-nav">
+        <a href="{{ route('gallery', ['china' => $isChina ? 1 : null]) }}" class="nav-link" style="background:rgba(230, 57, 70, 0.8);">Public Gallery</a>
+        <a href="{{ route('login') }}" id="nav-admin" class="nav-link">Admin Login</a> 
     </nav>
 
     <header class="hero">
@@ -379,7 +379,7 @@
         </div>
     </header>
 
-    <main class="section-legacy">
+    <main class="content-section">
         <div class="card-info">
             <div class="stamp-decor"></div>
 
@@ -412,7 +412,7 @@
         </div>
     </main>
 
-    <footer class="footer-legacy">
+    <footer class="footer-section">
         <p id="footer-owner">Dikelola dengan <i class="bi bi-heart-fill text-danger"></i> oleh {{ config('app.owner_name') }}</p>
         <p id="footer-disclaimer" style="font-size: 11px; opacity: 0.7; margin-top:10px;">
             Situs ini adalah proyek hobi pribadi. Kami tidak mengumpulkan data pribadi pengunjung publik.<br>
@@ -498,7 +498,7 @@
             document.getElementById('footer-owner').innerHTML = translations[lang].footerOwner;
             document.getElementById('footer-disclaimer').innerHTML = translations[lang].footerDisclaimer;
 
-            // Logika ganti font untuk Mandarin
+            // Use different font-family for Chinese
             if (lang === 'zh') {
                 heroTitle.classList.add('lang-zh');
             } else {

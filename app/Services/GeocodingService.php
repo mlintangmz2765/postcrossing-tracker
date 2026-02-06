@@ -40,7 +40,7 @@ class GeocodingService
 
     protected function getCoordinatesChina($alamat)
     {
-        // TAHAP 1: POI Search Gaode
+        // POI Search (Gaode)
         $urlPOI = "https://restapi.amap.com/v3/place/text";
         $resPOI = Http::get($urlPOI, [
             'keywords' => $alamat,
@@ -57,7 +57,7 @@ class GeocodingService
             }
         }
 
-        // TAHAP 2: Geocoding Gaode (Backup)
+        // Geocoding Fallback (Gaode)
         $urlGeo = "https://restapi.amap.com/v3/geocode/geo";
         $resGeo = Http::get($urlGeo, [
             'address' => $alamat,
@@ -99,7 +99,7 @@ class GeocodingService
             }
         }
 
-        // TAHAP 2: GEOCODING STANDAR
+        // Precise Geocoding (Google)
         $urlGeo = "https://maps.googleapis.com/maps/api/geocode/json";
         $resGeo = Http::get($urlGeo, [
             'address' => $full_query,

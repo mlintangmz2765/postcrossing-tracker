@@ -140,7 +140,7 @@ class PublicGallery extends Component
                  
                  if (!empty($p->lat) && !empty($p->lng)) {
                      // Map Marker Logic
-                     // ... same as legacy ...
+                     // Query from existing result
                  }
              }
 
