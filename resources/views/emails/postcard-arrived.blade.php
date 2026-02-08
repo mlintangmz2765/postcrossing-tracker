@@ -181,7 +181,7 @@
                 </div>
 
                 <div style="text-align: center;">
-                    <a href="{{ config('app.url') }}/view/{{ $postcard->id }}" class="btn">View Postcard Details</a>
+                    <a href="{{ config('app.url') }}/view/{{ $postcard->id }}" class="btn" style="color: #ffffff !important; text-decoration: none;">View Postcard Details</a>
                 </div>
             </div>
 

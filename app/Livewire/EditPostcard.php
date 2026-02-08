@@ -35,24 +35,21 @@ class EditPostcard extends Component
 
     public $deskripsi_gambar;
 
-    // Currency fields (for received)
     public $nilai_asal;
 
     public $mata_uang = 'IDR';
 
     public $kurs_idr = 1;
 
-    // Images
     public $currentFotoDepan;
 
     public $currentFotoBelakang;
 
-    // JS Scanner will fill these Base64 strings
     public $newFotoDepanBase64;
 
     public $newFotoBelakangBase64;
 
-    public $newStampsBase64 = []; // Array of Base64 strings
+    public $newStampsBase64 = [];
 
     public $existingStamps = [];
 

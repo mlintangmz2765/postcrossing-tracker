@@ -7,7 +7,6 @@
             </div>
 
             <form wire:submit.prevent="save" class="p-8 space-y-8">
-                <!-- Type Selection -->
                 <div class="flex space-x-4 p-2 bg-gray-100/50 rounded-xl border-2 border-dashed border-gray-200">
                     <button type="button" 
                         wire:click="$set('type', 'sent')"
@@ -54,33 +53,45 @@
                         <input type="text" id="negaraInput" wire:model.blur="negara" class="vintage-input w-full" placeholder="Where is it from/to?" required @blur="updateCurrencyFromCountry($el.value)">
                     </div>
 
-                    <div wire:ignore
-                         x-data="{ dateValue: @entangle('tanggal_kirim') }"
-                         x-init="
-                            flatpickr($refs.input, {
-                                altInput: true,
-                                altFormat: 'd/m/Y',
-                                dateFormat: 'Y-m-d',
-                                allowInput: true,
-                                onChange: function(selectedDates, dateStr, instance) {
-                                    dateValue = dateStr;
-                                    $wire.set('tanggal_kirim', dateStr);
-                                    instance.element.setAttribute('data-date-value', dateStr);
-                                    updateRate(dateStr, 'sent');
-                                },
-                                onClose: function(selectedDates, dateStr, instance) {
-                                    updateRate(dateStr, 'sent');
-                                }
-                            });
-                         ">
-                        <label class="vintage-label">Registry Date</label>
-                        <input x-ref="input" type="text" id="tanggalKirim" x-model="dateValue" class="vintage-input w-full" required>
-                        <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
-                    </div>
+                     <div wire:ignore
+                          x-data="{ dateValue: @entangle('tanggal_kirim') }"
+                          x-init="
+                             const fp = flatpickr($refs.input, {
+                                 altInput: true,
+                                 altFormat: 'd/m/Y',
+                                 dateFormat: 'Y-m-d',
+                                 allowInput: true,
+                                 onChange: function(selectedDates, dateStr, instance) {
+                                     dateValue = dateStr;
+                                     $wire.set('tanggal_kirim', dateStr);
+                                     instance.element.setAttribute('data-date-value', dateStr);
+                                     updateRate(dateStr, 'sent');
+                                 },
+                                 onValueUpdate: function(selectedDates, dateStr, instance) {
+                                     dateValue = dateStr;
+                                     $wire.set('tanggal_kirim', dateStr);
+                                     instance.element.setAttribute('data-date-value', dateStr);
+                                 },
+                                 onClose: function(selectedDates, dateStr, instance) {
+                                     updateRate(dateStr, 'sent');
+                                 }
+                             });
+                             // Ensure value is synced on manual typing blur
+                             fp.altInput.addEventListener('blur', () => {
+                                 if (fp.input.value) {
+                                     $wire.set('tanggal_kirim', fp.input.value);
+                                     updateRate(fp.input.value, 'sent');
+                                 }
+                             });
+                          ">
+                         <label class="vintage-label">Registry Date</label>
+                         <input x-ref="input" type="text" id="tanggalKirim" class="vintage-input w-full" required>
+                         <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
+                         @error('tanggal_kirim') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t-2 border-dashed border-gray-100">
-                    <!-- Front Image -->
                     <div>
                         <label class="vintage-label">Front Visual (Artwork)</label>
                         <div class="relative group">
@@ -103,7 +114,6 @@
                         <input type="file" id="input_d" accept="image/*" class="hidden" onchange="handleFile(event, 'd')">
                     </div>
 
-                    <!-- Back Image -->
                     <div>
                         <label class="vintage-label">Back Message (Postal)</label>
                         <div class="relative group">
@@ -127,14 +137,18 @@
                     </div>
                 </div>
                 
-                <!-- Stamps Section -->
                 <div class="pt-6 border-t-2 border-dashed border-gray-100">
                      <label class="vintage-label">Philately Collection (Stamps)</label>
                      <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 mb-4" id="stamps-grid">
                          @foreach($stamp_data as $index => $stamp)
                             <div class="relative group aspect-square" wire:key="reg-stamp-{{ $index }}">
                                 <img src="{{ $stamp }}" class="w-full h-full object-cover rounded border-2 border-white shadow-sm">
-                                <button type="button" wire:click="removeStamp({{ $index }})" class="absolute -top-2 -right-2 bg-pc-red text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md border-2 border-white">X</button>
+                                <div class="absolute -top-2 -right-2 flex gap-1">
+                                    <button type="button" onclick="rotateStampData({{ $index }})" class="bg-pc-blue text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md border-2 border-white" title="Rotate">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                    <button type="button" wire:click="removeStamp({{ $index }})" class="bg-pc-red text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md border-2 border-white" title="Remove">X</button>
+                                </div>
                             </div>
                          @endforeach
                          
@@ -150,7 +164,7 @@
                     <div wire:ignore
                          x-data="{ dateValue: @entangle('tanggal_terima') }"
                          x-init="
-                            flatpickr($refs.input, {
+                            const fp = flatpickr($refs.input, {
                                 defaultDate: dateValue,
                                 altInput: true,
                                 altFormat: 'd/m/Y',
@@ -161,13 +175,23 @@
                                     $wire.set('tanggal_terima', dateStr);
                                     instance.element.setAttribute('data-date-value', dateStr);
                                 },
+                                onValueUpdate: function(selectedDates, dateStr, instance) {
+                                    dateValue = dateStr;
+                                    $wire.set('tanggal_terima', dateStr);
+                                    instance.element.setAttribute('data-date-value', dateStr);
+                                },
                                 onClose: function(selectedDates, dateStr, instance) {
 
                                 }
                             });
+                            fp.altInput.addEventListener('blur', () => {
+                                if (fp.input.value) {
+                                    $wire.set('tanggal_terima', fp.input.value);
+                                }
+                            });
                          ">
                         <label class="vintage-label">Received Date</label>
-                        <input x-ref="input" type="text" id="tanggalTerima" x-model="dateValue" class="vintage-input w-full">
+                        <input x-ref="input" type="text" id="tanggalTerima" class="vintage-input w-full">
                         <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
                     </div>
                     <div>
@@ -223,7 +247,6 @@
         </div>
     </div>
 
-    <!-- Scanner Modal (Hidden by default) -->
     <div id="scannerModal" class="fixed inset-0 z-50 bg-black flex flex-col hidden">
         <div class="flex-1 relative flex items-center justify-center overflow-hidden bg-black">
              <canvas id="scannerCanvas" class="max-w-full max-h-full touch-none"></canvas>
@@ -289,6 +312,30 @@
             if(component) component.set('img_' + mode + '_data', newData);
         };
         img.src = preview;
+    };
+
+    window.rotateStampData = (index) => {
+        const component = getComponent();
+        if (!component) return;
+        
+        const stamps = component.get('stamp_data') || [];
+        const base64 = stamps[index];
+        if (!base64) return;
+
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.height; canvas.height = img.width;
+            const ctx = canvas.getContext('2d');
+            ctx.translate(canvas.width/2, canvas.height/2);
+            ctx.rotate(90 * Math.PI / 180);
+            ctx.drawImage(img, -img.width/2, -img.height/2);
+            const newData = canvas.toDataURL('image/jpeg', 0.85);
+            
+            stamps[index] = newData;
+            component.set('stamp_data', stamps);
+        };
+        img.src = base64;
     };
     
     window.closeScanner = () => document.getElementById('scannerModal').classList.add('hidden');

@@ -1,8 +1,8 @@
-const CACHE_NAME = 'postcrossing-v4';
+const CACHE_NAME = 'postcrossing-v7';
 const ASSETS = [
-    '/logo-app.png',
+    '/logo.png',
     '/vendor/bootstrap-icons/bootstrap-icons.css',
-    '/offline.html' // Optional: Create an offline page
+    '/offline.html'
 ];
 
 self.addEventListener('install', (event) => {
@@ -28,7 +28,20 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    // Navigation requests (HTML pages) -> Network Only (Audit: User reported stale data)
+    const url = new URL(event.request.url);
+
+    // Cache-first for static assets
+    const isAsset = ASSETS.some(asset => url.pathname === asset);
+    if (isAsset) {
+        event.respondWith(
+            caches.match(event.request).then((response) => {
+                return response || fetch(event.request);
+            })
+        );
+        return;
+    }
+
+    // Network-only with offline fallback for navigation
     if (event.request.mode === 'navigate') {
         event.respondWith(
             fetch(event.request).catch(() => {
@@ -38,10 +51,5 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Static Assets -> Cache First, then Network
-    event.respondWith(
-        caches.match(event.request).then((response) => {
-            return response || fetch(event.request);
-        })
-    );
+    // Bypass for dynamic requests (Livewire/API)
 });

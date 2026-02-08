@@ -35,8 +35,8 @@
         .id-link { font-weight: bold; color: #2c3e50; text-decoration: none; }
         .id-link:hover { text-decoration: underline; color: #e63946; }
         
-        .thumb-img { width: 45px; height: 30px; object-fit: cover; border-radius: 3px; border: 1px solid #ccc; cursor: pointer; transition: transform 0.2s; }
-        .thumb-img:hover { transform: scale(3); z-index: 10; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .thumb-img { width: 50px; height: auto; max-height: 50px; border-radius: 3px; border: 1px solid #ccc; cursor: pointer; transition: transform 0.2s; background: #eee; }
+        .thumb-img:hover { transform: scale(3.5); z-index: 100; position: relative; box-shadow: 0 5px 20px rgba(0,0,0,0.4); outline: 2px solid white; }
 
         .btn-action { color: #666; margin-right: 5px; font-size: 1rem; transition: color 0.2s; }
         .btn-action:hover { color: #000; }
@@ -47,18 +47,18 @@
     <div class="filter-inline">
         <div class="filter-group">
             <label>Sent Date</label>
-            <div class="flex items-center gap-2">
-                <input type="date" wire:model.live="start_kirim" class="filter-control">
+            <div class="flex items-center gap-2" wire:ignore>
+                <input type="text" x-data x-init="flatpickr($el, { altInput: true, altFormat: 'd/m/Y', dateFormat: 'Y-m-d', onChange: (d, str) => $wire.set('start_kirim', str) })" value="{{ $start_kirim }}" class="filter-control datepicker-active" placeholder="DD/MM/YYYY">
                 <span class="text-gray-400">-</span>
-                <input type="date" wire:model.live="end_kirim" class="filter-control">
+                <input type="text" x-data x-init="flatpickr($el, { altInput: true, altFormat: 'd/m/Y', dateFormat: 'Y-m-d', onChange: (d, str) => $wire.set('end_kirim', str) })" value="{{ $end_kirim }}" class="filter-control datepicker-active" placeholder="DD/MM/YYYY">
             </div>
         </div>
         <div class="filter-group">
             <label>Received Date</label>
-            <div class="flex items-center gap-2">
-                <input type="date" wire:model.live="start_terima" class="filter-control">
+            <div class="flex items-center gap-2" wire:ignore>
+                <input type="text" x-data x-init="flatpickr($el, { altInput: true, altFormat: 'd/m/Y', dateFormat: 'Y-m-d', onChange: (d, str) => $wire.set('start_terima', str) })" value="{{ $start_terima }}" class="filter-control datepicker-active" placeholder="DD/MM/YYYY">
                 <span class="text-gray-400">-</span>
-                <input type="date" wire:model.live="end_terima" class="filter-control">
+                <input type="text" x-data x-init="flatpickr($el, { altInput: true, altFormat: 'd/m/Y', dateFormat: 'Y-m-d', onChange: (d, str) => $wire.set('end_terima', str) })" value="{{ $end_terima }}" class="filter-control datepicker-active" placeholder="DD/MM/YYYY">
             </div>
         </div>
         <div class="filter-group">
@@ -147,7 +147,9 @@
                         <td>
                             <span class="badge">{{ $this->getDuration($row->tanggal_kirim, $row->tanggal_terima) }}</span>
                         </td>
-                        <td>{{ number_format($row->jarak_hitung) }} km</td>
+                        <td>
+                            {{ number_format($row->jarak_hitung) }} km
+                        </td>
                         <td style="max-width: 250px; word-wrap: break-word;" title="{{ $row->deskripsi_gambar }}">
                             {{ $row->deskripsi_gambar }}
                         </td>

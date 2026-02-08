@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Models\Postcard;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -29,7 +28,7 @@ class DashboardTable extends Component
 
     public $filter_status = '';
 
-    public $sort = 'tanggal_kirim'; // default
+    public $sort = 'tanggal_kirim';
 
     public $perPage = 20;
 
@@ -60,87 +59,79 @@ class DashboardTable extends Component
             $query->whereBetween('tanggal_terima', [$this->start_terima, $this->end_terima]);
         }
 
-        // SQL JOIN for Country Search
+        // Filters
         if ($this->filter_negara) {
-            $searchTerm = $this->filter_negara;
-            $query->whereHas('country', function ($q) use ($searchTerm) {
-                $q->where('nama_indonesia', 'like', '%'.$searchTerm.'%')
-                    ->orWhere('nama_inggris', 'like', '%'.$searchTerm.'%');
+            $searchTerm = '%'.$this->filter_negara.'%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereHas('country', function ($sq) use ($searchTerm) {
+                    $sq->where('nama_indonesia', 'like', $searchTerm)
+                        ->orWhere('nama_inggris', 'like', $searchTerm);
+                })
+                    ->orWhereHas('contact', function ($sq) use ($searchTerm) {
+                        $sq->where('nama_kontak', 'like', $searchTerm)
+                            ->orWhere('alamat', 'like', $searchTerm)
+                            ->orWhere('nomor_telepon', 'like', $searchTerm);
+                    })
+                    ->orWhere('postcard_id', 'like', $searchTerm)
+                    ->orWhere('deskripsi_gambar', 'like', $searchTerm);
             });
         }
 
-        if ($this->filter_kategori === 'postcrossing') {
-            $query->where('postcard_id', 'like', '%-%');
-        } elseif ($this->filter_kategori === 'swap') {
-            $query->where(function ($q) {
-                $q->where('postcard_id', 'not like', '%-%')
-                    ->orWhereNull('postcard_id')
-                    ->orWhere('postcard_id', '');
-            });
-        }
-
-        if ($this->filter_status === 'arrived') {
-            $query->whereNotNull('tanggal_terima')->where('tanggal_terima', '!=', '0000-00-00');
-        } elseif ($this->filter_status === 'travelling') {
-            $query->where(function ($q) {
-                $q->whereNull('tanggal_terima')->orWhere('tanggal_terima', '0000-00-00');
-            });
-        }
-
-        $allRecords = $query->get();
-
-        if ($this->filter_negara) {
-            $searchTerm = strtolower($this->filter_negara);
-            $allRecords = $allRecords->filter(function ($row) use ($searchTerm) {
-                // Country search already handled by SQL whereHas, but adding others here
-                return str_contains(strtolower((string) $row->contact?->nama_kontak), $searchTerm) ||
-                       str_contains(strtolower((string) $row->contact?->alamat), $searchTerm) ||
-                       str_contains(strtolower((string) $row->contact?->nomor_telepon), $searchTerm) ||
-                       str_contains(strtolower((string) $row->postcard_id), $searchTerm) ||
-                       str_contains(strtolower((string) $row->deskripsi_gambar), $searchTerm);
-            });
-        }
-
+        // Handle Sorting
         if (str_starts_with($this->sort, 'jarak')) {
-            $allRecords->each(function ($row) use ($myLat, $myLng) {
-                $row->jarak_hitung = ($row->contact?->lat && $row->contact?->lng && is_numeric($row->contact->lat))
-                    ? $this->calculateDistance($myLat, $myLng, (float) $row->contact->lat, (float) $row->contact->lng)
-                    : 0;
+            $allRows = $query->get()->each(function ($row) use ($myLat, $myLng) {
+                if ($row->contact && $row->contact->lat && $row->contact->lng) {
+                    $row->jarak_hitung = $this->calculateDistance($myLat, $myLng, $row->contact->lat, $row->contact->lng);
+                } else {
+                    $row->jarak_hitung = 0;
+                }
             });
 
             if ($this->sort === 'jarak_desc') {
-                $allRecords = $allRecords->sortByDesc('jarak_hitung');
+                $allRows = $allRows->sortByDesc('jarak_hitung');
             } else {
-                $allRecords = $allRecords->sortBy('jarak_hitung');
+                $allRows = $allRows->sort(function ($a, $b) {
+                    if ($a->jarak_hitung == 0 && $b->jarak_hitung == 0) {
+                        return 0;
+                    }
+                    if ($a->jarak_hitung == 0) {
+                        return 1;
+                    }
+                    if ($b->jarak_hitung == 0) {
+                        return -1;
+                    }
+
+                    return $a->jarak_hitung <=> $b->jarak_hitung;
+                });
             }
-        } elseif ($this->sort === 'tanggal_terima') {
-            $allRecords = $allRecords->sortByDesc('tanggal_kirim')
-                ->sortByDesc('tanggal_terima');
+
+            $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage();
+            $rows = new \Illuminate\Pagination\LengthAwarePaginator(
+                $allRows->forPage($currentPage, $this->perPage)->values(),
+                $allRows->count(),
+                $this->perPage,
+                $currentPage,
+                ['path' => request()->url(), 'query' => request()->query()]
+            );
         } else {
-            // Default: tanggal_kirim DESC
-            $allRecords = $allRecords->sortByDesc('tanggal_kirim');
-        }
+            if ($this->sort === 'tanggal_terima') {
+                $query->orderByDesc('tanggal_terima')->orderByDesc('tanggal_kirim');
+            } else {
+                $query->orderByDesc('tanggal_kirim')->orderByDesc('id');
+            }
 
-        $page = $this->getPage();
-        $rows = new LengthAwarePaginator(
-            $allRecords->forPage($page, $this->perPage),
-            $allRecords->count(),
-            $this->perPage,
-            $page,
-            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]
-        );
+            $rows = $query->paginate($this->perPage);
 
-        // Ensure distance is calculated for result page if not done in sort step
-        if (! str_starts_with($this->sort, 'jarak')) {
             $rows->getCollection()->each(function ($row) use ($myLat, $myLng) {
-                $row->jarak_hitung = ($row->contact?->lat && $row->contact?->lng && is_numeric($row->contact->lat))
-                    ? $this->calculateDistance($myLat, $myLng, (float) $row->contact->lat, (float) $row->contact->lng)
-                    : 0;
+                if ($row->contact && $row->contact->lat && $row->contact->lng) {
+                    $row->jarak_hitung = $this->calculateDistance($myLat, $myLng, $row->contact->lat, $row->contact->lng);
+                } else {
+                    $row->jarak_hitung = 0;
+                }
             });
         }
 
-        // Grand Total based on PHP-filtered records
-        $totalCost = $allRecords->sum('biaya_prangko');
+        $totalCost = Postcard::where('user_id', $user_id)->where('type', $this->type)->sum('biaya_prangko');
 
         return view('livewire.dashboard-table', [
             'rows' => $rows,

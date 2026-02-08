@@ -86,10 +86,6 @@
         .btn-rot-stamp { position: absolute; top: -8px; left: -8px; background: var(--pc-blue); color: white; border-radius: 50%; width: 24px; height: 24px; text-align: center; line-height: 20px; border: 2px solid white; font-size: 16px; cursor: pointer; z-index: 5; }
     </style>
 
-    <!-- Scripts -->
-    <script src="{{ asset('vendor/opencv/opencv.js') }}" type="text/javascript"></script>
-    <script src="{{ asset('vendor/jscanify/jscanify.min.js') }}"></script>
-
     <div class="container airmail-border">
         <div class="form-inner">
             <div class="header">
@@ -113,7 +109,7 @@
                     <div class="form-group" wire:ignore
                          x-data="{ dateValue: @entangle('tanggal_kirim') }"
                          x-init="
-                            flatpickr($refs.input, {
+                            const fp = flatpickr($refs.input, {
                                 defaultDate: dateValue,
                                 altInput: true,
                                 altFormat: 'd/m/Y',
@@ -125,20 +121,31 @@
                                     instance.element.setAttribute('data-date-value', dateStr);
                                     getAutoKurs(dateStr, 'sent');
                                 },
+                                onValueUpdate: function(selectedDates, dateStr, instance) {
+                                    dateValue = dateStr;
+                                    $wire.set('tanggal_kirim', dateStr);
+                                    instance.element.setAttribute('data-date-value', dateStr);
+                                },
                                 onClose: function(selectedDates, dateStr, instance) {
                                     getAutoKurs(dateStr, 'sent');
                                 }
                             });
+                            fp.altInput.addEventListener('blur', () => {
+                                if (fp.input.value) {
+                                    $wire.set('tanggal_kirim', fp.input.value);
+                                    getAutoKurs(fp.input.value, 'sent');
+                                }
+                            });
                          ">
                         <label class="vintage-label">Sent Date</label>
-                        <input x-ref="input" type="text" class="vintage-input" id="tgl_kirim" x-model="dateValue">
+                        <input x-ref="input" type="text" class="vintage-input" id="tgl_kirim">
                         <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
                         @error('tanggal_kirim') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
                     <div class="form-group" wire:ignore
                          x-data="{ dateValue: @entangle('tanggal_terima') }"
                          x-init="
-                            flatpickr($refs.input, {
+                            const fp = flatpickr($refs.input, {
                                 defaultDate: dateValue,
                                 altInput: true,
                                 altFormat: 'd/m/Y',
@@ -149,13 +156,23 @@
                                     $wire.set('tanggal_terima', dateStr);
                                     instance.element.setAttribute('data-date-value', dateStr);
                                 },
+                                onValueUpdate: function(selectedDates, dateStr, instance) {
+                                    dateValue = dateStr;
+                                    $wire.set('tanggal_terima', dateStr);
+                                    instance.element.setAttribute('data-date-value', dateStr);
+                                },
                                 onClose: function(selectedDates, dateStr, instance) {
 
                                 }
                             });
+                            fp.altInput.addEventListener('blur', () => {
+                                if (fp.input.value) {
+                                    $wire.set('tanggal_terima', fp.input.value);
+                                }
+                            });
                          ">
                         <label class="vintage-label">Received Date</label>
-                        <input x-ref="input" type="text" class="vintage-input" id="tgl_terima" x-model="dateValue">
+                        <input x-ref="input" type="text" class="vintage-input" id="tgl_terima">
                         <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
                     </div>
 
@@ -223,10 +240,10 @@
                                 </div>
                             @endforeach
                             
-                            <!-- New Stamps Preview -->
                             @foreach($newStampsBase64 as $index => $base64)
                                 <div class="stamp-item" wire:key="new-stamp-{{ $index }}">
                                     <img src="{{ $base64 }}">
+                                    <button type="button" class="btn-rot-stamp" onclick="rotateNewStamp({{ $index }})"><i class="bi bi-arrow-clockwise"></i></button>
                                     <button type="button" class="btn-del-stamp" wire:click="removeNewStamp({{ $index }})">×</button>
                                 </div>
                             @endforeach
@@ -255,10 +272,8 @@
         </div>
     </div>
 
-    <!-- File Input -->
     <input type="file" id="hiddenInput" accept="image/*" style="display:none">
 
-    <!-- Scanner Modal -->
     <div id="scannerModal">
         <div class="scanner-body"><canvas id="scannerCanvas"></canvas></div>
         <div class="scanner-footer">
@@ -268,10 +283,14 @@
         </div>
     </div>
 
+    <script src="/js/opencv.js"></script>
+    <script src="/js/jscanify.min.js"></script>
     <script>
+    let activeMode = '';
+    let originalImage = new Image();
     const defaultPoints = [{x: 0.15, y: 0.15}, {x: 0.85, y: 0.15}, {x: 0.85, y: 0.85}, {x: 0.15, y: 0.85}];
-    const scanner = new jscanify();
-    let activeMode = '', originalImage = new Image();
+    let scanner;
+    try { scanner = new jscanify(); } catch(e) { console.error("jscanify load error:", e); }
     const canvas = document.getElementById('scannerCanvas'), ctx = canvas.getContext('2d');
     let points = [], draggingIndex = -1;
         const fileInput = document.getElementById('hiddenInput');

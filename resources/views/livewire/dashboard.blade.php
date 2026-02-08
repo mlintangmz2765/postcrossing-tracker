@@ -259,12 +259,7 @@
             dashboardMap = new google.maps.Map(document.getElementById('dashboard-map'), {
                 zoom: 2,
                 center: { lat: 20, lng: 10 },
-                streetViewControl: false,
-                styles: [
-                    { "elementType": "geometry", "stylers": [{ "color": "#ebe3cd" }] },
-                    { "elementType": "labels.text.fill", "stylers": [{ "color": "#523735" }] },
-                    { "featureType": "water", "elementType": "geometry.fill", "stylers": [{ "color": "#b9d3c2" }] }
-                ]
+                streetViewControl: false
             });
 
             const coordsTracker = {};
