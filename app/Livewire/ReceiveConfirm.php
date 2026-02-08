@@ -133,7 +133,7 @@ class ReceiveConfirm extends Component
             Mail::send('emails.postcard-arrived', [
                 'ownerName' => $ownerName,
                 'postcard' => $this->postcard,
-                'senderMessage' => $senderMessage
+                'senderMessage' => $senderMessage,
             ], function ($message) use ($ownerEmail, $fromAddress, $fromName, $subject) {
                 $message->to($ownerEmail)
                     ->from($fromAddress, $fromName)
