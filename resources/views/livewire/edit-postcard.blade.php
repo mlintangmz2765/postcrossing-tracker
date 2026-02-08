@@ -1,4 +1,8 @@
-<div class="edit-wrapper paper-texture" data-wire-id="{{ $this->getId() }}">
+<div class="edit-wrapper paper-texture" x-data="{ 
+    new_stamp_previews: @entangle('newStampsBase64').defer,
+    biaya_prangko: @entangle('biaya_prangko'),
+    isScannerOpen: false
+}" data-wire-id="{{ $this->getId() }}">
     <style>
         .edit-wrapper {
             min-height: 100vh;
@@ -86,10 +90,6 @@
         .btn-rot-stamp { position: absolute; top: -8px; left: -8px; background: var(--pc-blue); color: white; border-radius: 50%; width: 24px; height: 24px; text-align: center; line-height: 20px; border: 2px solid white; font-size: 16px; cursor: pointer; z-index: 5; }
     </style>
 
-    <!-- Scripts -->
-    <script src="{{ asset('vendor/opencv/opencv.js') }}" type="text/javascript"></script>
-    <script src="{{ asset('vendor/jscanify/jscanify.min.js') }}"></script>
-
     <div class="container airmail-border">
         <div class="form-inner">
             <div class="header">
@@ -99,21 +99,35 @@
 
             <form wire:submit.prevent="update">
                 <div class="form-grid">
-                    <div class="form-group"><label class="vintage-label">Postcard ID</label><input type="text" class="vintage-input" wire:model="postcard_id" value="{{ $postcard_id }}" placeholder="ID-123456">
+                    <div class="form-group"><label class="vintage-label">Postcard ID</label><input type="text" class="vintage-input" wire:model="postcard_id" value="{{ $postcard_id }}" placeholder="e.g. ID-123456">
                         @error('postcard_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
-                    <div class="form-group"><label class="vintage-label">Contact Name</label><input type="text" class="vintage-input" wire:model="nama_kontak" value="{{ $nama_kontak }}" placeholder="Recipient Name"></div>
-                    <div class="form-group"><label class="vintage-label">Country</label><input type="text" class="vintage-input" id="negara" wire:model="negara" value="{{ $negara }}" @blur="getCurrencyFromCountry()" placeholder="Origin Country">
+                    <div class="form-group"><label class="vintage-label">Contact Name</label><input type="text" class="vintage-input" wire:model="nama_kontak" value="{{ $nama_kontak }}" placeholder="Addressee Name"></div>
+                    <div class="form-group"><label class="vintage-label">Country</label><input type="text" class="vintage-input" id="negara" wire:model="negara" value="{{ $negara }}" @blur="getCurrencyFromCountry()" placeholder="Where is it from/to?">
                         @error('negara') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
-                    <div class="form-group"><label class="vintage-label">Phone Number</label><input type="text" class="vintage-input" wire:model="nomor_telepon" value="{{ $nomor_telepon }}" placeholder="+00 000 0000"></div>
-                    <div class="form-group full"><label class="vintage-label">Mailing Address</label><textarea class="vintage-input" wire:model="alamat" rows="3" placeholder="Full postal address...">{{ $alamat }}</textarea>
+                    <div class="form-group"><label class="vintage-label">Phone Number</label><input type="text" class="vintage-input" wire:model="nomor_telepon" value="{{ $nomor_telepon }}" placeholder="e.g. +62 812..."></div>
+                    <div class="form-group full">
+                        <div class="flex justify-between items-end mb-1">
+                            <label class="vintage-label mb-0">Mailing Address</label>
+                            <button type="button" wire:click="refreshGeocoding" class="text-xs text-pc-blue hover:underline font-bold" style="font-family: 'Special Elite';">
+                                <i class="bi bi-geo-alt-fill"></i> REFRESH LOCATION
+                            </button>
+                        </div>
+                        <textarea class="vintage-input" wire:model="alamat" rows="3" placeholder="Write the full address here...">{{ $alamat }}</textarea>
                         @error('alamat') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        
+                        @if (session()->has('geo_success'))
+                            <div class="text-green-600 text-xs mt-1 font-bold"><i class="bi bi-check-circle"></i> {{ session('geo_success') }}</div>
+                        @endif
+                        @if (session()->has('geo_error'))
+                            <div class="text-red-600 text-xs mt-1 font-bold"><i class="bi bi-exclamation-circle"></i> {{ session('geo_error') }}</div>
+                        @endif
                     </div>
                     <div class="form-group" wire:ignore
                          x-data="{ dateValue: @entangle('tanggal_kirim') }"
                          x-init="
-                            flatpickr($refs.input, {
+                            const fp = flatpickr($refs.input, {
                                 defaultDate: dateValue,
                                 altInput: true,
                                 altFormat: 'd/m/Y',
@@ -125,20 +139,31 @@
                                     instance.element.setAttribute('data-date-value', dateStr);
                                     getAutoKurs(dateStr, 'sent');
                                 },
+                                onValueUpdate: function(selectedDates, dateStr, instance) {
+                                    dateValue = dateStr;
+                                    $wire.set('tanggal_kirim', dateStr);
+                                    instance.element.setAttribute('data-date-value', dateStr);
+                                },
                                 onClose: function(selectedDates, dateStr, instance) {
                                     getAutoKurs(dateStr, 'sent');
                                 }
                             });
+                            fp.altInput.addEventListener('blur', () => {
+                                if (fp.input.value) {
+                                    $wire.set('tanggal_kirim', fp.input.value);
+                                    getAutoKurs(fp.input.value, 'sent');
+                                }
+                            });
                          ">
                         <label class="vintage-label">Sent Date</label>
-                        <input x-ref="input" type="text" class="vintage-input" id="tgl_kirim" x-model="dateValue">
+                        <input x-ref="input" type="text" class="vintage-input" id="tgl_kirim">
                         <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
                         @error('tanggal_kirim') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
                     <div class="form-group" wire:ignore
                          x-data="{ dateValue: @entangle('tanggal_terima') }"
                          x-init="
-                            flatpickr($refs.input, {
+                            const fp = flatpickr($refs.input, {
                                 defaultDate: dateValue,
                                 altInput: true,
                                 altFormat: 'd/m/Y',
@@ -149,13 +174,23 @@
                                     $wire.set('tanggal_terima', dateStr);
                                     instance.element.setAttribute('data-date-value', dateStr);
                                 },
+                                onValueUpdate: function(selectedDates, dateStr, instance) {
+                                    dateValue = dateStr;
+                                    $wire.set('tanggal_terima', dateStr);
+                                    instance.element.setAttribute('data-date-value', dateStr);
+                                },
                                 onClose: function(selectedDates, dateStr, instance) {
 
                                 }
                             });
+                            fp.altInput.addEventListener('blur', () => {
+                                if (fp.input.value) {
+                                    $wire.set('tanggal_terima', fp.input.value);
+                                }
+                            });
                          ">
                         <label class="vintage-label">Received Date</label>
-                        <input x-ref="input" type="text" class="vintage-input" id="tgl_terima" x-model="dateValue">
+                        <input x-ref="input" type="text" class="vintage-input" id="tgl_terima">
                         <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
                     </div>
 
@@ -163,8 +198,8 @@
                     <div class="form-group full" wire:ignore>
                         <label class="vintage-label">Currency & Rate</label>
                         <div style="display:flex; gap:10px;">
-                            <input type="number" id="nilai_asli" class="vintage-input" wire:model="nilai_asal" value="{{ $nilai_asal }}" step="0.01" placeholder="Val" oninput="hitungIDR()">
-                            <input type="text" id="mata_uang" class="vintage-input uppercase" wire:model="mata_uang" value="{{ $mata_uang }}" style="width:150px" @blur="getAutoKurs()" placeholder="CUR">
+                            <input type="number" id="nilai_asli" class="vintage-input" wire:model="nilai_asal" value="{{ $nilai_asal }}" step="0.01" placeholder="0.00" oninput="hitungIDR()">
+                            <input type="text" id="mata_uang" class="vintage-input uppercase" wire:model="mata_uang" value="{{ $mata_uang }}" style="width:150px" @blur="getAutoKurs()" placeholder="USD/EUR/etc">
                             <input type="number" id="kurs_idr" class="vintage-input" wire:model="kurs_idr" value="{{ $kurs_idr }}" step="0.01" oninput="hitungIDR()">
                         </div>
 
@@ -212,7 +247,7 @@
                         </div>
                     </div>
 
-                    <div class="full" style="border-top: 2px dashed #eee; padding-top: 25px; margin-top: 15px;">
+                    <div class="full" style="border-top: 2px dashed #eee; padding-top: 25px; margin-top: 15px;" wire:ignore>
                         <label class="vintage-label">Philately Collection (Stamps)</label>
                         <div class="stamp-gallery">
                             @foreach($existingStamps as $st)
@@ -223,13 +258,13 @@
                                 </div>
                             @endforeach
                             
-                            <!-- New Stamps Preview -->
-                            @foreach($newStampsBase64 as $index => $base64)
-                                <div class="stamp-item" wire:key="new-stamp-{{ $index }}">
-                                    <img src="{{ $base64 }}">
-                                    <button type="button" class="btn-del-stamp" wire:click="removeNewStamp({{ $index }})">×</button>
+                            <template x-for="(stamp, index) in new_stamp_previews" :key="'new-preview-'+index">
+                                <div class="stamp-item">
+                                    <img :src="stamp">
+                                    <button type="button" class="btn-rot-stamp" @click="rotateNewStampPreview(index, stamp)"><i class="bi bi-arrow-clockwise"></i></button>
+                                    <button type="button" class="btn-del-stamp" @click="removeNewStampPreview(index)">×</button>
                                 </div>
-                            @endforeach
+                            </template>
                         </div>
                         
                         <div class="upload-card" onclick="openScanner('stamp')" style="border-style: dotted;">
@@ -238,7 +273,10 @@
                     </div>
                 </div>
 
-                <button type="submit" class="vintage-btn w-full mt-8">CONFIRM LOG UPDATES</button>
+                <button type="submit" class="vintage-btn w-full mt-8" wire:loading.attr="disabled" wire:target="update">
+                    <span wire:loading.remove wire:target="update">CONFIRM LOG UPDATES</span>
+                    <span wire:loading wire:target="update">UPDATING...</span>
+                </button>
                 
                 <div class="flex justify-between items-center mt-8 pt-6 border-t-2 border-dashed border-gray-100">
                     <a href="{{ route('view', ['id' => $id]) }}" style="color:#94a3b8; text-decoration:none; font-family: 'Special Elite'; font-size: 0.9rem;">
@@ -255,23 +293,27 @@
         </div>
     </div>
 
-    <!-- File Input -->
     <input type="file" id="hiddenInput" accept="image/*" style="display:none">
 
-    <!-- Scanner Modal -->
-    <div id="scannerModal">
-        <div class="scanner-body"><canvas id="scannerCanvas"></canvas></div>
-        <div class="scanner-footer">
-            <button type="button" class="btn-scan uppercase" style="background:#444" onclick="closeScanner()">Cancel</button>
-            <button type="button" class="btn-scan uppercase" style="background:#2563eb" onclick="rotateSource()"><i class="bi bi-arrow-clockwise"></i> Rotate</button>
-            <button type="button" id="btnCropEdit" class="btn-scan uppercase" style="background:var(--success)">Crop & Use</button>
+    <div wire:ignore>
+        <div id="scannerModal" x-show="isScannerOpen" style="display: none; position: fixed; z-index: 10000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.95); flex-direction: column;">
+            <div class="scanner-body"><canvas id="scannerCanvas"></canvas></div>
+            <div class="scanner-footer">
+                <button type="button" class="btn-scan uppercase" style="background:#444" onclick="closeScanner()">Cancel</button>
+                <button type="button" class="btn-scan uppercase" style="background:#2563eb" onclick="rotateSource()"><i class="bi bi-arrow-clockwise"></i> Rotate</button>
+                <button type="button" id="btnCropEdit" class="btn-scan uppercase" style="background:var(--success)">Crop & Use</button>
+            </div>
         </div>
     </div>
 
+    <script src="/js/opencv.js"></script>
+    <script src="/js/jscanify.min.js"></script>
     <script>
+    let activeMode = '';
+    let originalImage = new Image();
     const defaultPoints = [{x: 0.15, y: 0.15}, {x: 0.85, y: 0.15}, {x: 0.85, y: 0.85}, {x: 0.15, y: 0.85}];
-    const scanner = new jscanify();
-    let activeMode = '', originalImage = new Image();
+    let scanner;
+    try { scanner = new jscanify(); } catch(e) { console.error("jscanify load error:", e); }
     const canvas = document.getElementById('scannerCanvas'), ctx = canvas.getContext('2d');
     let points = [], draggingIndex = -1;
         const fileInput = document.getElementById('hiddenInput');
@@ -286,7 +328,10 @@
                 const reader = new FileReader();
                 reader.onload = (ev) => {
                     originalImage.onload = () => {
-                        document.getElementById('scannerModal').style.display = 'flex';
+                        const alEl = document.querySelector('.edit-wrapper');
+                        if (alEl && window.Alpine) {
+                            window.Alpine.$data(alEl).isScannerOpen = true;
+                        }
                         autoDetect();
                     };
                     originalImage.src = ev.target.result;
@@ -354,7 +399,6 @@
             const component = getComponent();
             if(component) component.set(mode === 'front' ? 'newFotoDepanBase64' : 'newFotoBelakangBase64', null);
             
-            // Reset input so it can be re-uploaded immediately
             const fileInput = document.getElementById('hiddenInput');
             if (fileInput) fileInput.value = "";
         };
@@ -375,7 +419,7 @@
                 const rootEl = document.querySelector('.edit-wrapper');
                 const componentId = rootEl ? rootEl.getAttribute('data-wire-id') : null;
                 const component = Livewire.find(componentId);
-                if(component) component.set(mode === 'front' ? 'newFotoDepanBase64' : 'newFotoBelakangBase64', dataUrl);
+                if(component) component.set(mode === 'front' ? 'newFotoDepanBase64' : 'newFotoBelakangBase64', dataUrl, true);
             };
             img.src = imgEl.src;
         };
@@ -416,6 +460,7 @@
                 const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.85);
 
                 const rootEl = document.querySelector('.edit-wrapper');
+                const alData = window.Alpine ? window.Alpine.$data(rootEl) : null;
                 const componentId = rootEl ? rootEl.getAttribute('data-wire-id') : null;
                 const component = Livewire.find(componentId);
 
@@ -431,9 +476,15 @@
                         document.getElementById('p_back').style.display = 'block';
                         document.getElementById('btn-actions-back').style.display = 'flex';
                     } else if (activeMode === 'stamp') {
-                        let currentStamps = component.get('newStampsBase64') || [];
-                        currentStamps.push(dataUrl);
-                        component.set('newStampsBase64', currentStamps);
+                        const alEl = document.querySelector('.edit-wrapper');
+                        const alData = alEl && window.Alpine ? window.Alpine.$data(alEl) : null;
+                        if (alData) {
+                            if (!Array.isArray(alData.new_stamp_previews)) {
+                                alData.new_stamp_previews = [];
+                            }
+                            alData.new_stamp_previews.push(dataUrl);
+                            component.set('newStampsBase64', alData.new_stamp_previews, true);
+                        }
                     }
                 }
                 
@@ -442,8 +493,51 @@
             } catch(e) { console.error(e); }
         };
 
+        window.rotateNewStampPreview = (index, base64) => {
+            const img = new Image();
+            img.onload = () => {
+                const can = document.createElement('canvas');
+                can.width = img.height; can.height = img.width;
+                const c = can.getContext('2d');
+                c.translate(can.width/2, can.height/2);
+                c.rotate(90 * Math.PI / 180);
+                c.drawImage(img, -img.width/2, -img.height/2);
+                const dataUrl = can.toDataURL('image/jpeg', 0.85);
+                
+                const rootEl = document.querySelector('.edit-wrapper');
+                const alData = window.Alpine ? window.Alpine.$data(rootEl) : null;
+                if (alData) alData.new_stamp_previews[index] = dataUrl;
 
-        function closeScanner() { document.getElementById('scannerModal').style.display = 'none'; }
+                const componentId = rootEl ? rootEl.getAttribute('data-wire-id') : null;
+                const component = Livewire.find(componentId);
+                if (component) {
+                    const alData = window.Alpine ? window.Alpine.$data(rootEl) : null;
+                    if (alData) {
+                        alData.new_stamp_previews[index] = dataUrl;
+                        component.set('newStampsBase64', alData.new_stamp_previews, true);
+                    }
+                }
+            };
+            img.src = base64;
+        };
+
+        window.removeNewStampPreview = (index) => {
+            const rootEl = document.querySelector('.edit-wrapper');
+            const alData = window.Alpine ? window.Alpine.$data(rootEl) : null;
+            if (alData) {
+                alData.new_stamp_previews.splice(index, 1);
+                const comp = getComponent();
+                if (comp) comp.set('newStampsBase64', alData.new_stamp_previews, true);
+            }
+        };
+
+
+        function closeScanner() { 
+            const alEl = document.querySelector('.edit-wrapper');
+            if (alEl && window.Alpine) {
+                window.Alpine.$data(alEl).isScannerOpen = false;
+            }
+        }
 
         function getComponent() {
             if (window.livewire_edit_id) {
@@ -529,12 +623,26 @@
            if (!nilaiInput) return;
            
            const val = parseFloat(nilaiInput.value || 0);
-           if (val <= 0) return;
+           const cur = document.getElementById('mata_uang')?.value || 'IDR';
            
-           const rate = parseFloat(document.getElementById('kurs_idr')?.value || 1);
+           let total;
+           if (cur === 'IDR') {
+               total = Math.round(val);
+               const rateInput = document.getElementById('kurs_idr');
+               if (rateInput) rateInput.value = "1.00";
+               component.set('kurs_idr', 1, true);
+           } else {
+               const rate = parseFloat(document.getElementById('kurs_idr')?.value || 1);
+               total = Math.round(val * rate);
+           }
+           
            const totalDisplay = document.getElementById('biaya_prangko');
-           const total = Math.round(val * rate);
            if (totalDisplay) totalDisplay.value = total;
+
+           const alEl = document.querySelector('.edit-wrapper');
+           if (alEl && window.Alpine) {
+               window.Alpine.$data(alEl).biaya_prangko = total;
+           }
            component.set('biaya_prangko', total);
         }
 

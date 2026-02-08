@@ -1,1 +1,127 @@
-<div class="flex items-center justify-center min-h-screen bg-gray-100"><div class="text-center p-8 bg-white rounded-lg shadow-lg"><h1 class="text-4xl font-bold text-gray-800 mb-4">You are Offline</h1><p class="text-gray-600">Please check your internet connection.</p><button onclick="window.location.reload()" class="mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Try Again</button></div></div>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Postcard Tracker</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Quicksand:wght@400;600&display=swap');
+
+        body {
+            background-color: #fdf6e3;
+            background-image:
+                linear-gradient(#e5e5e5 1.1px, transparent 1.1px),
+                linear-gradient(90deg, #e5e5e5 1.1px, transparent 1.1px);
+            background-size: 30px 30px;
+            font-family: 'Quicksand', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .offline-card {
+            background: #fff;
+            padding: 40px;
+            border: 1px solid #ddd;
+            box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.1);
+            max-width: 450px;
+            text-align: center;
+            position: relative;
+            transform: rotate(-1deg);
+        }
+
+        .offline-card::before {
+            content: "";
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 25px;
+            background: rgba(255, 221, 87, 0.5);
+            /* Tape look */
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-family: 'Special Elite', cursive;
+            color: #e63946;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 0px #333;
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #64748b;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .stamp-decor {
+            width: 80px;
+            height: 90px;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-family: 'Special Elite';
+            color: #ccc;
+            font-size: 0.8rem;
+            transform: rotate(5deg);
+        }
+
+        .btn-retry {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-family: 'Special Elite', cursive;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px #457b9d;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-retry:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #457b9d;
+        }
+
+        .airmail-border {
+            border-bottom: 5px solid transparent;
+            border-image: repeating-linear-gradient(45deg,
+                    #e63946,
+                    #e63946 10px,
+                    transparent 10px,
+                    transparent 20px,
+                    #457b9d 20px,
+                    #457b9d 30px,
+                    transparent 30px,
+                    transparent 40px) 10;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="offline-card">
+        <div class="airmail-border"></div>
+        <div class="stamp-decor">NO<br>CONNECTION</div>
+        <h1>Connection Lost</h1>
+        <p>It seems you've wandered off the map. Please check your internet cable and try connecting again.</p>
+        <button class="btn-retry" onclick="window.location.reload()">Reconnect</button>
+    </div>
+
+</body>
+
+</html>

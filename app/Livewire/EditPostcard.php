@@ -35,24 +35,21 @@ class EditPostcard extends Component
 
     public $deskripsi_gambar;
 
-    // Currency fields (for received)
     public $nilai_asal;
 
     public $mata_uang = 'IDR';
 
     public $kurs_idr = 1;
 
-    // Images
     public $currentFotoDepan;
 
     public $currentFotoBelakang;
 
-    // JS Scanner will fill these Base64 strings
     public $newFotoDepanBase64;
 
     public $newFotoBelakangBase64;
 
-    public $newStampsBase64 = []; // Array of Base64 strings
+    public $newStampsBase64 = [];
 
     public $existingStamps = [];
 
@@ -97,7 +94,6 @@ class EditPostcard extends Component
         $data = Postcard::where('id', $this->id)->where('user_id', auth()->id())->first();
 
         if ($data) {
-            // Delete associated images
             if ($data->foto_depan && file_exists(public_path($data->foto_depan))) {
                 @unlink(public_path($data->foto_depan));
             }
@@ -105,7 +101,6 @@ class EditPostcard extends Component
                 @unlink(public_path($data->foto_belakang));
             }
 
-            // Delete stamps and their images
             $stamps = PostcardStamp::where('postcard_id', $this->id)->get();
             foreach ($stamps as $stamp) {
                 if (file_exists(public_path($stamp->foto_prangko))) {
@@ -114,7 +109,6 @@ class EditPostcard extends Component
             }
             PostcardStamp::where('postcard_id', $this->id)->delete();
 
-            // Delete postcard record
             $data->delete();
         }
 
@@ -169,6 +163,15 @@ class EditPostcard extends Component
 
         $postcard = Postcard::where('id', $this->id)->where('user_id', auth()->id())->firstOrFail();
 
+        if ($this->type === 'received') {
+            if ($this->mata_uang === 'IDR') {
+                $this->biaya_prangko = round((float) ($this->nilai_asal ?? 0));
+                $this->kurs_idr = 1;
+            } else {
+                $this->biaya_prangko = round((float) ($this->nilai_asal ?? 0) * (float) ($this->kurs_idr ?? 1));
+            }
+        }
+
         if ($this->newFotoDepanBase64) {
             if ($this->currentFotoDepan && file_exists(public_path($this->currentFotoDepan))) {
                 @unlink(public_path($this->currentFotoDepan));
@@ -193,24 +196,25 @@ class EditPostcard extends Component
             ]);
         }
 
-        // Fetch Country ID
         $country = \App\Models\Country::where('nama_indonesia', $this->negara)
             ->orWhere('nama_inggris', $this->negara)
             ->first();
         $country_id = $country?->id;
 
-        $lat = $postcard->contact?->lat;
-        $lng = $postcard->contact?->lng;
+        $lat = $postcard->contact?->lat ?? 0;
+        $lng = $postcard->contact?->lng ?? 0;
 
-        if (($postcard->contact?->alamat !== $this->alamat) || ($postcard->country?->nama_indonesia !== $this->negara)) {
+        $addressChanged = ($postcard->contact?->alamat !== $this->alamat) || ($postcard->country?->nama_indonesia !== $this->negara);
+        $isZeroCoords = ($lat == 0 && $lng == 0);
+
+        if ($addressChanged || $isZeroCoords) {
             $coords = $geoService->getCoordinates($this->alamat, $this->negara);
-            if ($coords['lat'] != 0) {
+            if ($coords['lat'] != 0 || $coords['lng'] != 0) {
                 $lat = $coords['lat'];
                 $lng = $coords['lng'];
             }
         }
 
-        // Sync Contact first to ensure relation
         $contact = Contact::updateOrCreate(
             ['user_id' => auth()->id() ?? 1, 'nama_kontak' => $this->nama_kontak],
             [
@@ -245,6 +249,30 @@ class EditPostcard extends Component
         if (isset($this->newStampsBase64[$index])) {
             unset($this->newStampsBase64[$index]);
             $this->newStampsBase64 = array_values($this->newStampsBase64);
+        }
+    }
+
+    public function refreshGeocoding(\App\Services\GeocodingService $geoService)
+    {
+        if (empty($this->alamat) || empty($this->negara)) {
+            session()->flash('geo_error', 'Address and country are required.');
+
+            return;
+        }
+
+        $coords = $geoService->getCoordinates($this->alamat, $this->negara);
+
+        if ($coords['lat'] != 0 || $coords['lng'] != 0) {
+            $postcard = Postcard::where('id', $this->id)->where('user_id', auth()->id())->first();
+            if ($postcard && $postcard->contact) {
+                $postcard->contact->update([
+                    'lat' => $coords['lat'],
+                    'lng' => $coords['lng'],
+                ]);
+                session()->flash('geo_success', 'Location updated successfully! ('.round($coords['lat'], 4).', '.round($coords['lng'], 4).')');
+            }
+        } else {
+            session()->flash('geo_error', 'Could not find location. Please check the address.');
         }
     }
 

@@ -72,17 +72,22 @@
         .stamp-card-slider {
             width: var(--stamp-w); height: 140px; margin: 0 15px;
             background: white; padding: 10px;
-            /* Simple border */
-            border: 1px solid #ccc; border-radius: 2px;
-            box-shadow: 3px 3px 10px rgba(0,0,0,0.3);
+            /* Jagged Stamp Border Aesthetic */
+            border: 2px solid #ddd;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.4);
             flex-shrink: 0;
             transform: rotate(calc(var(--r) * 1deg));
             cursor: pointer; transition: 0.3s;
             display: flex; align-items: center; justify-content: center; position: relative;
         }
+
+        .stamp-card-slider::after {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            border: 8px solid white; outline: 1px dashed #ccc;
+        }
         
-        .stamp-card-slider img { max-width: 100%; max-height: 100%; object-fit: contain; z-index: 1; }
-        .stamp-card-slider:hover { transform: scale(1.1) rotate(0deg); z-index: 10; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .stamp-card-slider img { max-width: 90%; max-height: 90%; object-fit: contain; z-index: 1; }
+        .stamp-card-slider:hover { transform: scale(1.2) rotate(0deg); z-index: 10; box-shadow: 0 15px 30px rgba(0,0,0,0.6); }
 
         /* Gallery Grid */
         .gallery-grid {
@@ -159,7 +164,7 @@
                 </div>
                 <div class="stamp-info">
                     <div class="stamp-country">📍 {{ $g->negara }}</div>
-                    <div class="stamp-id">{{ $g->postcard_id ?: 'PHIL-'.rand(1000,9999) }}</div>
+                    <div class="stamp-id">{{ $g->postcard_id ?: '-' }}</div>
                 </div>
             </a>
         @endforeach

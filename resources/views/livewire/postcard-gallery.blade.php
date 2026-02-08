@@ -47,8 +47,18 @@
         .paravion-text small { font-size: 0.8rem; letter-spacing: 3px; }
 
         .gallery-grid { 
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
-            gap: 50px; max-width: 1300px; margin: 0 auto; padding-bottom: 50px;
+            column-count: 3;
+            column-gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px 50px;
+        }
+
+        @media (max-width: 1100px) {
+            .gallery-grid { column-count: 2; }
+        }
+        @media (max-width: 700px) {
+            .gallery-grid { column-count: 1; }
         }
 
         .card-container { 
@@ -56,6 +66,10 @@
             /* Default Aspect Ratio */
             aspect-ratio: 4/3;
             transition: aspect-ratio 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            break-inside: avoid;
+            margin-bottom: 30px;
+            width: 100%;
+            display: inline-block;
         }
         .card-inner { 
             position: relative; width: 100%; height: 100%;

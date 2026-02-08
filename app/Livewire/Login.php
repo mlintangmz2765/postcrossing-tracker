@@ -15,6 +15,13 @@ class Login extends Component
 
     public $error = '';
 
+    public function mount()
+    {
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
+    }
+
     protected $rules = [
         'username' => 'required',
         'password' => 'required',

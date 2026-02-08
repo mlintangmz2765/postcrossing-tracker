@@ -31,7 +31,6 @@ class RegisterPostcard extends Component
 
     public $deskripsi_gambar;
 
-    // Currency
     public $nilai_asal;
 
     public $mata_uang = 'IDR';
@@ -94,6 +93,17 @@ class RegisterPostcard extends Component
 
     protected function calculateBiaya()
     {
+        // For sent postcards, we use manual input for biaya_prangko, so skip calculation.
+        if ($this->type === 'sent') {
+            return;
+        }
+
+        if ($this->mata_uang === 'IDR') {
+            $this->biaya_prangko = round((float) ($this->nilai_asal ?? 0));
+            $this->kurs_idr = 1;
+
+            return;
+        }
         $this->biaya_prangko = round((float) ($this->nilai_asal ?? 0) * (float) ($this->kurs_idr ?? 1));
     }
 
@@ -114,6 +124,14 @@ class RegisterPostcard extends Component
 
     public function save(GeocodingService $geoService)
     {
+        $this->validate([
+            'negara' => 'required',
+            'alamat' => 'required',
+            'tanggal_kirim' => 'required|date',
+            'img_d_data' => 'nullable', // Optional but handled
+            'img_b_data' => 'nullable',
+        ]);
+
         $coords = $geoService->getCoordinates($this->alamat, $this->negara);
         $lat = $coords['lat'];
         $lng = $coords['lng'];

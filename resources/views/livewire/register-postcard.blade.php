@@ -1,4 +1,10 @@
-<div class="register-wrapper paper-texture py-20 px-6" x-data="{ img_d_preview: null, img_b_preview: null }" data-wire-id="{{ $this->getId() }}">
+<div class="register-wrapper paper-texture py-20 px-6" x-data="{ 
+    img_d_preview: null, 
+    img_b_preview: null,
+    stamp_previews: @entangle('stamp_data').defer,
+    biaya_prangko: @entangle('biaya_prangko'),
+    isScannerOpen: false
+}" data-wire-id="{{ $this->getId() }}">
     <div class="container max-w-4xl mx-auto airmail-border bg-white shadow-xl overflow-hidden">
         <div class="form-inner p-0">
             <div class="p-8 border-b-2 border-dashed border-gray-100 text-center">
@@ -7,7 +13,6 @@
             </div>
 
             <form wire:submit.prevent="save" class="p-8 space-y-8">
-                <!-- Type Selection -->
                 <div class="flex space-x-4 p-2 bg-gray-100/50 rounded-xl border-2 border-dashed border-gray-200">
                     <button type="button" 
                         wire:click="$set('type', 'sent')"
@@ -54,33 +59,44 @@
                         <input type="text" id="negaraInput" wire:model.blur="negara" class="vintage-input w-full" placeholder="Where is it from/to?" required @blur="updateCurrencyFromCountry($el.value)">
                     </div>
 
-                    <div wire:ignore
-                         x-data="{ dateValue: @entangle('tanggal_kirim') }"
-                         x-init="
-                            flatpickr($refs.input, {
-                                altInput: true,
-                                altFormat: 'd/m/Y',
-                                dateFormat: 'Y-m-d',
-                                allowInput: true,
-                                onChange: function(selectedDates, dateStr, instance) {
-                                    dateValue = dateStr;
-                                    $wire.set('tanggal_kirim', dateStr);
-                                    instance.element.setAttribute('data-date-value', dateStr);
-                                    updateRate(dateStr, 'sent');
-                                },
-                                onClose: function(selectedDates, dateStr, instance) {
-                                    updateRate(dateStr, 'sent');
-                                }
-                            });
-                         ">
-                        <label class="vintage-label">Registry Date</label>
-                        <input x-ref="input" type="text" id="tanggalKirim" x-model="dateValue" class="vintage-input w-full" required>
-                        <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
-                    </div>
+                     <div wire:ignore
+                          x-data="{ dateValue: @entangle('tanggal_kirim') }"
+                          x-init="
+                             const fp = flatpickr($refs.input, {
+                                 altInput: true,
+                                 altFormat: 'd/m/Y',
+                                 dateFormat: 'Y-m-d',
+                                 allowInput: true,
+                                 onChange: function(selectedDates, dateStr, instance) {
+                                     dateValue = dateStr;
+                                     $wire.set('tanggal_kirim', dateStr);
+                                     instance.element.setAttribute('data-date-value', dateStr);
+                                     updateRate(dateStr, 'sent');
+                                 },
+                                 onValueUpdate: function(selectedDates, dateStr, instance) {
+                                     dateValue = dateStr;
+                                     $wire.set('tanggal_kirim', dateStr);
+                                     instance.element.setAttribute('data-date-value', dateStr);
+                                 },
+                                 onClose: function(selectedDates, dateStr, instance) {
+                                     updateRate(dateStr, 'sent');
+                                 }
+                             });
+                              fp.altInput.addEventListener('blur', () => {
+                                 if (fp.input.value) {
+                                     $wire.set('tanggal_kirim', fp.input.value);
+                                     updateRate(fp.input.value, 'sent');
+                                 }
+                             });
+                          ">
+                         <label class="vintage-label">Registry Date</label>
+                         <input x-ref="input" type="text" id="tanggalKirim" class="vintage-input w-full" required>
+                         <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
+                         @error('tanggal_kirim') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t-2 border-dashed border-gray-100">
-                    <!-- Front Image -->
                     <div>
                         <label class="vintage-label">Front Visual (Artwork)</label>
                         <div class="relative group">
@@ -103,7 +119,6 @@
                         <input type="file" id="input_d" accept="image/*" class="hidden" onchange="handleFile(event, 'd')">
                     </div>
 
-                    <!-- Back Image -->
                     <div>
                         <label class="vintage-label">Back Message (Postal)</label>
                         <div class="relative group">
@@ -127,16 +142,20 @@
                     </div>
                 </div>
                 
-                <!-- Stamps Section -->
-                <div class="pt-6 border-t-2 border-dashed border-gray-100">
+                <div class="pt-6 border-t-2 border-dashed border-gray-100" wire:ignore>
                      <label class="vintage-label">Philately Collection (Stamps)</label>
                      <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 mb-4" id="stamps-grid">
-                         @foreach($stamp_data as $index => $stamp)
-                            <div class="relative group aspect-square" wire:key="reg-stamp-{{ $index }}">
-                                <img src="{{ $stamp }}" class="w-full h-full object-cover rounded border-2 border-white shadow-sm">
-                                <button type="button" wire:click="removeStamp({{ $index }})" class="absolute -top-2 -right-2 bg-pc-red text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md border-2 border-white">X</button>
+                         <template x-for="(stamp, index) in stamp_previews" :key="'preview-'+index">
+                            <div class="relative group aspect-square">
+                                <img :src="stamp" class="w-full h-full object-cover rounded border-2 border-white shadow-sm">
+                                <div class="absolute -top-2 -right-2 flex gap-1">
+                                    <button type="button" @click="rotateStampPreview(index, stamp)" class="bg-pc-blue text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md border-2 border-white" title="Rotate">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                    <button type="button" @click="removeStampPreview(index)" class="bg-pc-red text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md border-2 border-white" title="Remove">X</button>
+                                </div>
                             </div>
-                         @endforeach
+                         </template>
                          
                          <button type="button" onclick="openScanner('s')" class="aspect-square flex flex-col items-center justify-center border-2 border-dotted border-gray-300 rounded-lg text-gray-400 hover:bg-gray-50 transition bg-gray-50">
                              <i class="bi bi-plus-circle text-2xl"></i>
@@ -150,7 +169,7 @@
                     <div wire:ignore
                          x-data="{ dateValue: @entangle('tanggal_terima') }"
                          x-init="
-                            flatpickr($refs.input, {
+                            const fp = flatpickr($refs.input, {
                                 defaultDate: dateValue,
                                 altInput: true,
                                 altFormat: 'd/m/Y',
@@ -161,13 +180,23 @@
                                     $wire.set('tanggal_terima', dateStr);
                                     instance.element.setAttribute('data-date-value', dateStr);
                                 },
+                                onValueUpdate: function(selectedDates, dateStr, instance) {
+                                    dateValue = dateStr;
+                                    $wire.set('tanggal_terima', dateStr);
+                                    instance.element.setAttribute('data-date-value', dateStr);
+                                },
                                 onClose: function(selectedDates, dateStr, instance) {
 
                                 }
                             });
+                            fp.altInput.addEventListener('blur', () => {
+                                if (fp.input.value) {
+                                    $wire.set('tanggal_terima', fp.input.value);
+                                }
+                            });
                          ">
                         <label class="vintage-label">Received Date</label>
-                        <input x-ref="input" type="text" id="tanggalTerima" x-model="dateValue" class="vintage-input w-full">
+                        <input x-ref="input" type="text" id="tanggalTerima" class="vintage-input w-full">
                         <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
                     </div>
                     <div>
@@ -200,7 +229,8 @@
                 @else
                 <div class="pt-6 border-t-2 border-dashed border-gray-100">
                     <label class="vintage-label">Calculated Total</label>
-                    <div class="text-3xl font-postcard text-pc-blue bg-blue-50 p-4 rounded-lg text-center border-2 border-pc-blue border-dotted">
+                    <div class="text-3xl font-postcard text-pc-blue bg-blue-50 p-4 rounded-lg text-center border-2 border-pc-blue border-dotted"
+                         x-text="'IDR ' + new Intl.NumberFormat('id-ID').format(biaya_prangko || 0)">
                         IDR {{ number_format((float)($biaya_prangko ?? 0), 0, ',', '.') }}
                     </div>
                 </div>
@@ -212,8 +242,9 @@
                 </div>
 
                 <div class="pt-8">
-                    <button type="submit" class="vintage-btn w-full text-xl py-5">
-                        <i class="bi bi-journal-check me-2"></i> CONFIRM REGISTRY
+                    <button type="submit" class="vintage-btn w-full text-xl py-5" wire:loading.attr="disabled" wire:target="save">
+                        <span wire:loading.remove wire:target="save"><i class="bi bi-journal-check me-2"></i> CONFIRM REGISTRY</span>
+                        <span wire:loading wire:target="save"><i class="bi bi-hourglass-split me-2"></i> SAVING...</span>
                     </button>
                     <a href="{{ route('dashboard') }}" class="block text-center mt-6 text-gray-400 font-postcard hover:text-pc-ink transition">
                         <i class="bi bi-arrow-left"></i> Cancel and Return
@@ -223,15 +254,16 @@
         </div>
     </div>
 
-    <!-- Scanner Modal (Hidden by default) -->
-    <div id="scannerModal" class="fixed inset-0 z-50 bg-black flex flex-col hidden">
-        <div class="flex-1 relative flex items-center justify-center overflow-hidden bg-black">
-             <canvas id="scannerCanvas" class="max-w-full max-h-full touch-none"></canvas>
-        </div>
-        <div class="h-24 bg-gray-900 flex items-center justify-around px-4">
-            <button type="button" onclick="closeScanner()" class="px-4 py-3 bg-gray-600 rounded-lg font-bold text-white uppercase">Cancel</button>
-            <button type="button" onclick="rotateSource()" class="px-4 py-3 bg-blue-600 rounded-lg font-bold text-white uppercase"><i class="bi bi-arrow-clockwise"></i> Rotate</button>
-            <button type="button" id="btnCropRegister" class="px-4 py-3 bg-green-500 rounded-lg font-bold text-white uppercase">Crop & Use</button>
+    <div wire:ignore>
+        <div id="scannerModal" class="fixed inset-0 z-50 bg-black flex flex-col" x-show="isScannerOpen" style="display: none;">
+            <div class="flex-1 relative flex items-center justify-center overflow-hidden bg-black">
+                 <canvas id="scannerCanvas" class="max-w-full max-h-full touch-none"></canvas>
+            </div>
+            <div class="h-24 bg-gray-900 flex items-center justify-around px-4">
+                <button type="button" onclick="closeScanner()" class="px-4 py-3 bg-gray-600 rounded-lg font-bold text-white uppercase">Cancel</button>
+                <button type="button" onclick="rotateSource()" class="px-4 py-3 bg-blue-600 rounded-lg font-bold text-white uppercase"><i class="bi bi-arrow-clockwise"></i> Rotate</button>
+                <button type="button" id="btnCropRegister" class="px-4 py-3 bg-green-500 rounded-lg font-bold text-white uppercase">Crop & Use</button>
+            </div>
         </div>
     </div>
 
@@ -257,7 +289,10 @@
              reader.onload = (evt) => {
                  originalImage = new Image();
                  originalImage.onload = () => {
-                     document.getElementById('scannerModal').classList.remove('hidden');
+                     const alEl = document.querySelector('.register-wrapper');
+                     if (alEl && window.Alpine) {
+                         window.Alpine.$data(alEl).isScannerOpen = true;
+                     }
                      autoDetect();
                  };
                  originalImage.src = evt.target.result;
@@ -286,12 +321,47 @@
             const newData = canvas.toDataURL('image/jpeg', 0.85);
             
             if(alData) alData['img_' + mode + '_preview'] = newData;
-            if(component) component.set('img_' + mode + '_data', newData);
+            if(component) component.set('img_' + mode + '_data', newData, true);
         };
         img.src = preview;
     };
+
+    window.rotateStampPreview = (index, base64) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.height; canvas.height = img.width;
+            const ctx = canvas.getContext('2d');
+            ctx.translate(canvas.width/2, canvas.height/2);
+            ctx.rotate(90 * Math.PI / 180);
+            ctx.drawImage(img, -img.width/2, -img.height/2);
+            const newData = canvas.toDataURL('image/jpeg', 0.85);
+            
+            const alData = window.Alpine ? window.Alpine.$data(document.querySelector('.register-wrapper')) : null;
+            if (alData) {
+                alData.stamp_previews[index] = newData;
+                const component = getComponent();
+                if (component) component.set('stamp_data', alData.stamp_previews, true);
+            }
+        };
+        img.src = base64;
+    };
+
+    window.removeStampPreview = (index) => {
+        const alData = window.Alpine ? window.Alpine.$data(document.querySelector('.register-wrapper')) : null;
+        if (alData) {
+            alData.stamp_previews.splice(index, 1);
+            const component = getComponent();
+            if (component) component.set('stamp_data', alData.stamp_previews, true);
+        }
+    };
     
-    window.closeScanner = () => document.getElementById('scannerModal').classList.add('hidden');
+    window.closeScanner = () => {
+        const alEl = document.querySelector('.register-wrapper');
+        if (alEl && window.Alpine) {
+            window.Alpine.$data(alEl).isScannerOpen = false;
+        }
+    };
 
     window.rotateSource = () => {
         const can = document.createElement('canvas');
@@ -382,7 +452,6 @@
             const src = cv.imread(originalImage);
             const p = points.map(pt => ({ x: pt.x * src.cols, y: pt.y * src.rows }));
             
-            // Re-calculate target dimensions properly
             const targetW = Math.max(Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y), Math.hypot(p[2].x - p[3].x, p[2].y - p[3].y));
             const targetH = Math.max(Math.hypot(p[3].x - p[0].x, p[3].y - p[0].y), Math.hypot(p[2].x - p[1].x, p[2].y - p[1].y));
             
@@ -402,19 +471,24 @@
             const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.85);
             
             const component = getComponent();
+            const alEl = document.querySelector('.register-wrapper');
+            const alData = alEl && window.Alpine ? window.Alpine.$data(alEl) : null;
 
-            if (component) {
-                if (activeMode === 's') { 
-                    let stamps = component.get('stamp_data') || [];
-                    stamps.push(dataUrl);
-                    component.set('stamp_data', stamps);
-                } else { 
-                    component.set('img_' + activeMode + '_data', dataUrl);
-                    const alEl = document.querySelector('.register-wrapper');
-                    if (alEl && window.Alpine) {
-                        const data = window.Alpine.$data(alEl);
-                        if (data) data['img_' + activeMode + '_preview'] = dataUrl;
-                    }
+                if (component) {
+                    if (activeMode === 's') { 
+                        const alEl = document.querySelector('.register-wrapper');
+                        const alData = alEl && window.Alpine ? window.Alpine.$data(alEl) : null;
+                        if (alData) {
+                            if (!Array.isArray(alData.stamp_previews)) {
+                                alData.stamp_previews = [];
+                            }
+                            alData.stamp_previews.push(dataUrl);
+                            component.set('stamp_data', alData.stamp_previews, true);
+                        }
+                    } else { 
+                    const alData = window.Alpine ? window.Alpine.$data(document.querySelector('.register-wrapper')) : null;
+                    if (alData) alData['img_' + activeMode + '_preview'] = dataUrl;
+                    component.set('img_' + activeMode + '_data', dataUrl, true);
                 }
             }
             
@@ -425,18 +499,15 @@
 
 
     function getComponent() {
-        // Try global ID first
         if (window.livewire_register_id) {
             const comp = Livewire.find(window.livewire_register_id);
             if (comp) return comp;
         }
         
-        // Fallback to data attribute
         const root = document.querySelector('.register-wrapper');
         const id = root?.getAttribute('data-wire-id');
         if (id) return Livewire.find(id);
         
-        // Last resort: standard Livewire discovery
         const el = document.querySelector('[wire\\:id]');
         if (el) return Livewire.find(el.getAttribute('wire:id'));
         
@@ -512,15 +583,29 @@
        if(!component) return;
        
        const nilaiInput = document.getElementById('nilai_asli');
-       if (!nilaiInput) return; 
+       if (!nilaiInput) return;
        
        const val = parseFloat(nilaiInput.value || 0);
-       if (val <= 0) return; 
+       const cur = document.getElementById('mata_uang')?.value || 'IDR';
        
-       const rate = parseFloat(document.getElementById('kurs_idr')?.value || 1);
+       let total;
+       if (cur === 'IDR') {
+           total = Math.round(val);
+           const rateInput = document.getElementById('kurs_idr');
+           if (rateInput) rateInput.value = "1.00";
+           component.set('kurs_idr', 1, true);
+       } else {
+           const rate = parseFloat(document.getElementById('kurs_idr')?.value || 1);
+           total = Math.round(val * rate);
+       }
+       
        const totalDisplay = document.getElementById('biaya_prangko');
-       const total = Math.round(val * rate);
        if (totalDisplay) totalDisplay.value = total;
+       
+       const alEl = document.querySelector('.register-wrapper');
+       if (alEl && window.Alpine) {
+           window.Alpine.$data(alEl).biaya_prangko = total;
+       }
        component.set('biaya_prangko', total);
     }
 

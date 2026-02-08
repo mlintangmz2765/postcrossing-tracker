@@ -62,15 +62,17 @@
 
         .stat-row {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 12px;
             padding: 10px 0;
             border-bottom: 1px dotted #eee;
             font-size: 0.95rem;
+            color: #4b5563; /* Darker gray for labels */
         }
 
         .stat-row:last-child { border-bottom: none; }
-        .stat-value { font-family: 'Special Elite', monospace; font-weight: bold; font-size: 1.2rem; }
+        .stat-value { font-family: 'Special Elite', monospace; font-weight: bold; font-size: 1.1rem; color: #1f2937; }
+        .stat-label { font-family: 'Quicksand', sans-serif; font-size: 0.95rem; }
 
 
         #dashboard-map { width: 100%; height: 500px; background: #f8f8f8; border-radius: 4px; border: 1px solid #eee; }
@@ -164,20 +166,29 @@
                     <i class="bi bi-send"></i> SENT LOGS
                 </div>
                 <div class="stat-row">
-                    <span><i class="bi bi-people text-blue-500 mr-2"></i> Receivers</span> 
+                    <i class="bi bi-people text-blue-500 text-xl"></i>
                     <span class="stat-value">{{ $statsSent['people'] }}</span>
+                    <span class="stat-label">receivers</span>
                 </div>
                 <div class="stat-row">
-                    <span><i class="bi bi-globe text-blue-500 mr-2"></i> Countries</span>
+                    <i class="bi bi-globe text-blue-500 text-xl"></i>
                     <span class="stat-value">{{ $statsSent['countries'] }}</span>
+                    <span class="stat-label">countries</span>
                 </div>
                 <div class="stat-row">
-                    <span><i class="bi bi-postcard text-blue-500 mr-2"></i> Total Cards</span>
+                    <i class="bi bi-postcard text-blue-500 text-xl"></i>
                     <span class="stat-value">{{ $statsSent['cards'] }}</span>
+                    <span class="stat-label">postcards sent</span>
                 </div>
                 <div class="stat-row">
-                    <span><i class="bi bi-geo-alt text-blue-500 mr-2"></i> Distance</span>
-                    <span class="stat-value">{{ number_format($statsSent['km'], 0, ',', '.') }} km</span>
+                    <i class="bi bi-geo-alt text-blue-500 text-xl"></i>
+                    <span class="stat-value">{{ number_format($statsSent['km'], 0, ',', '.') }}</span>
+                    <span class="stat-label">km traveled</span>
+                </div>
+                <div class="stat-row">
+                    <i class="bi bi-arrow-repeat text-blue-500 text-xl"></i>
+                    <span class="stat-value">{{ number_format($statsSent['laps'], 2, ',', '.') }}</span>
+                    <span class="stat-label">laps around the world</span>
                 </div>
             </div>
 
@@ -187,20 +198,29 @@
                     <i class="bi bi-box-arrow-in-down"></i> RECEIVED LOGS
                 </div>
                 <div class="stat-row">
-                    <span><i class="bi bi-people text-red-500 mr-2"></i> Senders</span>
+                    <i class="bi bi-people text-red-500 text-xl"></i>
                     <span class="stat-value">{{ $statsReceived['people'] }}</span>
+                    <span class="stat-label">senders</span>
                 </div>
                 <div class="stat-row">
-                    <span><i class="bi bi-globe text-red-500 mr-2"></i> Countries</span>
+                    <i class="bi bi-globe text-red-500 text-xl"></i>
                     <span class="stat-value">{{ $statsReceived['countries'] }}</span>
+                    <span class="stat-label">countries</span>
                 </div>
                 <div class="stat-row">
-                    <span><i class="bi bi-postcard text-red-500 mr-2"></i> Total Cards</span>
+                    <i class="bi bi-postcard text-red-500 text-xl"></i>
                     <span class="stat-value">{{ $statsReceived['cards'] }}</span>
+                    <span class="stat-label">postcards received</span>
                 </div>
                 <div class="stat-row">
-                    <span><i class="bi bi-geo-alt text-red-500 mr-2"></i> Distance</span>
-                    <span class="stat-value">{{ number_format($statsReceived['km'], 0, ',', '.') }} km</span>
+                    <i class="bi bi-geo-alt text-red-500 text-xl"></i>
+                    <span class="stat-value">{{ number_format($statsReceived['km'], 0, ',', '.') }}</span>
+                    <span class="stat-label">km traveled</span>
+                </div>
+                <div class="stat-row">
+                    <i class="bi bi-arrow-repeat text-red-500 text-xl"></i>
+                    <span class="stat-value">{{ number_format($statsReceived['laps'], 2, ',', '.') }}</span>
+                    <span class="stat-label">laps around the world</span>
                 </div>
             </div>
         </div>
@@ -259,12 +279,7 @@
             dashboardMap = new google.maps.Map(document.getElementById('dashboard-map'), {
                 zoom: 2,
                 center: { lat: 20, lng: 10 },
-                streetViewControl: false,
-                styles: [
-                    { "elementType": "geometry", "stylers": [{ "color": "#ebe3cd" }] },
-                    { "elementType": "labels.text.fill", "stylers": [{ "color": "#523735" }] },
-                    { "featureType": "water", "elementType": "geometry.fill", "stylers": [{ "color": "#b9d3c2" }] }
-                ]
+                streetViewControl: false
             });
 
             const coordsTracker = {};

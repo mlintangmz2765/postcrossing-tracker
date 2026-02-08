@@ -7,6 +7,9 @@
         <link rel="manifest" href="/manifest.json">
         <meta name="theme-color" content="#2c3e50">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+        <meta http-equiv="Pragma" content="no-cache">
+        <meta http-equiv="Expires" content="0">
         
         <!-- Local Assets Only -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -223,7 +226,7 @@
         @livewireScripts
         
         <!-- Global Postcard Loader -->
-        <div wire:loading.delay.longest class="pc-loader-overlay">
+        <div wire:loading.delay class="pc-loader-overlay">
             <div class="pc-envelope"></div>
             <div class="pc-shadow"></div>
             <div class="pc-loading-text">Traveling to destination...</div>
@@ -238,7 +241,7 @@
             const installBtn = document.getElementById('pwaInstallBtn');
 
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js');
+                navigator.serviceWorker.register('/sw.js?v=7');
             }
 
             window.addEventListener('beforeinstallprompt', (e) => {

@@ -266,12 +266,7 @@
             const map = new google.maps.Map(document.getElementById('google-map-view'), {
                 zoom: 3,
                 center: myPos,
-                streetViewControl: false,
-                styles: [
-                    { "elementType": "geometry", "stylers": [{ "color": "#ebe3cd" }] },
-                    { "elementType": "labels.text.fill", "stylers": [{ "color": "#523735" }] },
-                    { "featureType": "water", "elementType": "geometry.fill", "stylers": [{ "color": "#b9d3c2" }] }
-                ]
+                streetViewControl: false
             });
 
             // Standard Marker (Allows programmatic styles)
@@ -282,12 +277,18 @@
                 title: 'My Location (Yogyakarta)'
             });
 
-            new google.maps.Marker({
+            const targetMarker = new google.maps.Marker({
                 position: targetPos,
                 map: map,
                 icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#007bff', fillOpacity: 0.8, scale: 8, strokeColor: 'white', strokeWeight: 2 },
                 title: 'Postcard Location'
             });
+
+            const targetInfo = new google.maps.InfoWindow({
+                content: `<b>Destination</b><br>{!! addslashes(nl2br(e($card->contact?->alamat))) !!}`
+            });
+
+            targetMarker.addListener('click', () => targetInfo.open(map, targetMarker));
 
             // Polyline
             new google.maps.Polyline({

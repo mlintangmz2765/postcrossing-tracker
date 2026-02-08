@@ -32,7 +32,12 @@ class GeocodingService
         }
 
         if ($isChina) {
-            return $this->getCoordinatesChina($alamat_clean);
+            $coords = $this->getCoordinatesChina($alamat_clean);
+            if ($coords['lat'] === 0.0 && $coords['lng'] === 0.0) {
+                return $this->getCoordinatesGoogle($alamat_clean, $negara);
+            }
+
+            return $coords;
         } else {
             return $this->getCoordinatesGoogle($alamat_clean, $negara);
         }
@@ -40,7 +45,6 @@ class GeocodingService
 
     protected function getCoordinatesChina($alamat)
     {
-        // POI Search (Gaode)
         $urlPOI = 'https://restapi.amap.com/v3/place/text';
         $resPOI = Http::get($urlPOI, [
             'keywords' => $alamat,
@@ -58,7 +62,6 @@ class GeocodingService
             }
         }
 
-        // Geocoding Fallback (Gaode)
         $urlGeo = 'https://restapi.amap.com/v3/geocode/geo';
         $resGeo = Http::get($urlGeo, [
             'address' => $alamat,
@@ -79,14 +82,12 @@ class GeocodingService
 
     protected function getCoordinatesGoogle($alamat, $negara)
     {
-        // Use Google Maps as primary if key is available
         if (! $this->googleApiKey) {
             return ['lat' => 0.0, 'lng' => 0.0];
         }
 
         $full_query = $alamat.', '.$negara;
 
-        // Search by location name (Google)
         $urlPlaces = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
         $resPlaces = Http::get($urlPlaces, [
             'query' => $full_query,
@@ -103,7 +104,6 @@ class GeocodingService
             }
         }
 
-        // Precise Geocoding (Google)
         $urlGeo = 'https://maps.googleapis.com/maps/api/geocode/json';
         $resGeo = Http::get($urlGeo, [
             'address' => $full_query,

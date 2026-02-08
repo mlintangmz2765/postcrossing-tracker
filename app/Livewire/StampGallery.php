@@ -24,6 +24,15 @@ class StampGallery extends Component
             ->orderBy(DB::raw('COALESCE(countries.nama_inggris, countries.nama_indonesia)'), 'asc')
             ->get()
             ->toArray();
+
+        $this->sliderStamps = DB::table('postcard_stamps')
+            ->join('postcards', 'postcard_stamps.postcard_id', '=', 'postcards.id')
+            ->select('postcard_stamps.foto_prangko', 'postcards.id')
+            ->where('postcards.user_id', $user_id)
+            ->inRandomOrder()
+            ->limit(20)
+            ->get()
+            ->toArray();
     }
 
     public function render()

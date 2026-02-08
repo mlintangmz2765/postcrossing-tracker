@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Postcard Arrived!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Special+Elite&display=swap" rel="stylesheet">
     <style>
         /* Base styles */
         body {
@@ -50,12 +53,14 @@
         }
 
         h1 {
-            font-family: 'Dancing Script', cursive, serif;
+            font-family: 'Dancing Script', 'Brush Script MT', cursive;
             color: #2c3e50;
             font-size: 32px;
+            font-weight: 700;
             margin-top: 0;
             margin-bottom: 20px;
             text-align: center;
+            letter-spacing: 1px;
         }
 
         .intro {
@@ -181,7 +186,7 @@
                 </div>
 
                 <div style="text-align: center;">
-                    <a href="{{ config('app.url') }}/view/{{ $postcard->id }}" class="btn">View Postcard Details</a>
+                    <a href="{{ config('app.url') }}/view/{{ $postcard->id }}" class="btn" style="color: #ffffff !important; text-decoration: none;">View Postcard Details</a>
                 </div>
             </div>
 
