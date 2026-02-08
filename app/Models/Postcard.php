@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Postcard extends Model
 {
     protected $table = 'postcards';
+
     public $timestamps = false;
+
     protected $guarded = ['id'];
 
     protected $casts = [
@@ -31,12 +33,11 @@ class Postcard extends Model
 
     public function contact()
     {
-         return $this->belongsTo(Contact::class, 'nama_kontak', 'nama_kontak')
-                     ->where('user_id', $this->user_id); 
+        return $this->belongsTo(Contact::class);
     }
 
-    public function country_data()
+    public function country()
     {
-        return $this->belongsTo(Country::class, 'negara', 'nama_indonesia');
+        return $this->belongsTo(Country::class);
     }
 }

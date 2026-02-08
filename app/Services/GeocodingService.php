@@ -3,26 +3,26 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 
 class GeocodingService
 {
     protected $amapWebKey;
+
     protected $googleApiKey;
 
     public function __construct()
     {
-        $this->amapWebKey = env('AMAP_WEB_KEY');
-        $this->googleApiKey = env('GOOGLE_API_KEY'); // Ensure this is in .env if used
+        $this->amapWebKey = config('app.amap_web_key');
+        $this->googleApiKey = config('app.google_api_key');
     }
 
     public function getCoordinates($alamat, $negara)
     {
-        $alamat_clean = str_replace(["\r", "\n", '"', "'", "#"], " ", $alamat);
-        
+        $alamat_clean = str_replace(["\r", "\n", '"', "'", '#'], ' ', $alamat);
+
         $chinaKeywords = ['china', 'tiongkok', 'prc', "people's republic of china", 'cn'];
         $negara_lower = strtolower(trim($negara));
-        
+
         $isChina = false;
         foreach ($chinaKeywords as $kw) {
             if (str_contains($negara_lower, $kw)) {
@@ -40,35 +40,37 @@ class GeocodingService
 
     protected function getCoordinatesChina($alamat)
     {
-        // TAHAP 1: POI Search Gaode
-        $urlPOI = "https://restapi.amap.com/v3/place/text";
+        // POI Search (Gaode)
+        $urlPOI = 'https://restapi.amap.com/v3/place/text';
         $resPOI = Http::get($urlPOI, [
             'keywords' => $alamat,
             'key' => $this->amapWebKey,
             'offset' => 1,
-            'page' => 1
+            'page' => 1,
         ]);
-        
+
         if ($resPOI->successful()) {
             $data = $resPOI->json();
-            if (!empty($data['pois'][0]['location'])) {
+            if (! empty($data['pois'][0]['location'])) {
                 $loc = explode(',', $data['pois'][0]['location']);
-                return ['lat' => (float)$loc[1], 'lng' => (float)$loc[0]];
+
+                return ['lat' => (float) $loc[1], 'lng' => (float) $loc[0]];
             }
         }
 
-        // TAHAP 2: Geocoding Gaode (Backup)
-        $urlGeo = "https://restapi.amap.com/v3/geocode/geo";
+        // Geocoding Fallback (Gaode)
+        $urlGeo = 'https://restapi.amap.com/v3/geocode/geo';
         $resGeo = Http::get($urlGeo, [
             'address' => $alamat,
-            'key' => $this->amapWebKey
+            'key' => $this->amapWebKey,
         ]);
-        
+
         if ($resGeo->successful()) {
             $data = $resGeo->json();
-            if (!empty($data['geocodes'][0]['location'])) {
+            if (! empty($data['geocodes'][0]['location'])) {
                 $loc = explode(',', $data['geocodes'][0]['location']);
-                return ['lat' => (float)$loc[1], 'lng' => (float)$loc[0]];
+
+                return ['lat' => (float) $loc[1], 'lng' => (float) $loc[0]];
             }
         }
 
@@ -77,41 +79,43 @@ class GeocodingService
 
     protected function getCoordinatesGoogle($alamat, $negara)
     {
-        // Replicating logic, but checking if Google Key exists
-        if (!$this->googleApiKey) return ['lat' => 0.0, 'lng' => 0.0];
+        // Use Google Maps as primary if key is available
+        if (! $this->googleApiKey) {
+            return ['lat' => 0.0, 'lng' => 0.0];
+        }
 
-        $full_query = $alamat . ", " . $negara;
+        $full_query = $alamat.', '.$negara;
 
-        // TAHAP 1: POI SEARCH (Google Places - Text Search)
-        $urlPlaces = "https://maps.googleapis.com/maps/api/place/textsearch/json";
+        // Search by location name (Google)
+        $urlPlaces = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
         $resPlaces = Http::get($urlPlaces, [
             'query' => $full_query,
-            'key' => $this->googleApiKey
+            'key' => $this->googleApiKey,
         ]);
-        
+
         if ($resPlaces->successful()) {
             $dataP = $resPlaces->json();
-            if (($dataP['status'] ?? '') === 'OK' && !empty($dataP['results'][0]['geometry']['location'])) {
+            if (($dataP['status'] ?? '') === 'OK' && ! empty($dataP['results'][0]['geometry']['location'])) {
                 return [
-                    'lat' => (float)$dataP['results'][0]['geometry']['location']['lat'],
-                    'lng' => (float)$dataP['results'][0]['geometry']['location']['lng']
+                    'lat' => (float) $dataP['results'][0]['geometry']['location']['lat'],
+                    'lng' => (float) $dataP['results'][0]['geometry']['location']['lng'],
                 ];
             }
         }
 
-        // TAHAP 2: GEOCODING STANDAR
-        $urlGeo = "https://maps.googleapis.com/maps/api/geocode/json";
+        // Precise Geocoding (Google)
+        $urlGeo = 'https://maps.googleapis.com/maps/api/geocode/json';
         $resGeo = Http::get($urlGeo, [
             'address' => $full_query,
-            'key' => $this->googleApiKey
+            'key' => $this->googleApiKey,
         ]);
-        
+
         if ($resGeo->successful()) {
             $dataG = $resGeo->json();
-            if (($dataG['status'] ?? '') === 'OK' && !empty($dataG['results'][0]['geometry']['location'])) {
+            if (($dataG['status'] ?? '') === 'OK' && ! empty($dataG['results'][0]['geometry']['location'])) {
                 return [
-                    'lat' => (float)$dataG['results'][0]['geometry']['location']['lat'],
-                    'lng' => (float)$dataG['results'][0]['geometry']['location']['lng']
+                    'lat' => (float) $dataG['results'][0]['geometry']['location']['lat'],
+                    'lng' => (float) $dataG['results'][0]['geometry']['location']['lng'],
                 ];
             }
         }

@@ -1,5 +1,5 @@
 <div class="gallery-wrapper">
-    <!-- Local Styles specific to Gallery to match legacy exactly -->
+
     <style>
         :root { 
             --post-red: #e63946;
@@ -8,7 +8,7 @@
             --text-dark: #1e293b;
         }
         
-        /* Full Page Background Override for Gallery */
+        /* Page Background */
         .gallery-wrapper {
             background-color: var(--paper);
             background-image: 
@@ -82,7 +82,7 @@
             filter: contrast(1.05) saturate(1.1);
         }
 
-        /* INFO OVERLAY (HOVER ONLY) */
+        /* INFO OVERLAY */
         .info-overlay { 
             position: absolute; bottom: 0; left: 0; right: 0; 
             background: linear-gradient(transparent, rgba(0,0,0,0.9));
@@ -152,7 +152,7 @@
                     <div class="card-front">
                         <img src="{{ asset($card->foto_depan) }}" loading="lazy" alt="Front">
                         <div class="info-overlay">
-                            <h4>{{ $card->negara }}</h4>
+                            <h4>{{ $card->country?->nama_inggris ?? $card->country?->nama_indonesia ?? 'Unknown' }}</h4>
                             <p style="font-size: 11px; opacity: 0.9; margin: 0; font-family: 'Special Elite'; letter-spacing: 1px;">
                                 {{ $card->postcard_id ?: 'DIRECT SWAP' }}
                             </p>

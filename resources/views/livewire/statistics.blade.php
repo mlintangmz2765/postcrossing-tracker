@@ -1,5 +1,5 @@
 <div class="statistics-wrapper">
-    <!-- Local Styles -->
+
     <style>
         :root {
             --paper: #fdf6e3;
@@ -77,11 +77,11 @@
     </style>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{ activeTab: 'sent' }">
-        <!-- Dashboard Button REMOVED as requested -->
+        <div class="stats-actions">
         
         <h1 class="stats-header">Detailed Statistics</h1>
 
-        <!-- Tabs Navigation: Full Width -->
+        <!-- Tabs Navigation -->
         <div class="flex space-x-1 rounded-xl bg-gray-200 p-1 mb-6 w-full font-bold shadow-inner" style="font-family: 'Special Elite', cursive;">
             <button @click="activeTab = 'sent'" 
                 :class="{ 'bg-white shadow text-blue-700': activeTab === 'sent', 'text-gray-600 hover:bg-white/[0.12] hover:text-blue-600': activeTab !== 'sent' }"
@@ -95,7 +95,7 @@
             </button>
         </div>
         
-        <!-- SENT STATISTICS TAB -->
+        <!-- SENT STATISTICS -->
         <div x-show="activeTab === 'sent'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100">
             <div class="vintage-table-card">
                 <h3 class="table-title" style="color: #007bff;">
@@ -129,7 +129,7 @@
                                     <span class="text-green-600">{{ $s->min_days ?? '-' }}</span> / 
                                     <span class="text-red-600">{{ $s->max_days ?? '-' }}</span>
                                 </td>
-                                <td class="font-bold text-right">Rp {{ number_format($s->total_biaya, 0, ',', '.') }}</td>
+                                <td class="font-bold text-right">IDR {{ number_format($s->total_biaya, 0, ',', '.') }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -138,7 +138,7 @@
             </div>
         </div>
 
-        <!-- RECEIVED STATISTICS TAB -->
+        <!-- RECEIVED STATISTICS -->
         <div x-show="activeTab === 'received'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" style="display: none;">
             <div class="vintage-table-card">
                 <h3 class="table-title" style="color: #28a745;">
@@ -171,8 +171,8 @@
                                     <span class="text-green-600">{{ $r->min_days ?? '-' }}</span> / 
                                     <span class="text-red-600">{{ $r->max_days ?? '-' }}</span>
                                 </td>
-                                <td class="font-bold text-right text-gray-600">Rp {{ number_format($r->avg_nilai, 0, ',', '.') }}</td>
-                                <td class="font-bold text-right">Rp {{ number_format($r->total_nilai, 0, ',', '.') }}</td>
+                                <td class="font-bold text-right text-gray-600">IDR {{ number_format($r->avg_nilai, 0, ',', '.') }}</td>
+                                <td class="font-bold text-right">IDR {{ number_format($r->total_nilai, 0, ',', '.') }}</td>
                             </tr>
                             @endforeach
                         </tbody>

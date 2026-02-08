@@ -2,34 +2,26 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Livewire\Component;
 
 class StampGallery extends Component
 {
     public $sliderStamps = [];
+
     public $galleryStamps = [];
 
     public function mount()
     {
         $user_id = Auth::id();
 
-        // Slider: Random order
-        $this->sliderStamps = DB::table('postcard_stamps')
-            ->join('postcards', 'postcard_stamps.postcard_id', '=', 'postcards.id')
-            ->select('postcard_stamps.foto_prangko', 'postcards.id')
-            ->where('postcards.user_id', $user_id)
-            ->inRandomOrder()
-            ->get()
-            ->toArray();
-
-        // Gallery: Ordered by Country
         $this->galleryStamps = DB::table('postcard_stamps')
             ->join('postcards', 'postcard_stamps.postcard_id', '=', 'postcards.id')
-            ->select('postcard_stamps.foto_prangko', 'postcards.id', 'postcards.negara', 'postcards.postcard_id')
+            ->leftJoin('countries', 'postcards.country_id', '=', 'countries.id')
+            ->select('postcard_stamps.foto_prangko', 'postcards.id', DB::raw('COALESCE(countries.nama_inggris, countries.nama_indonesia) as negara'), 'postcards.postcard_id')
             ->where('postcards.user_id', $user_id)
-            ->orderBy('postcards.negara', 'asc')
+            ->orderBy(DB::raw('COALESCE(countries.nama_inggris, countries.nama_indonesia)'), 'asc')
             ->get()
             ->toArray();
     }

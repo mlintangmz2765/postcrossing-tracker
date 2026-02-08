@@ -4,9 +4,14 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{{ $title ?? 'Postcard Tracker - My Postcrossing Journey' }}</title>
+        <link rel="manifest" href="/manifest.json">
+        <meta name="theme-color" content="#2c3e50">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         
         <!-- Local Assets Only -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
         @livewireStyles
 
         <style>
@@ -43,20 +48,21 @@
                 max-width: 1280px;
                 margin: 0 auto;
                 padding: 0 20px;
-                height: 70px;
+                min-height: 70px;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
+                gap: 20px;
             }
 
             .nav-brand {
                 font-family: 'Special Elite', monospace;
-                font-size: 1.5rem;
+                font-size: 1.25rem;
                 color: #fff;
                 text-decoration: none;
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: 8px;
                 text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
             }
             
@@ -64,31 +70,42 @@
 
             .nav-links {
                 display: flex;
-                gap: 5px;
+                gap: 2px;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding: 5px 0;
             }
+
+            .nav-links::-webkit-scrollbar { display: none; }
 
             .nav-item {
                 font-family: 'Special Elite', monospace;
                 color: #ecf0f1;
                 text-decoration: none;
-                padding: 8px 15px;
+                padding: 6px 12px;
                 border-radius: 4px;
-                font-size: 0.9rem;
+                font-size: 0.85rem;
                 transition: all 0.3s;
                 border: 1px solid transparent;
+                white-space: nowrap;
+                display: flex;
+                align-items: center;
+                gap: 6px;
             }
 
             .nav-item:hover, .nav-item.active {
                 background: rgba(255, 255, 255, 0.1);
                 border-color: rgba(255, 255, 255, 0.3);
                 color: #fff;
-                transform: translateY(-2px);
+                transform: translateY(-1px);
             }
              
             .nav-item.active {
                 background: #e63946; /* Accent Red */
                 border-color: #e63946;
-                box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+                box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
             }
 
             .btn-new-entry {
@@ -107,9 +124,30 @@
             .user-menu {
                 display: flex;
                 align-items: center;
-                gap: 10px;
-                font-size: 0.8rem;
+                gap: 8px;
+                font-size: 0.75rem;
                 color: #bdc3c7;
+            }
+
+            @media (max-width: 640px) {
+                .nav-container {
+                    padding: 10px;
+                    height: auto;
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+                .nav-brand { justify-content: center; }
+                .nav-links { 
+                    justify-content: flex-start;
+                    border-top: 1px solid rgba(255,255,255,0.05);
+                    padding-top: 10px;
+                }
+                .flex.items-center.gap-4 {
+                    justify-content: center;
+                    border-top: 1px solid rgba(255,255,255,0.05);
+                    padding-top: 10px;
+                    margin-top: 10px;
+                }
             }
         </style>
     </head>
@@ -133,7 +171,7 @@
                                 <i class="bi bi-speedometer2"></i> Dashboard
                             </a>
                             <a href="{{ route('postcard.gallery') }}" class="nav-item {{ request()->routeIs('postcard.gallery') ? 'active' : '' }}">
-                                <i class="bi bi-images"></i> Postcard Gallery
+                                <i class="bi bi-images"></i> Archive Gallery
                             </a>
                             <a href="{{ route('stamps') }}" class="nav-item {{ request()->routeIs('stamps') ? 'active' : '' }}">
                                 <i class="bi bi-envelope-paper"></i> Stamps
@@ -144,9 +182,8 @@
                             <a href="{{ route('stats') }}" class="nav-item {{ request()->routeIs('stats') ? 'active' : '' }}">
                                 <i class="bi bi-bar-chart-fill"></i> Stats
                             </a>
-                            <!-- Future Routes -->
                             <a href="{{ route('gallery') }}" class="nav-item {{ request()->routeIs('gallery') ? 'active' : '' }}" target="_blank">
-                                <i class="bi bi-globe"></i> Public Gallery
+                                <i class="bi bi-globe"></i> Public View
                             </a>
                         </div>
 
@@ -157,6 +194,11 @@
                             
                             @auth
                                 <div class="user-menu">
+                                    @if(!request()->routeIs('home') && !request()->routeIs('gallery') && !request()->routeIs('receive.confirm'))
+                                    <button id="pwaInstallBtn" class="nav-item" style="display:none; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);">
+                                        <i class="bi bi-download"></i> <span class="hidden lg:inline">Install App</span>
+                                    </button>
+                                    @endif
                                     <span class="hidden md:inline">{{ Auth::user()->username }}</span>
                                     <!-- Logout Form -->
                                     <form method="POST" action="{{ route('logout') }}" x-data>
@@ -179,7 +221,45 @@
         </div>
 
         @livewireScripts
+        
+        <!-- Global Postcard Loader -->
+        <div wire:loading.delay.longest class="pc-loader-overlay">
+            <div class="pc-envelope"></div>
+            <div class="pc-shadow"></div>
+            <div class="pc-loading-text">Traveling to destination...</div>
+        </div>
+
         <!-- Local Bootstrap Icons -->
         <link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.css') }}">
+
+        @auth
+        <script>
+            let deferredPrompt;
+            const installBtn = document.getElementById('pwaInstallBtn');
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js');
+            }
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                if(installBtn) installBtn.style.display = 'flex';
+            });
+
+            if(installBtn) {
+                installBtn.addEventListener('click', async () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        if (outcome === 'accepted') {
+                            installBtn.style.display = 'none';
+                        }
+                        deferredPrompt = null;
+                    }
+                });
+            }
+        </script>
+        @endauth
     </body>
 </html>

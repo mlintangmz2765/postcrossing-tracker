@@ -61,20 +61,26 @@
                 <table class="w-full text-sm font-postcard border-collapse border border-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="border border-gray-200 p-3 italic">No</th>
+                            <th class="border border-gray-200 p-3 italic" style="width: 50px;">No</th>
                             <th class="border border-gray-200 p-3 italic">Field Name</th>
                             <th class="border border-gray-200 p-3 italic">Format / Rule</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td class="border border-gray-200 p-3 text-center">1</td><td class="border border-gray-200 p-3 font-bold">type</td><td class="border border-gray-200 p-3">"sent" or "received"</td></tr>
-                        <tr><td class="border border-gray-200 p-3 text-center">3</td><td class="border border-gray-200 p-3 font-bold">tgl_kirim</td><td class="border border-gray-200 p-3">DD/MM/YYYY (Determines rate)</td></tr>
-                        <tr><td class="border border-gray-200 p-3 text-center">7</td><td class="border border-gray-200 p-3 font-bold">alamat</td><td class="border border-gray-200 p-3">Full address for mapping</td></tr>
-                        <tr><td class="border border-gray-200 p-3 text-center">8</td><td class="border border-gray-200 p-3 font-bold">negara</td><td class="border border-gray-200 p-3">Origin/Destination country</td></tr>
-                        <tr><td class="border border-gray-200 p-3 text-center">9</td><td class="border border-gray-200 p-3 font-bold">biaya_asal</td><td class="border border-gray-200 p-3">Digits only (0.85 or 0,85)</td></tr>
-                        <tr><td class="border border-gray-200 p-3 text-center">10</td><td class="border border-gray-200 p-3 font-bold">mata_uang</td><td class="border border-gray-200 p-3">ISO Code (USD, EUR, etc)</td></tr>
+                        <tr><td class="border border-gray-200 p-3 text-center">1</td><td class="border border-gray-200 p-3 font-bold">type</td><td class="border border-gray-200 p-3">"sent" or "received" (Lowercase)</td></tr>
+                        <tr><td class="border border-gray-200 p-3 text-center">2</td><td class="border border-gray-200 p-3 font-bold">postcard_id</td><td class="border border-gray-200 p-3">The Postcrossing ID (e.g., ID-123456)</td></tr>
+                        <tr><td class="border border-gray-200 p-3 text-center">3</td><td class="border border-gray-200 p-3 font-bold">tgl_kirim</td><td class="border border-gray-200 p-3">DD/MM/YYYY (Postmark date)</td></tr>
+                        <tr><td class="border border-gray-200 p-3 text-center">4</td><td class="border border-gray-200 p-3 font-bold">tgl_terima</td><td class="border border-gray-200 p-3">DD/MM/YYYY (Arrival date, optional)</td></tr>
+                        <tr><td class="border border-gray-200 p-3 text-center">5</td><td class="border border-gray-200 p-3 font-bold">deskripsi</td><td class="border border-gray-200 p-3">Subject or picture description</td></tr>
+                        <tr><td class="border border-gray-200 p-3 text-center">6</td><td class="border border-gray-200 p-3 font-bold">nama</td><td class="border border-gray-200 p-3">Contact name</td></tr>
+                        <tr><td class="border border-gray-200 p-3 text-center">7</td><td class="border border-gray-200 p-3 font-bold">alamat</td><td class="border border-gray-200 p-3">Full address (for map plotting)</td></tr>
+                        <tr><td class="border border-gray-200 p-3 text-center">8</td><td class="border border-gray-200 p-3 font-bold">negara</td><td class="border border-gray-200 p-3">Country name</td></tr>
+                        <tr><td class="border border-gray-200 p-3 text-center font-bold text-pc-blue">9*</td><td class="border border-gray-200 p-3 font-bold">telepon</td><td class="border border-gray-200 p-3 italic text-pc-blue">ONLY for type:sent (11 cols). Skip if received.</td></tr>
+                        <tr><td class="border border-gray-200 p-3 text-center">9/10</td><td class="border border-gray-200 p-3 font-bold">biaya_asal</td><td class="border border-gray-200 p-3">Digits only (e.g., 10000 or 1.50)</td></tr>
+                        <tr><td class="border border-gray-200 p-3 text-center">10/11</td><td class="border border-gray-200 p-3 font-bold">mata_uang</td><td class="border border-gray-200 p-3">ISO Code (USD, IDR, EUR, etc)</td></tr>
                     </tbody>
                 </table>
+                <p class="mt-4 text-xs italic text-gray-500">* Note: Column index shifts if "telepon" is included (Sent). Use semicolon (;) as separator.</p>
             </div>
 
             <div class="mt-10 text-center">

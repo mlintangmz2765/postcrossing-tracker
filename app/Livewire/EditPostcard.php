@@ -2,41 +2,56 @@
 
 namespace App\Livewire;
 
+use App\Models\Contact;
+use App\Models\Postcard;
+use App\Models\PostcardStamp;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Http;
-use Intervention\Image\Facades\Image; // Assuming intervention/image is available or using standard GD
 
 class EditPostcard extends Component
 {
     use WithFileUploads;
 
     public $id;
+
     public $type;
+
     public $postcard_id;
+
     public $nama_kontak;
+
     public $negara;
+
     public $nomor_telepon;
+
     public $alamat;
+
     public $tanggal_kirim;
+
     public $tanggal_terima;
+
     public $biaya_prangko;
+
     public $deskripsi_gambar;
-    
+
     // Currency fields (for received)
     public $nilai_asal;
+
     public $mata_uang = 'IDR';
+
     public $kurs_idr = 1;
 
     // Images
     public $currentFotoDepan;
+
     public $currentFotoBelakang;
-    
+
     // JS Scanner will fill these Base64 strings
-    public $newFotoDepanBase64; 
+    public $newFotoDepanBase64;
+
     public $newFotoBelakangBase64;
+
     public $newStampsBase64 = []; // Array of Base64 strings
 
     public $existingStamps = [];
@@ -46,26 +61,26 @@ class EditPostcard extends Component
     public function mount($id)
     {
         $this->id = $id;
-        $data = DB::table('postcards')->where('id', $id)->where('user_id', auth()->id())->first();
+        $data = Postcard::where('id', $id)->where('user_id', auth()->id())->first();
 
-        if (!$data) {
+        if (! $data) {
             return redirect()->route('dashboard');
         }
 
         $this->type = $data->type;
         $this->postcard_id = $data->postcard_id;
-        $this->nama_kontak = $data->nama_kontak;
-        $this->negara = $data->negara;
-        $this->nomor_telepon = $data->nomor_telepon;
-        $this->alamat = $data->alamat;
-        $this->tanggal_kirim = $data->tanggal_kirim;
-        $this->tanggal_terima = $data->tanggal_terima;
+        $this->nama_kontak = $data->contact?->nama_kontak;
+        $this->negara = $data->country?->nama_indonesia;
+        $this->nomor_telepon = $data->contact?->nomor_telepon;
+        $this->alamat = $data->contact?->alamat;
+        $this->tanggal_kirim = $data->tanggal_kirim?->format('Y-m-d');
+        $this->tanggal_terima = $data->tanggal_terima?->format('Y-m-d');
         $this->biaya_prangko = $data->biaya_prangko;
         $this->deskripsi_gambar = $data->deskripsi_gambar;
         $this->nilai_asal = $data->nilai_asal;
         $this->mata_uang = $data->mata_uang ?? 'IDR';
         $this->kurs_idr = $data->kurs_idr ?? 1;
-        
+
         $this->currentFotoDepan = $data->foto_depan;
         $this->currentFotoBelakang = $data->foto_belakang;
 
@@ -74,13 +89,13 @@ class EditPostcard extends Component
 
     public function loadStamps()
     {
-        $this->existingStamps = DB::table('postcard_stamps')->where('postcard_id', $this->id)->get();
+        $this->existingStamps = PostcardStamp::where('postcard_id', $this->id)->get();
     }
 
     public function deletePostcard()
     {
-        $data = DB::table('postcards')->where('id', $this->id)->where('user_id', auth()->id())->first();
-        
+        $data = Postcard::where('id', $this->id)->where('user_id', auth()->id())->first();
+
         if ($data) {
             // Delete associated images
             if ($data->foto_depan && file_exists(public_path($data->foto_depan))) {
@@ -89,96 +104,105 @@ class EditPostcard extends Component
             if ($data->foto_belakang && file_exists(public_path($data->foto_belakang))) {
                 @unlink(public_path($data->foto_belakang));
             }
-            
+
             // Delete stamps and their images
-            $stamps = DB::table('postcard_stamps')->where('postcard_id', $this->id)->get();
+            $stamps = PostcardStamp::where('postcard_id', $this->id)->get();
             foreach ($stamps as $stamp) {
                 if (file_exists(public_path($stamp->foto_prangko))) {
                     @unlink(public_path($stamp->foto_prangko));
                 }
             }
-            DB::table('postcard_stamps')->where('postcard_id', $this->id)->delete();
-            
+            PostcardStamp::where('postcard_id', $this->id)->delete();
+
             // Delete postcard record
-            DB::table('postcards')->where('id', $this->id)->delete();
+            $data->delete();
         }
-        
-        return redirect()->route('home');
+
+        return redirect()->route('dashboard');
     }
 
     public function deleteStamp($stampId)
     {
-        $stamp = DB::table('postcard_stamps')
-            ->join('postcards', 'postcard_stamps.postcard_id', '=', 'postcards.id')
-            ->where('postcard_stamps.id', $stampId)
-            ->where('postcards.user_id', auth()->id())
-            ->select('postcard_stamps.*')
+        $stamp = PostcardStamp::where('id', $stampId)
+            ->whereHas('postcard', function ($q) {
+                $q->where('user_id', auth()->id());
+            })
             ->first();
+
         if ($stamp) {
             if (file_exists(public_path($stamp->foto_prangko))) {
                 @unlink(public_path($stamp->foto_prangko));
             }
-            DB::table('postcard_stamps')->where('id', $stampId)->delete();
+            $stamp->delete();
             $this->loadStamps();
         }
     }
-    
+
     public function rotateStamp($stampId)
     {
-        // Simple rotation logic using GD
-        $stamp = DB::table('postcard_stamps')
-            ->join('postcards', 'postcard_stamps.postcard_id', '=', 'postcards.id')
-            ->where('postcard_stamps.id', $stampId)
-            ->where('postcards.user_id', auth()->id())
-            ->select('postcard_stamps.*')
+        $stamp = PostcardStamp::where('id', $stampId)
+            ->whereHas('postcard', function ($q) {
+                $q->where('user_id', auth()->id());
+            })
             ->first();
+
         if ($stamp && file_exists(public_path($stamp->foto_prangko))) {
             $path = public_path($stamp->foto_prangko);
             $source = imagecreatefromjpeg($path);
-            $rotate = imagerotate($source, -90, 0); // Rotate 90 deg clockwise (negative in GD?)
+            $rotate = imagerotate($source, -90, 0);
             imagejpeg($rotate, $path);
             imagedestroy($source);
             imagedestroy($rotate);
-            $this->loadStamps(); // Refresh UI
-            $this->dispatch('stampRotated', $stampId); // Notify frontend to reload image
+            $this->loadStamps();
+            $this->dispatch('stampRotated', $stampId);
         }
     }
 
     public function update(\App\Services\GeocodingService $geoService)
     {
         $this->validate([
-            'postcard_id' => 'required',
+            'postcard_id' => 'nullable',
             'negara' => 'required',
             'alamat' => 'required',
             'tanggal_kirim' => 'required|date',
         ]);
 
-        // Process Base64 Images if present
+        $postcard = Postcard::where('id', $this->id)->where('user_id', auth()->id())->firstOrFail();
+
         if ($this->newFotoDepanBase64) {
-            if ($this->currentFotoDepan && file_exists(public_path($this->currentFotoDepan))) @unlink(public_path($this->currentFotoDepan));
+            if ($this->currentFotoDepan && file_exists(public_path($this->currentFotoDepan))) {
+                @unlink(public_path($this->currentFotoDepan));
+            }
+
             $this->currentFotoDepan = $this->saveBase64Image($this->newFotoDepanBase64, 'f', 'd');
         }
 
         if ($this->newFotoBelakangBase64) {
-            if ($this->currentFotoBelakang && file_exists(public_path($this->currentFotoBelakang))) @unlink(public_path($this->currentFotoBelakang));
+            if ($this->currentFotoBelakang && file_exists(public_path($this->currentFotoBelakang))) {
+                @unlink(public_path($this->currentFotoBelakang));
+            }
+
             $this->currentFotoBelakang = $this->saveBase64Image($this->newFotoBelakangBase64, 'b', 'b');
         }
 
-        // Process New Stamps
         foreach ($this->newStampsBase64 as $idx => $base64) {
-             $path = $this->saveBase64Image($base64, 'stamp', $idx);
-             DB::table('postcard_stamps')->insert([
-                 'postcard_id' => $this->id,
-                 'foto_prangko' => $path
-             ]);
+            $path = $this->saveBase64Image($base64, 'stamp', $idx);
+            PostcardStamp::create([
+                'postcard_id' => $this->id,
+                'foto_prangko' => $path,
+            ]);
         }
 
-        // Handle Coordinates - Geocode if address/country changed
-        $lat = null;
-        $lng = null;
-        $original = DB::table('postcards')->where('id', $this->id)->where('user_id', auth()->id())->first();
-        
-        if ($original && ($original->alamat !== $this->alamat || $original->negara !== $this->negara)) {
+        // Fetch Country ID
+        $country = \App\Models\Country::where('nama_indonesia', $this->negara)
+            ->orWhere('nama_inggris', $this->negara)
+            ->first();
+        $country_id = $country?->id;
+
+        $lat = $postcard->contact?->lat;
+        $lng = $postcard->contact?->lng;
+
+        if (($postcard->contact?->alamat !== $this->alamat) || ($postcard->country?->nama_indonesia !== $this->negara)) {
             $coords = $geoService->getCoordinates($this->alamat, $this->negara);
             if ($coords['lat'] != 0) {
                 $lat = $coords['lat'];
@@ -186,12 +210,22 @@ class EditPostcard extends Component
             }
         }
 
-        $updateData = [
+        // Sync Contact first to ensure relation
+        $contact = Contact::updateOrCreate(
+            ['user_id' => auth()->id() ?? 1, 'nama_kontak' => $this->nama_kontak],
+            [
+                'alamat' => $this->alamat,
+                'country_id' => $country_id,
+                'nomor_telepon' => $this->nomor_telepon,
+                'lat' => $lat,
+                'lng' => $lng,
+            ]
+        );
+
+        $postcard->update([
             'postcard_id' => $this->postcard_id,
-            'nama_kontak' => $this->nama_kontak,
-            'negara' => $this->negara,
-            'nomor_telepon' => $this->nomor_telepon,
-            'alamat' => $this->alamat,
+            'contact_id' => $contact->id,
+            'country_id' => $country_id,
             'tanggal_kirim' => $this->tanggal_kirim,
             'tanggal_terima' => $this->tanggal_terima ?: null,
             'biaya_prangko' => $this->biaya_prangko,
@@ -201,57 +235,20 @@ class EditPostcard extends Component
             'kurs_idr' => $this->kurs_idr,
             'foto_depan' => $this->currentFotoDepan,
             'foto_belakang' => $this->currentFotoBelakang,
-        ];
+        ]);
 
-        if ($lat !== null && $lng !== null) {
-            $updateData['lat'] = $lat;
-            $updateData['lng'] = $lng;
-        }
-
-        DB::table('postcards')->where('id', $this->id)->where('user_id', auth()->id())->update($updateData);
-
-        // Sync Contact
-        $this->syncContact();
-
-        return redirect()->route('view', ['id' => $this->id]);
+        return redirect()->route('dashboard');
     }
 
     private function saveBase64Image($base64, $prefix, $suffix)
     {
-        $image_parts = explode(";base64,", $base64);
+        $image_parts = explode(';base64,', $base64);
         $image_base64 = base64_decode($image_parts[1]);
-        $filename = 'uploads/' . $prefix . '_' . time() . '_' . $suffix . '.jpg';
-        
-        // Use Storage facade for safer file writing
-        \Illuminate\Support\Facades\Storage::disk('public')->put($filename, $image_base64);
-        
-        return 'storage/' . $filename;
+        $filename = 'uploads/'.$prefix.'_'.time().'_'.$suffix.'.jpg';
+        Storage::disk('public')->put($filename, $image_base64);
+
+        return 'storage/'.$filename;
     }
-
-    private function syncContact()
-    {
-        $exists = DB::table('contacts')
-            ->where('nama_kontak', $this->nama_kontak)
-            ->where('user_id', auth()->id() ?? 1)
-            ->first();
-        
-        $data = [
-            'alamat' => $this->alamat,
-            'negara' => $this->negara,
-            'nomor_telepon' => $this->nomor_telepon,
-        ];
-
-        if ($exists) {
-            DB::table('contacts')->where('id', $exists->id)->update($data);
-        } else {
-            DB::table('contacts')->insert(array_merge($data, [
-                'user_id' => auth()->id() ?? 1,
-                'nama_kontak' => $this->nama_kontak
-            ]));
-        }
-    }
-
-
 
     public function render()
     {

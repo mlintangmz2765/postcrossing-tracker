@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Livewire\RegisterPostcard;
 use App\Livewire\Home;
 use App\Livewire\PublicGallery;
+use App\Livewire\RegisterPostcard;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', Home::class)->name('home');
 Route::get('/gallery', PublicGallery::class)->name('gallery');
@@ -23,5 +23,6 @@ Route::post('/logout', function () {
     Auth::logout();
     session()->invalidate();
     session()->regenerateToken();
+
     return redirect('/');
 })->name('logout');

@@ -2,7 +2,7 @@
      style="font-family: 'Quicksand', sans-serif; background-image: url('{{ asset('images/cardboard.png') }}'); background-repeat: repeat;">
     
     <style>
-        /* Embed fonts specifically for this page if needed */
+
 
         
         body { font-family: 'Quicksand', sans-serif; }
@@ -122,7 +122,7 @@
                 @elseif ($postcard)
                     <div class="recipient-box">
                         <small style="color:#64748b;">TO RECIPIENT:</small><br>
-                        <strong style="font-size:22px; color:#1e293b;">{{ $postcard->nama_kontak }}</strong>
+                        <strong style="font-size:22px; color:#1e293b;">{{ $postcard->contact?->nama_kontak ?? 'Friend' }}</strong>
                     </div>
                     <p style="font-size: 14px; color: #6b7280; margin-bottom: 20px;">
                         Greetings! A postcard from Indonesia has reached you. Please confirm to notify the sender.
@@ -145,7 +145,7 @@
             </div>
 
             <div class="footer-text">
-                mlintangmz Postcard Tracker &bull; {{ date('Y') }}
+                {{ config('app.owner_username') }} Postcard Tracker &bull; {{ date('Y') }}
             </div>
         </div>
 
@@ -154,7 +154,7 @@
             <div class="modal-overlay">
                 <div class="modal-box">
                     <h2 class="text-xl font-bold mb-2">Is it you?</h2>
-                    <p class="mb-4">Confirming as <b>{{ $postcard->nama_kontak ?? '' }}</b>.</p>
+                    <p class="mb-4">Confirming as <b>{{ $postcard->contact?->nama_kontak ?? 'the recipient' }}</b>.</p>
                     <div class="modal-btns">
                         <button class="btn-action bg-emerald-500 hover:bg-emerald-600" @click="confirmStep1()">Yes, confirm!</button>
                         <button @click="closeModal()" class="text-gray-400 hover:text-gray-600">Cancel</button>
@@ -167,7 +167,7 @@
             <div class="modal-overlay">
                 <div class="modal-box">
                     <h2 class="text-xl font-bold mb-2">Add a Note?</h2>
-                    <p class="mb-4">Would you like to send a message to Lintang?</p>
+                    <p class="mb-4">Would you like to send a message to {{ config('app.owner_name') }}?</p>
                     <div class="modal-btns">
                         <button class="btn-action" @click="goToStep3()">Write Message</button>
                         <button class="btn-action bg-gray-500 hover:bg-gray-600" @click="submitFinal()">No, just register</button>
@@ -200,38 +200,38 @@
 
     @if ($isChina)
     <script type="text/javascript">
-        window._AMapSecurityConfig = { securityJsCode: '{{ env('AMAP_WEB_KEY') }}' };
+        window._AMapSecurityConfig = { securityJsCode: '{{ config('app.amap_web_key') }}' };
     </script>
-    <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key={{ env('AMAP_JS_KEY') }}"></script>
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key={{ config('app.amap_js_key') }}"></script>
     <script>
         @if($postcard && !$alreadyConfirmed && !$justConfirmed)
-        const container = document.getElementById('map-confirm');
-        if (container) {
-            var map = new AMap.Map('map-confirm', { zoom: 2, center: [105, 10], mapStyle: 'amap://styles/light' });
-            var start = new AMap.LngLat(myLng, myLat);
-            var end = new AMap.LngLat(targetLng, targetLat);
-            new AMap.CircleMarker({ center: start, radius: 5, strokeColor: '#ff4b4b', fillColor: '#ff4b4b', fillOpacity: 0.8 }).setMap(map);
-            new AMap.CircleMarker({ center: end, radius: 5, strokeColor: '#4f46e5', fillColor: '#4f46e5', fillOpacity: 0.8 }).setMap(map);
-            var polyline = new AMap.Polyline({ path: [start, end], strokeColor: '#4f46e5', strokeWeight: 2, strokeStyle: 'dashed', strokeDasharray: [5, 10] });
-            map.add(polyline);
-            map.setFitView([polyline], true, [30, 30, 30, 30]);
-        }
+        window.onload = function() {
+            const container = document.getElementById('map-confirm');
+            if (container && typeof AMap !== 'undefined') {
+                var map = new AMap.Map('map-confirm', { zoom: 2, center: [105, 10], mapStyle: 'amap://styles/light' });
+                var start = new AMap.LngLat(myLng, myLat);
+                var end = new AMap.LngLat(targetLng, targetLat);
+                new AMap.CircleMarker({ center: start, radius: 5, strokeColor: '#ff4b4b', fillColor: '#ff4b4b', fillOpacity: 0.8 }).setMap(map);
+                new AMap.CircleMarker({ center: end, radius: 5, strokeColor: '#4f46e5', fillColor: '#4f46e5', fillOpacity: 0.8 }).setMap(map);
+                var polyline = new AMap.Polyline({ path: [start, end], strokeColor: '#4f46e5', strokeWeight: 2, strokeStyle: 'dashed', strokeDasharray: [5, 10] });
+                map.add(polyline);
+                map.setFitView([polyline], true, [30, 30, 30, 30]);
+            }
+        };
         @endif
     </script>
     @else
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_API_KEY') }}&libraries=marker&callback=initMap&loading=async" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('app.google_api_key') }}&libraries=marker&callback=initMap&loading=async" async defer></script>
     <script>
         @if($postcard && !$alreadyConfirmed && !$justConfirmed)
-        async function initMap() {
+        function initMap() {
             var container = document.getElementById('map-confirm');
             if (!container) return;
-
-            const { Map } = await google.maps.importLibrary("maps");
 
             var myPos = { lat: myLat, lng: myLng };
             var targetPos = { lat: targetLat, lng: targetLng };
             
-            var map = new Map(container, {
+            var map = new google.maps.Map(container, {
                 zoom: 2, 
                 center: myPos, 
                 disableDefaultUI: true,

@@ -44,7 +44,6 @@
         .total-row td { background: #f8f9fa; font-weight: bold; font-size: 0.9rem; color: #2c3e50; border-top: 2px solid #ddd; }
     </style>
 
-    <!-- Filters -->
     <div class="filter-inline">
         <div class="filter-group">
             <label>Sent Date</label>
@@ -93,7 +92,6 @@
         </div>
     </div>
 
-    <!-- Table -->
     <div style="overflow-x: auto;">
         <table class="vintage-table">
             <thead>
@@ -115,7 +113,7 @@
                         <th>Rate</th>
                     @endif
                     <th>Total (IDR)</th>
-                    <!-- Legacy Action Column: Title was empty in legacy, but for accessiblity we can keep it empty or use 'Actions' -->
+                    <th>Actions</th>
                     <th style="width: 80px;"></th> 
                 </tr>
             </thead>
@@ -144,8 +142,8 @@
                                 <span class="font-bold text-gray-700">{{ $row->postcard_id ?: '-' }}</span>
                             @endif
                         </td>
-                        <td>{{ \Carbon\Carbon::parse($row->tanggal_kirim)->format('Y-m-d') }}</td>
-                        <td>{{ ($row->tanggal_terima && $row->tanggal_terima != '0000-00-00') ? \Carbon\Carbon::parse($row->tanggal_terima)->format('Y-m-d') : '-' }}</td>
+                        <td>{{ $row->tanggal_kirim ? \Carbon\Carbon::parse($row->tanggal_kirim)->format('d/m/Y') : '-' }}</td>
+                        <td>{{ ($row->tanggal_terima && $row->tanggal_terima != '0000-00-00') ? \Carbon\Carbon::parse($row->tanggal_terima)->format('d/m/Y') : '-' }}</td>
                         <td>
                             <span class="badge">{{ $this->getDuration($row->tanggal_kirim, $row->tanggal_terima) }}</span>
                         </td>
@@ -153,13 +151,13 @@
                         <td style="max-width: 250px; word-wrap: break-word;" title="{{ $row->deskripsi_gambar }}">
                             {{ $row->deskripsi_gambar }}
                         </td>
-                        <td>{{ $row->nama_kontak }}</td>
-                        <td style="font-size: 0.75rem; max-width: 200px; word-wrap: break-word;" title="{{ $row->alamat }}">
-                            {{ $row->alamat }}
+                        <td>{{ $row->contact?->nama_kontak }}</td>
+                        <td style="font-size: 0.75rem; max-width: 200px; word-wrap: break-word;" title="{{ $row->contact?->alamat }}">
+                            {{ $row->contact?->alamat }}
                         </td>
-                        <td>{{ $row->negara }}</td>
+                        <td>{{ $row->country?->nama_inggris ?? $row->country?->nama_indonesia }}</td>
                         @if($type === 'sent')
-                            <td>{{ $row->nomor_telepon ?: '-' }}</td>
+                            <td>{{ $row->contact?->nomor_telepon ?: '-' }}</td>
                         @else
                             <td>
                                 {{ $row->mata_uang }} {{ number_format($row->nilai_asal, 2) }}
@@ -191,13 +189,12 @@
                 <!-- Totals Row -->
                 <tr class="total-row">
                     <td colspan="{{ $type === 'sent' ? '10' : '11' }}" style="text-align: right; padding-right: 15px;">TOTAL:</td>
-                    <td colspan="2" style="color: #d63031;">Rp {{ number_format($totalCost) }}</td>
+                    <td colspan="2" style="color: #d63031;">IDR {{ number_format($totalCost) }}</td>
                 </tr>
             </tbody>
         </table>
     </div>
     
-    <!-- Pagination -->
     <div class="mt-4">
         {{ $rows->links('livewire.custom-pagination', data: ['scrollTo' => false]) }}
     </div>

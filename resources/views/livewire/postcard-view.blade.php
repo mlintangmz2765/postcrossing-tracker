@@ -12,14 +12,14 @@
             border-radius: 4px;
         }
 
-        /* HEADER */
+
         .header-section { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #f1f5f9; padding-bottom: 20px; margin-bottom: 30px; }
         .header-title { margin: 0; color: var(--pc-blue); font-family: 'Dancing Script', cursive; font-size: 2.8rem; }
         .header-title a { text-decoration: none; color: inherit; }
         .header-title a:hover { text-decoration: underline; }
         .status-badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase; font-family: 'Special Elite'; }
         
-        /* PHOTO GRID */
+
         .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
         .photo-box { 
             background: #fafafa; padding: 15px; border-radius: 4px; border: 1px solid #eee; 
@@ -33,7 +33,7 @@
         .photo-box img:hover { transform: scale(1.02); }
         .photo-label { display: block; margin-top: 15px; font-weight: bold; font-size: 12px; color: var(--pc-blue); font-family: 'Special Elite'; letter-spacing: 1px; }
 
-        /* STAMPS */
+
         .stamp-section { margin-top: 25px; padding-top: 25px; border-top: 2px dashed #f1f5f9; }
         .stamp-gallery { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; }
         .stamp-item { background: white; padding: 5px; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0,0,0,0.08); transition: 0.2s; cursor: pointer; rotate: -2deg; }
@@ -41,22 +41,22 @@
         .stamp-item:hover { rotate: 0deg; transform: translateY(-5px); }
         .stamp-item img { width: 80px; height: 80px; object-fit: cover; border: 1px solid #eee; }
 
-        /* MESSAGES */
+
         .msg-box { background: #f0fdf4; padding: 20px; border-radius: 15px; border: 2px solid #bbf7d0; margin-bottom: 20px; line-height: 1.6; position: relative; color: #166534; font-style: italic; }
         .msg-box::before { content: '💬'; position: absolute; top: -15px; left: 20px; background: white; font-size: 20px; border: 1px solid #bbf7d0; border-radius: 50%; padding: 5px; }
         .desc-box { background: #fdf6e3; padding: 20px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 30px; line-height: 1.6; color: var(--pc-ink); position: relative; }
         .desc-box::before { content: 'NOTES'; position: absolute; top: -10px; left: 20px; background: var(--pc-blue); color: white; font-family: 'Special Elite'; font-size: 10px; padding: 2px 8px; border-radius: 4px; }
 
-        /* MAP */
+
         #google-map-view { height: 400px; width: 100%; border-radius: 8px; margin-bottom: 30px; border: 2px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
 
-        /* INFO GRID */
+
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
         .info-item { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #f8fafc; }
         .info-item label { display: block; font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; font-family: 'Special Elite'; letter-spacing: 1px; }
         .info-item span { font-size: 15px; font-weight: 500; color: #1e293b; word-wrap: break-word; font-family: 'Quicksand', sans-serif; }
         
-        /* QR CODE */
+
         .qr-area { text-align: center; background: white; padding: 20px; border: 2px solid #eee; border-radius: 8px; display: inline-block; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
 
         /* Lightbox */
@@ -71,12 +71,9 @@
 
     <div class="view-container airmail-border">
         <div class="view-inner">
-        <!-- Dashboard Button Removed as per request (or keeps legacy 'Back to Dashboard'?) -->
-        <!-- User said "hapus tombol ke postcard gallery", assuming they meant the big button at bottom. -->
-        <!-- Legacy had a "Dashboard" back link at top. I'll keep a small text link or remove entire nav if they want pure view. -->
 
 
-        <!-- HEADER -->
+
         <div class="header-section">
             <div>
                 <h2 class="header-title">
@@ -101,12 +98,12 @@
             </div>
             <div>
                 <a href="{{ route('edit', ['id' => $card->id]) }}" style="color: var(--post-blue); font-weight: bold; text-decoration: none;">
-                    <i class="bi bi-pencil-square"></i> Edit Data
+                    <i class="bi bi-pencil-square"></i> Edit Postcard
                 </a>
             </div>
         </div>
 
-        <!-- IMAGES -->
+
         <div class="photo-grid">
             <div class="photo-box">
                 @if(!empty($card->foto_depan))
@@ -126,7 +123,7 @@
             </div>
         </div>
 
-        <!-- STAMPS -->
+
         @if(count($stamps) > 0)
         <div class="stamp-section">
             <label style="font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; font-family: 'Special Elite';">Stamp Collection</label>
@@ -140,7 +137,7 @@
         </div>
         @endif
 
-        <!-- MESSAGES -->
+
         <div style="margin-top: 25px;">
             @if(!empty($card->pesan_penerima))
             <div class="msg-box">
@@ -157,33 +154,33 @@
             @endif
         </div>
 
-        <!-- MAP -->
+
         <label style="font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; margin-top:20px; display:block; font-family: 'Special Elite';">Travel Visualization</label>
         <div id="google-map-view"></div>
 
-        <!-- FULL DETAILS GRID -->
+
         <div class="info-grid">
             <!-- Left Info -->
             <div>
                 <div class="info-item">
                     <label>Country</label>
-                    <span>{{ $card->negara }}</span>
+                    <span>{{ $card->country?->nama_inggris ?? $card->country?->nama_indonesia }}</span>
                 </div>
                 <div class="info-item">
                     <label>{{ $card->type == 'sent' ? 'Recipient' : 'Sender' }}</label>
-                    <span>{{ $card->nama_kontak }}</span>
+                    <span>{{ $card->contact?->nama_kontak }}</span>
                 </div>
                 <div class="info-item">
                     <label>Full Address</label>
-                    <span>{!! nl2br(e($card->alamat)) !!}</span>
+                    <span>{!! nl2br(e($card->contact?->alamat)) !!}</span>
                 </div>
                 <div class="info-item">
                     <label>Phone Number</label>
-                    <span>{{ $card->nomor_telepon ?: '-' }}</span>
+                    <span>{{ $card->contact?->nomor_telepon ?: '-' }}</span>
                 </div>
                  <div class="info-item">
                     <label>Coordinates</label>
-                    <span>{{ (float)$card->lat }}, {{ (float)$card->lng }}</span>
+                    <span>{{ (float)($card->contact?->lat ?? 0) }}, {{ (float)($card->contact?->lng ?? 0) }}</span>
                 </div>
             </div>
 
@@ -191,11 +188,11 @@
             <div>
                 <div class="info-item">
                     <label>Sent Date</label>
-                    <span>{{ \Carbon\Carbon::parse($card->tanggal_kirim)->format('d F Y') }}</span>
+                    <span>{{ \Carbon\Carbon::parse($card->tanggal_kirim)->format('d/m/Y') }}</span>
                 </div>
                 <div class="info-item">
                     <label>Received Date</label>
-                    <span>{{ (!empty($card->tanggal_terima) && $card->tanggal_terima != '0000-00-00') ? \Carbon\Carbon::parse($card->tanggal_terima)->format('d F Y') : 'Travelling / Not Yet Received' }}</span>
+                    <span>{{ (!empty($card->tanggal_terima) && $card->tanggal_terima != '0000-00-00') ? \Carbon\Carbon::parse($card->tanggal_terima)->format('d/m/Y') : 'Travelling / Not Yet Received' }}</span>
                 </div>
                 <div class="info-item">
                     <label>Duration</label>
@@ -214,13 +211,13 @@
                                 <small>(Rate: {{ number_format($card->kurs_idr, 0, ',', '.') }})</small>
                             </span>
                         @endif
-                        <strong style="color: var(--post-blue);">Rp {{ number_format($card->biaya_prangko, 0, ',', '.') }}</strong>
+                        <strong style="color: var(--post-blue);">IDR {{ number_format($card->biaya_prangko, 0, ',', '.') }}</strong>
                     </span>
                 </div>
             </div>
         </div>
 
-        <!-- QR SECTION (Sent Only) -->
+        <!-- QR SECTION -->
         @if($card->type == 'sent')
         <div style="border-top: 2px solid #f1f5f9; margin-top: 30px; padding-top: 30px; text-align: center;">
             <div class="qr-area" id="qr-download-area">
@@ -248,7 +245,7 @@
     <!-- SCRIPTS -->
     <script src="{{ asset('vendor/qrcode/qrcode.min.js') }}"></script>
     <script src="{{ asset('vendor/html-to-image/html-to-image.js') }}"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_API_KEY') }}&libraries=marker&callback=initViewMap&loading=async" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('app.google_api_key') }}&libraries=marker&callback=initViewMap&loading=async" async defer></script>
 
     <script>
         function openLightbox(src) {
@@ -262,13 +259,11 @@
         }
 
         // Map using Google Maps
-        async function initViewMap() {
+        function initViewMap() {
             const myPos = { lat: {{ $originLat }}, lng: {{ $originLng }} };
-            const targetPos = { lat: {{ $card->lat }}, lng: {{ $card->lng }} };
+            const targetPos = { lat: {{ $card->contact?->lat ?? 0 }}, lng: {{ $card->contact?->lng ?? 0 }} };
 
-            const { Map } = await google.maps.importLibrary("maps");
-
-            const map = new Map(document.getElementById('google-map-view'), {
+            const map = new google.maps.Map(document.getElementById('google-map-view'), {
                 zoom: 3,
                 center: myPos,
                 streetViewControl: false,
@@ -324,7 +319,7 @@
                 var node = document.getElementById('qr-download-area');
                 if (!node) { alert('Node not found'); return; }
 
-                htmlToImage.toPng(node)
+                htmlToImage.toPng(node, { skipFonts: true })
                     .then(function (dataUrl) {
                         var link = document.createElement('a');
                         link.download = 'Label_{{ $card->uid }}.png';

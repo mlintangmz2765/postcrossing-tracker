@@ -1,6 +1,6 @@
 
     <style>
-        /* --- 1. SETUP FONT LOKAL --- */
+        /* Fonts */
         @font-face {
             font-family: 'Dancing Script';
             src: url('{{ asset('fonts/dancing-script.woff2') }}') format('woff2');
@@ -30,7 +30,7 @@
             font-display: swap;
         }
 
-        /* --- 2. CSS UTAMA --- */
+        /* Main Styles */
         :root {
             --primary: #2c3e50;
             --accent-blue: #457b9d;
@@ -56,10 +56,10 @@
             -moz-osx-font-smoothing: auto;
         }
         
-        /* Helper for legacy text-danger */
+        /* Text Helper */
         .text-danger { color: var(--accent-red); }
 
-        /* --- DEKORASI PAR AVION (Strip Atas) --- */
+        /* Par Avion Decoration */
         .par-avion-strip {
             position: fixed; top: 0; left: 0; right: 0; height: 10px;
             background: repeating-linear-gradient(
@@ -73,8 +73,8 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        /* --- NAVIGATION (Top Right) --- */
-        .top-nav-legacy {
+        /* Top Navigation */
+        .top-nav {
             position: absolute;
             top: 25px;
             right: 25px;
@@ -83,7 +83,7 @@
             gap: 15px;
         }
 
-        .nav-link-legacy {
+        .nav-link {
             text-decoration: none;
             color: #fff;
             font-family: 'Special Elite', monospace;
@@ -96,7 +96,7 @@
             transition: 0.3s;
         }
 
-        .nav-link-legacy:hover {
+        .nav-link:hover {
             background: var(--accent-red);
             border-color: var(--accent-red);
         }
@@ -141,7 +141,7 @@
             letter-spacing: 1px;
         }
 
-        /* --- TOMBOL UTAMA (Public Gallery) --- */
+        /* Gallery Button */
         .btn-gallery {
             display: inline-block;
             background: #fff;
@@ -169,11 +169,11 @@
         }
         
         .btn-gallery::before {
-             content: none; /* Legacy CSS content was invalid/broken, so no icon */
+             content: none;
         }
 
         /* --- CONTENT SECTION --- */
-        .section-legacy {
+        .content-section {
             padding: 60px 20px;
             max-width: 1000px;
             margin: auto;
@@ -228,7 +228,7 @@
             font-family: 'Special Elite', monospace;
         }
 
-        /* --- DEKORASI PRANGKO CSS --- */
+        /* Stamp Decoration */
         .stamp-decor {
             position: absolute;
             top: -20px;
@@ -237,7 +237,7 @@
             height: 90px;
             background: white;
             border: 4px solid var(--paper-bg);
-            /* Gerigi Prangko */
+            /* Stamp Edges */
             background-image: 
                 radial-gradient(var(--paper-bg) 30%, transparent 30%),
                 radial-gradient(var(--paper-bg) 30%, transparent 30%);
@@ -335,8 +335,8 @@
             color: white;
         }
 
-        /* --- FOOTER --- */
-        .footer-legacy {
+        /* Footer */
+        .footer-section {
             padding: 50px 20px;
             text-align: center;
             font-family: 'Special Elite', monospace;
@@ -351,9 +351,11 @@
             .hero { padding-top: 120px; }
             .hero h1 { font-size: 3rem; }
             .card-info { padding: 30px 20px; }
-            .stamp-decor { display: none; } /* Hide decorative stamp on mobile */
-            .top-nav-legacy { top: 20px; right: 20px; gap: 10px; }
-            .nav-link-legacy { padding: 6px 12px; font-size: 0.8rem; }
+            /* Text Helper */
+            .text-danger { color: var(--accent-red); }
+            .stamp-decor { display: none; }
+            .top-nav { top: 20px; right: 20px; gap: 10px; }
+            .nav-link { padding: 6px 12px; font-size: 0.8rem; }
         }
     </style>
     <link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.css') }}">
@@ -361,9 +363,9 @@
 <div class="home-wrapper">
     <div class="par-avion-strip"></div>
 
-    <nav class="top-nav-legacy">
-        <a href="{{ route('gallery', ['china' => $isChina ? 1 : null]) }}" class="nav-link-legacy" style="background:rgba(230, 57, 70, 0.8);">Public Gallery</a>
-        <a href="{{ route('login') }}" id="nav-admin" class="nav-link-legacy">Admin Login</a> 
+    <nav class="top-nav">
+        <a href="{{ route('gallery', ['china' => $isChina ? 1 : null]) }}" class="nav-link" style="background:rgba(230, 57, 70, 0.8);">Public Gallery</a>
+        <a href="{{ route('login') }}" id="nav-admin" class="nav-link">Admin Login</a> 
     </nav>
 
     <header class="hero">
@@ -377,7 +379,7 @@
         </div>
     </header>
 
-    <main class="section-legacy">
+    <main class="content-section">
         <div class="card-info">
             <div class="stamp-decor"></div>
 
@@ -403,15 +405,15 @@
                 <p id="offer-desc">
                     Saya sangat terbuka untuk melakukan <strong>Direct Swap</strong> (pertukaran langsung). Jika Anda ingin bertukar kartu pos bertema pemandangan Indonesia, budaya, atau apa pun dengan saya, jangan ragu untuk menghubungi!
                 </p>
-                <a href="mailto:lintangmaulanazulfan@gmail.com?subject=Postcrossing%20Swap%20Request" class="btn-contact" id="btn-contact">
+                <a href="mailto:{{ config('app.owner_contact_email') }}?subject=Postcrossing%20Swap%20Request" class="btn-contact" id="btn-contact">
                     <i class="bi bi-envelope-fill"></i> Hubungi Saya via Email
                 </a>
             </div>
         </div>
     </main>
 
-    <footer class="footer-legacy">
-        <p id="footer-owner">Dikelola dengan <i class="bi bi-heart-fill text-danger"></i> oleh M Lintang Maulana Zulfan</p>
+    <footer class="footer-section">
+        <p id="footer-owner">Dikelola dengan <i class="bi bi-heart-fill text-danger"></i> oleh {{ config('app.owner_name') }}</p>
         <p id="footer-disclaimer" style="font-size: 11px; opacity: 0.7; margin-top:10px;">
             Situs ini adalah proyek hobi pribadi. Kami tidak mengumpulkan data pribadi pengunjung publik.<br>
             Postcrossing adalah merek dagang terdaftar. Situs ini tidak berafiliasi secara resmi dengan Postcrossing.com.
@@ -439,7 +441,7 @@
                 offerTitle: "Tertarik Bertukar Kartu Pos?",
                 offerDesc: "Saya sangat terbuka untuk melakukan <strong>Direct Swap</strong> (pertukaran langsung). Jika Anda ingin bertukar kartu pos bertema pemandangan Indonesia, budaya, atau apa pun dengan saya, jangan ragu untuk menghubungi!",
                 btnContact: "<i class='bi bi-envelope-fill'></i> Hubungi Saya via Email",
-                footerOwner: "Dikelola dengan <i class='bi bi-heart-fill text-danger'></i> oleh M Lintang Maulana Zulfan",
+                footerOwner: "Dikelola dengan <i class='bi bi-heart-fill text-danger'></i> oleh {{ config('app.owner_name') }}",
                 footerDisclaimer: "Situs ini adalah proyek hobi pribadi. Kami tidak mengumpulkan data pribadi pengunjung publik.<br>Postcrossing adalah merek dagang terdaftar. Situs ini tidak berafiliasi secara resmi dengan Postcrossing.com."
             },
             en: {
@@ -455,7 +457,7 @@
                 offerTitle: "Interested in a Swap?",
                 offerDesc: "I am very open to <strong>Direct Swaps</strong>. If you would like to exchange postcards featuring Indonesian landscapes, culture, or anything else, please don't hesitate to reach out!",
                 btnContact: "<i class='bi bi-envelope-fill'></i> Contact Me via Email",
-                footerOwner: "Managed with <i class='bi bi-heart-fill text-danger'></i> by M Lintang Maulana Zulfan",
+                footerOwner: "Managed with <i class='bi bi-heart-fill text-danger'></i> by {{ config('app.owner_name') }}",
                 footerDisclaimer: "This is a private hobby project. We do not collect personal data from public visitors.<br>Postcrossing is a registered trademark. This site is not officially affiliated with Postcrossing.com."
             },
             zh: {
@@ -471,7 +473,7 @@
                 offerTitle: "有兴趣交换吗？",
                 offerDesc: "我非常欢迎<strong>直接交换 (Direct Swap)</strong>。如果您想交换印尼风景、文化或任何主题的明信片，请随时与我联系！",
                 btnContact: "<i class='bi bi-envelope-fill'></i> 通过电子邮件联系我",
-                footerOwner: "由 M Lintang Maulana Zulfan 用 <i class='bi bi-heart-fill text-danger'></i> 管理",
+                footerOwner: "由 {{ config('app.owner_name') }} 用 <i class='bi bi-heart-fill text-danger'></i> 管理",
                 footerDisclaimer: "这是一个私人爱好项目。我们不收集公众访客的个人数据。<br>Postcrossing 是注册商标。本网站与 Postcrossing.com 官方无关。"
             }
         };
@@ -483,7 +485,7 @@
             document.getElementById('nav-admin').innerText = translations[lang].navAdmin;
             heroTitle.innerText = translations[lang].heroTitle;
             document.getElementById('hero-desc').innerText = translations[lang].heroDesc;
-            // No Icon as per legacy match
+            // Update Button Text
             document.getElementById('btn-gallery-text').innerText = translations[lang].btnGallery;
             document.getElementById('title-what').innerText = translations[lang].titleWhat;
             document.getElementById('desc-what').innerHTML = translations[lang].descWhat;
@@ -496,7 +498,7 @@
             document.getElementById('footer-owner').innerHTML = translations[lang].footerOwner;
             document.getElementById('footer-disclaimer').innerHTML = translations[lang].footerDisclaimer;
 
-            // Logika ganti font untuk Mandarin
+            // Use different font-family for Chinese
             if (lang === 'zh') {
                 heroTitle.classList.add('lang-zh');
             } else {
@@ -514,7 +516,7 @@
             localStorage.setItem('preferredLang', lang);
         }
 
-        const savedLang = localStorage.getItem('preferredLang') || 'id';
+        const savedLang = localStorage.getItem('preferredLang') || 'en';
         setTimeout(() => setLang(savedLang), 100);
     </script>
 </div>

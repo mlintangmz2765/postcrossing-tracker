@@ -58,14 +58,14 @@
         .preview-img { 
             width: 100%; 
             border-radius: 4px; 
-            margin-top: 15px; 
             border: 5px solid white; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            max-height: 300px; 
+            max-height: 600px; 
             object-fit: contain; 
+            background: #f8fbff;
         }
 
-        /* Scanner Modal Styles */
+
         #scannerModal { display: none; position: fixed; z-index: 10000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.95); flex-direction: column; }
         .scanner-body { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         #scannerCanvas { max-width: 95vw; max-height: 85vh; cursor: crosshair; }
@@ -86,7 +86,7 @@
         .btn-rot-stamp { position: absolute; top: -8px; left: -8px; background: var(--pc-blue); color: white; border-radius: 50%; width: 24px; height: 24px; text-align: center; line-height: 20px; border: 2px solid white; font-size: 16px; cursor: pointer; z-index: 5; }
     </style>
 
-    <!-- Scripts for Scanner -->
+    <!-- Scripts -->
     <script src="{{ asset('vendor/opencv/opencv.js') }}" type="text/javascript"></script>
     <script src="{{ asset('vendor/jscanify/jscanify.min.js') }}"></script>
 
@@ -99,49 +99,119 @@
 
             <form wire:submit.prevent="update">
                 <div class="form-grid">
-                    <div class="form-group"><label class="vintage-label">Postcard ID</label><input type="text" class="vintage-input" wire:model="postcard_id" placeholder="ID-123456"></div>
-                    <div class="form-group"><label class="vintage-label">Contact Name</label><input type="text" class="vintage-input" wire:model="nama_kontak" placeholder="Recipient Name"></div>
-                    <div class="form-group"><label class="vintage-label">Country</label><input type="text" class="vintage-input" id="negara" wire:model="negara" @blur="getCurrencyFromCountry()" placeholder="Origin Country"></div>
-                    <div class="form-group"><label class="vintage-label">Phone Number</label><input type="text" class="vintage-input" wire:model="nomor_telepon" placeholder="+00 000 0000"></div>
-                    <div class="form-group full"><label class="vintage-label">Mailing Address</label><textarea class="vintage-input" wire:model="alamat" rows="3" placeholder="Full postal address..."></textarea></div>
-                    <div class="form-group"><label class="vintage-label">Sent Date</label><input type="date" class="vintage-input" id="tgl_kirim" wire:model="tanggal_kirim" @change="getAutoKurs()"></div>
-                    <div class="form-group"><label class="vintage-label">Received Date</label><input type="date" class="vintage-input" id="tgl_terima" wire:model="tanggal_terima" @change="getAutoKurs()"></div>
+                    <div class="form-group"><label class="vintage-label">Postcard ID</label><input type="text" class="vintage-input" wire:model="postcard_id" value="{{ $postcard_id }}" placeholder="ID-123456">
+                        @error('postcard_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="form-group"><label class="vintage-label">Contact Name</label><input type="text" class="vintage-input" wire:model="nama_kontak" value="{{ $nama_kontak }}" placeholder="Recipient Name"></div>
+                    <div class="form-group"><label class="vintage-label">Country</label><input type="text" class="vintage-input" id="negara" wire:model="negara" value="{{ $negara }}" @blur="getCurrencyFromCountry()" placeholder="Origin Country">
+                        @error('negara') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="form-group"><label class="vintage-label">Phone Number</label><input type="text" class="vintage-input" wire:model="nomor_telepon" value="{{ $nomor_telepon }}" placeholder="+00 000 0000"></div>
+                    <div class="form-group full"><label class="vintage-label">Mailing Address</label><textarea class="vintage-input" wire:model="alamat" rows="3" placeholder="Full postal address...">{{ $alamat }}</textarea>
+                        @error('alamat') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="form-group" wire:ignore
+                         x-data="{ dateValue: @entangle('tanggal_kirim') }"
+                         x-init="
+                            flatpickr($refs.input, {
+                                defaultDate: dateValue,
+                                altInput: true,
+                                altFormat: 'd/m/Y',
+                                dateFormat: 'Y-m-d',
+                                allowInput: true,
+                                onChange: function(selectedDates, dateStr, instance) {
+                                    dateValue = dateStr;
+                                    $wire.set('tanggal_kirim', dateStr);
+                                    instance.element.setAttribute('data-date-value', dateStr);
+                                    getAutoKurs(dateStr, 'sent');
+                                },
+                                onClose: function(selectedDates, dateStr, instance) {
+                                    getAutoKurs(dateStr, 'sent');
+                                }
+                            });
+                         ">
+                        <label class="vintage-label">Sent Date</label>
+                        <input x-ref="input" type="text" class="vintage-input" id="tgl_kirim" x-model="dateValue">
+                        <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
+                        @error('tanggal_kirim') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="form-group" wire:ignore
+                         x-data="{ dateValue: @entangle('tanggal_terima') }"
+                         x-init="
+                            flatpickr($refs.input, {
+                                defaultDate: dateValue,
+                                altInput: true,
+                                altFormat: 'd/m/Y',
+                                dateFormat: 'Y-m-d',
+                                allowInput: true,
+                                onChange: function(selectedDates, dateStr, instance) {
+                                    dateValue = dateStr;
+                                    $wire.set('tanggal_terima', dateStr);
+                                    instance.element.setAttribute('data-date-value', dateStr);
+                                },
+                                onClose: function(selectedDates, dateStr, instance) {
+
+                                }
+                            });
+                         ">
+                        <label class="vintage-label">Received Date</label>
+                        <input x-ref="input" type="text" class="vintage-input" id="tgl_terima" x-model="dateValue">
+                        <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
+                    </div>
 
                     @if($type == 'received')
                     <div class="form-group full" wire:ignore>
                         <label class="vintage-label">Currency & Rate</label>
                         <div style="display:flex; gap:10px;">
-                            <input type="number" id="nilai_asli" class="vintage-input" wire:model="nilai_asal" step="0.01" placeholder="Val" oninput="hitungIDR()">
-                            <input type="text" id="mata_uang" class="vintage-input uppercase" wire:model="mata_uang" style="width:150px" @blur="getAutoKurs()" placeholder="CUR">
-                            <input type="number" id="kurs_idr" class="vintage-input" wire:model="kurs_idr" step="0.01" oninput="hitungIDR()">
+                            <input type="number" id="nilai_asli" class="vintage-input" wire:model="nilai_asal" value="{{ $nilai_asal }}" step="0.01" placeholder="Val" oninput="hitungIDR()">
+                            <input type="text" id="mata_uang" class="vintage-input uppercase" wire:model="mata_uang" value="{{ $mata_uang }}" style="width:150px" @blur="getAutoKurs()" placeholder="CUR">
+                            <input type="number" id="kurs_idr" class="vintage-input" wire:model="kurs_idr" value="{{ $kurs_idr }}" step="0.01" oninput="hitungIDR()">
                         </div>
 
                     </div>
                     @endif
 
-                    <div class="form-group full"><label class="vintage-label">Total Postage (IDR)</label><input type="number" id="biaya_prangko" class="vintage-input" wire:model="biaya_prangko" step="any" placeholder="0"></div>
-                    <div class="form-group full"><label class="vintage-label">Archive Description</label><textarea class="vintage-input" wire:model="deskripsi_gambar" rows="3" placeholder="Write a short memory about this postcard..."></textarea></div>
+                    <div class="form-group full"><label class="vintage-label">Total Postage (IDR)</label><input type="number" id="biaya_prangko" class="vintage-input" wire:model="biaya_prangko" value="{{ $biaya_prangko }}" step="any" placeholder="0"></div>
+                    <div class="form-group full"><label class="vintage-label">Archive Description</label><textarea class="vintage-input" wire:model="deskripsi_gambar" rows="3" placeholder="Write a short memory about this postcard...">{{ $deskripsi_gambar }}</textarea></div>
 
-                    <!-- Images -->
-                    <div class="form-group">
-                        <label class="vintage-label">Front Visual</label>
+                    <div class="form-group relative">
+                        <label class="vintage-label">Front Visual (Artwork)</label>
                         <div class="upload-card" onclick="openScanner('front')">
                             <i class="bi bi-camera" style="font-size: 1.5rem; display: block;"></i>
                             SCAN FRONT
                         </div>
-                        <img id="p_front" class="preview-img" src="{{ $currentFotoDepan ? asset($currentFotoDepan) : '' }}" style="{{ $currentFotoDepan ? '' : 'display:none' }}">
+                        <div class="relative mt-4">
+                            <img id="p_front" class="preview-img" src="{{ $currentFotoDepan ? asset($currentFotoDepan) : '' }}" style="{{ $currentFotoDepan ? '' : 'display:none' }}">
+                            <div id="btn-actions-front" class="absolute top-4 right-4 flex gap-2 z-[100]" style="display: {{ $currentFotoDepan ? 'flex' : 'none' }};">
+                                <button type="button" onclick="rotateFinal('front')" class="bg-blue-600 text-white p-2 rounded-full shadow-2xl hover:bg-blue-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px;" title="Rotate">
+                                    <i class="bi bi-arrow-clockwise text-lg"></i>
+                                </button>
+                                <button type="button" onclick="deletePreview('front')" class="bg-red-600 text-white p-2 rounded-full shadow-2xl hover:bg-red-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px; background-color: #ef4444 !important;" title="Delete">
+                                    <i class="bi bi-trash text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="vintage-label">Back Message</label>
+                    <div class="form-group relative">
+                        <label class="vintage-label">Back Message (Postal)</label>
                         <div class="upload-card" onclick="openScanner('back')">
-                            <i class="bi bi-camera" style="font-size: 1.5rem; display: block;"></i>
+                            <i class="bi bi-chat-left-text" style="font-size: 1.5rem; display: block;"></i>
                             SCAN BACK
                         </div>
-                        <img id="p_back" class="preview-img" src="{{ $currentFotoBelakang ? asset($currentFotoBelakang) : '' }}" style="{{ $currentFotoBelakang ? '' : 'display:none' }}">
+                        <div class="relative mt-4">
+                            <img id="p_back" class="preview-img" src="{{ $currentFotoBelakang ? asset($currentFotoBelakang) : '' }}" style="{{ $currentFotoBelakang ? '' : 'display:none' }}">
+                            <div id="btn-actions-back" class="absolute top-4 right-4 flex gap-2 z-[100]" style="display: {{ $currentFotoBelakang ? 'flex' : 'none' }};">
+                                <button type="button" onclick="rotateFinal('back')" class="bg-blue-600 text-white p-2 rounded-full shadow-2xl hover:bg-blue-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px;" title="Rotate">
+                                    <i class="bi bi-arrow-clockwise text-lg"></i>
+                                </button>
+                                <button type="button" onclick="deletePreview('back')" class="bg-red-600 text-white p-2 rounded-full shadow-2xl hover:bg-red-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px; background-color: #ef4444 !important;" title="Delete">
+                                    <i class="bi bi-trash text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Stamps -->
                     <div class="full" style="border-top: 2px dashed #eee; padding-top: 25px; margin-top: 15px;">
                         <label class="vintage-label">Philately Collection (Stamps)</label>
                         <div class="stamp-gallery">
@@ -180,23 +250,25 @@
         </div>
     </div>
 
-    <!-- Hidden Input for File Selection -->
+    <!-- File Input -->
     <input type="file" id="hiddenInput" accept="image/*" style="display:none">
 
     <!-- Scanner Modal -->
     <div id="scannerModal">
         <div class="scanner-body"><canvas id="scannerCanvas"></canvas></div>
         <div class="scanner-footer">
-            <button class="btn-scan" style="background:#444" onclick="closeScanner()">CANCEL</button>
-            <button class="btn-scan" style="background:var(--success)" id="btnWarp">CROP & USE</button>
+            <button type="button" class="btn-scan uppercase" style="background:#444" onclick="closeScanner()">Cancel</button>
+            <button type="button" class="btn-scan uppercase" style="background:#2563eb" onclick="rotateSource()"><i class="bi bi-arrow-clockwise"></i> Rotate</button>
+            <button type="button" id="btnCropEdit" class="btn-scan uppercase" style="background:var(--success)">Crop & Use</button>
         </div>
     </div>
 
     <script>
-        const scanner = new jscanify();
-        let activeMode = '', originalImage = new Image();
-        const canvas = document.getElementById('scannerCanvas'), ctx = canvas.getContext('2d');
-        let points = [], draggingIndex = -1;
+    const defaultPoints = [{x: 0.15, y: 0.15}, {x: 0.85, y: 0.15}, {x: 0.85, y: 0.85}, {x: 0.15, y: 0.85}];
+    const scanner = new jscanify();
+    let activeMode = '', originalImage = new Image();
+    const canvas = document.getElementById('scannerCanvas'), ctx = canvas.getContext('2d');
+    let points = [], draggingIndex = -1;
         const fileInput = document.getElementById('hiddenInput');
 
         function openScanner(mode) {
@@ -228,9 +300,9 @@
                 if (paperContour) {
                     const corners = scanner.getCornerPoints(paperContour);
                     points = corners.map(p => ({ x: p.x / originalImage.width, y: p.y / originalImage.height }));
-                } else { points = [{x: 0.15, y: 0.15}, {x: 0.85, y: 0.15}, {x: 0.85, y: 0.85}, {x: 0.15, y: 0.85}]; }
+                } else { points = JSON.parse(JSON.stringify(defaultPoints)); }
                 resultMat.delete();
-            } catch (e) { points = [{x: 0.15, y: 0.15}, {x: 0.85, y: 0.15}, {x: 0.85, y: 0.85}, {x: 0.15, y: 0.85}]; }
+            } catch (e) { points = JSON.parse(JSON.stringify(defaultPoints)); }
             render();
         }
 
@@ -242,8 +314,8 @@
             ctx.closePath(); ctx.stroke();
             points.forEach(p => {
                 const x = p.x * canvas.width, y = p.y * canvas.height;
-                ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(x, y, 14, 0, Math.PI * 2); ctx.fill(); 
-                ctx.fillStyle = '#007bff'; ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.fill(); 
+                ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill(); 
+                ctx.fillStyle = '#007bff'; ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill(); 
             });
         }
 
@@ -261,59 +333,115 @@
         });
         window.addEventListener('mouseup', () => draggingIndex = -1);
 
-        document.getElementById('btnWarp').onclick = function() {
-            const src = cv.imread(originalImage);
-            const p = points.map(pt => ({ x: pt.x * src.cols, y: pt.y * src.rows }));
-            const targetW = Math.max(Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y), Math.hypot(p[2].x - p[3].x, p[2].y - p[3].y));
-            const targetH = Math.max(Math.hypot(p[3].x - p[0].x, p[3].y - p[0].y), Math.hypot(p[2].x - p[1].x, p[2].y - p[1].y));
-            const srcCoords = cv.matFromArray(4, 1, cv.CV_32FC2, [p[0].x, p[0].y, p[1].x, p[1].y, p[2].x, p[2].y, p[3].x, p[3].y]);
-            const dstCoords = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, targetW, 0, targetW, targetH, 0, targetH]);
-            const M = cv.getPerspectiveTransform(srcCoords, dstCoords), dst = new cv.Mat();
-            cv.warpPerspective(src, dst, M, new cv.Size(targetW, targetH));
-            
-            const tempCanvas = document.createElement('canvas'); cv.imshow(tempCanvas, dst);
-            const finalCanvas = document.createElement('canvas');
-            const MAX_DIM = 1200;
-            let scale = Math.min(1, MAX_DIM / Math.max(tempCanvas.width, tempCanvas.height));
-            finalCanvas.width = tempCanvas.width * scale; finalCanvas.height = tempCanvas.height * scale;
-            finalCanvas.getContext('2d').drawImage(tempCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
-            const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.8);
-
-            // Pass to Livewire
-            if (activeMode === 'front') {
-                @this.set('newFotoDepanBase64', dataUrl);
-                document.getElementById('p_front').src = dataUrl;
-                document.getElementById('p_front').style.display = 'block';
-            } else if (activeMode === 'back') {
-                @this.set('newFotoBelakangBase64', dataUrl);
-                document.getElementById('p_back').src = dataUrl;
-                document.getElementById('p_back').style.display = 'block';
-            } else if (activeMode === 'stamp') {
-                // Determine index for array append (simple approximation, Livewire array access is tricky from JS direct push)
-                // We'll let Livewire manage the array. We bind to a temporary variable or method?
-                // Best way for array in Livewire from JS: $wire.set('newStampsBase64', [...old, new])
-                // Or use a method: $wire.call('addStamp', dataUrl) -> but that triggers roundtrip.
-                // Alternative: $wire.newStampsBase64.push(dataUrl) ?? No.
-                // We will append to a local JS array and sync, OR just wire:model a hidden input (hard with arrays).
-                // Let's use a Livewire hook or method since array update is complex.
-                // Wait, simply accessing current value:
-                let currentStamps = @this.get('newStampsBase64') || [];
-                currentStamps.push(dataUrl);
-                @this.set('newStampsBase64', currentStamps);
-                
-                // Show preview locally
-                const div = document.createElement('div'); div.className = 'stamp-item';
-                div.innerHTML = `<img src="${dataUrl}">`;
-                document.getElementById('new-stamps-container').appendChild(div);
+        
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.id === 'btnCropEdit') {
+                processCropEdit();
             }
+        });
 
-            src.delete(); dst.delete(); M.delete(); srcCoords.delete(); dstCoords.delete(); 
-            closeScanner();
+        window.deletePreview = (mode) => {
+            const imgEl = document.getElementById(mode === 'front' ? 'p_front' : 'p_back');
+            const btnEl = document.getElementById(mode === 'front' ? 'btn-actions-front' : 'btn-actions-back');
+            if(imgEl) imgEl.style.display = 'none';
+            if(btnEl) btnEl.style.display = 'none';
+            
+            const rootEl = document.querySelector('.edit-wrapper');
+            const componentId = rootEl ? rootEl.getAttribute('data-wire-id') : null;
+            const component = Livewire.find(componentId);
+            if(component) component.set(mode === 'front' ? 'newFotoDepanBase64' : 'newFotoBelakangBase64', null);
         };
+
+        window.rotateFinal = (mode) => {
+            const imgEl = document.getElementById(mode === 'front' ? 'p_front' : 'p_back');
+            if(!imgEl || !imgEl.src) return;
+            const img = new Image();
+            img.onload = () => {
+                const can = document.createElement('canvas');
+                can.width = img.height; can.height = img.width;
+                const c = can.getContext('2d');
+                c.translate(can.width/2, can.height/2);
+                c.rotate(90 * Math.PI / 180);
+                c.drawImage(img, -img.width/2, -img.height/2);
+                const dataUrl = can.toDataURL('image/jpeg', 0.85);
+                imgEl.src = dataUrl;
+                const rootEl = document.querySelector('.edit-wrapper');
+                const componentId = rootEl ? rootEl.getAttribute('data-wire-id') : null;
+                const component = Livewire.find(componentId);
+                if(component) component.set(mode === 'front' ? 'newFotoDepanBase64' : 'newFotoBelakangBase64', dataUrl);
+            };
+            img.src = imgEl.src;
+        };
+
+        window.rotateSource = () => {
+            const can = document.createElement('canvas');
+            can.width = originalImage.height; can.height = originalImage.width;
+            const c = can.getContext('2d');
+            c.translate(can.width/2, can.height/2);
+            c.rotate(90 * Math.PI / 180);
+            c.drawImage(originalImage, -originalImage.width/2, -originalImage.height/2);
+            originalImage = new Image();
+            originalImage.onload = () => autoDetect();
+            originalImage.src = can.toDataURL();
+        };
+
+        window.processCropEdit = function() {
+            if (typeof cv === 'undefined' || !cv.Mat) { return; }
+            try {
+                const src = cv.imread(originalImage);
+                const p = points.map(pt => ({ x: pt.x * src.cols, y: pt.y * src.rows }));
+                
+                const targetW = Math.max(Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y), Math.hypot(p[2].x - p[3].x, p[2].y - p[3].y));
+                const targetH = Math.max(Math.hypot(p[3].x - p[0].x, p[3].y - p[0].y), Math.hypot(p[2].x - p[1].x, p[2].y - p[1].y));
+                
+                const srcCoords = cv.matFromArray(4, 1, cv.CV_32FC2, [p[0].x, p[0].y, p[1].x, p[1].y, p[2].x, p[2].y, p[3].x, p[3].y]);
+                const dstCoords = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, targetW, 0, targetW, targetH, 0, targetH]);
+                const M = cv.getPerspectiveTransform(srcCoords, dstCoords);
+                const dst = new cv.Mat();
+                cv.warpPerspective(src, dst, M, new cv.Size(targetW, targetH));
+                
+                const tempCanvas = document.createElement('canvas'); cv.imshow(tempCanvas, dst);
+                const finalCanvas = document.createElement('canvas');
+                const MAX_DIM = 1200;
+                let scale = Math.min(1, MAX_DIM / Math.max(targetW, targetH));
+                finalCanvas.width = targetW * scale; finalCanvas.height = targetH * scale;
+                finalCanvas.getContext('2d').drawImage(tempCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
+                const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.85);
+
+                const rootEl = document.querySelector('.edit-wrapper');
+                const componentId = rootEl ? rootEl.getAttribute('data-wire-id') : null;
+                const component = Livewire.find(componentId);
+
+                if (component) {
+                    if (activeMode === 'front') {
+                        component.set('newFotoDepanBase64', dataUrl);
+                        document.getElementById('p_front').src = dataUrl;
+                        document.getElementById('p_front').style.display = 'block';
+                        document.getElementById('btn-actions-front').style.display = 'flex';
+                    } else if (activeMode === 'back') {
+                        component.set('newFotoBelakangBase64', dataUrl);
+                        document.getElementById('p_back').src = dataUrl;
+                        document.getElementById('p_back').style.display = 'block';
+                        document.getElementById('btn-actions-back').style.display = 'flex';
+                    } else if (activeMode === 'stamp') {
+                        let currentStamps = component.get('newStampsBase64') || [];
+                        currentStamps.push(dataUrl);
+                        component.set('newStampsBase64', currentStamps);
+                        
+                        const div = document.createElement('div'); div.className = 'stamp-item';
+                        div.innerHTML = `<img src="${dataUrl}">`;
+                        document.getElementById('new-stamps-container').appendChild(div);
+                    }
+                }
+                
+                src.delete(); dst.delete(); M.delete(); srcCoords.delete(); dstCoords.delete(); 
+                closeScanner();
+            } catch(e) { console.error(e); }
+        };
+
 
         function closeScanner() { document.getElementById('scannerModal').style.display = 'none'; }
 
-        // --- Exchange Rate Logics (Global) ---
         function getComponent() {
             const root = document.querySelector('.edit-wrapper');
             const id = root?.dataset.wireId;
@@ -340,21 +468,25 @@
             } catch(e) { }
         }
         
-        async function getAutoKurs() {
+        async function getAutoKurs(overrideDate = null, type = null) {
             const component = getComponent();
             if(!component) return;
-            const cur = document.getElementById('mata_uang')?.value || component.get('mata_uang');
-            const tglKirim = document.getElementById('tgl_kirim')?.value;
-            const tglTerima = document.getElementById('tgl_terima')?.value;
-            const tgl = tglTerima || tglKirim || new Date().toISOString().split('T')[0];
-            const inp = document.getElementById('kurs_idr');
             
+            const cur = document.getElementById('mata_uang')?.value || component.get('mata_uang');
+            const inp = document.getElementById('kurs_idr');
+
             if (!cur || cur === 'IDR') {
                 if(inp) inp.value = "1.00";
-                component.set('kurs_idr', 1);
+                if(component) component.set('kurs_idr', 1);
                 hitungIDR();
                 return;
             }
+
+            let tglKirim = document.getElementById('tgl_kirim')?.getAttribute('data-date-value');
+            if (!tglKirim) tglKirim = document.getElementById('tgl_kirim')?.value;
+            if (!tglKirim && component) tglKirim = await component.get('tanggal_kirim');
+
+            const tgl = (tglKirim || new Date().toISOString().split('T')[0]);
 
             if (inp) inp.classList.add('animate-pulse', 'bg-yellow-50');
 
@@ -385,19 +517,23 @@
         function hitungIDR() {
            const component = getComponent();
            if(!component) return;
-           const val = parseFloat(document.getElementById('nilai_asli')?.value || 0);
+           
+           const nilaiInput = document.getElementById('nilai_asli');
+           if (!nilaiInput) return;
+           
+           const val = parseFloat(nilaiInput.value || 0);
+           if (val <= 0) return;
+           
            const rate = parseFloat(document.getElementById('kurs_idr')?.value || 1);
            const totalDisplay = document.getElementById('biaya_prangko');
-           if (val >= 0) {
-               const total = Math.round(val * rate);
-               if (totalDisplay) totalDisplay.value = total;
-               component.set('biaya_prangko', total);
-           }
+           const total = Math.round(val * rate);
+           if (totalDisplay) totalDisplay.value = total;
+           component.set('biaya_prangko', total);
         }
 
+    </script>
 
-
-@script
-    window.livewire_edit_id = $wire.id;
-@endscript
+    @script
+        window.livewire_edit_id = $wire.id;
+    @endscript
 </div>

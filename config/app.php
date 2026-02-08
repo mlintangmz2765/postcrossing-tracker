@@ -17,6 +17,47 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Site Owner Information
+    |--------------------------------------------------------------------------
+    |
+    | These values are used throughout the application to personalize
+    | the site for the owner (email notifications, public pages, etc.)
+    |
+    */
+
+    'owner_name' => env('OWNER_NAME', 'Site Owner'),
+    'owner_email' => env('OWNER_EMAIL', 'owner@example.com'),
+    'owner_username' => env('OWNER_USERNAME', 'postcrossing'),
+    'owner_contact_email' => env('OWNER_CONTACT_EMAIL', env('OWNER_EMAIL', 'owner@example.com')),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Third-Party API Keys
+    |--------------------------------------------------------------------------
+    |
+    | These values are used for external services like Google Maps, AMap,
+    | and ReCaptcha. Setting them here ensures they are accessible
+    | even when configuration is cached in production.
+    |
+    */
+
+    'google_api_key' => env('GOOGLE_API_KEY'),
+    'amap_js_key' => env('AMAP_JS_KEY'),
+    'amap_web_key' => env('AMAP_WEB_KEY'),
+    'recaptcha_site_key' => env('RECAPTCHA_SITE_KEY'),
+    'recaptcha_secret_key' => env('RECAPTCHA_SECRET_KEY'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Home Location Configuration
+    |--------------------------------------------------------------------------
+    */
+
+    'home_lat' => env('HOME_LAT', 0),
+    'home_lng' => env('HOME_LNG', 0),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

@@ -18,7 +18,7 @@
             padding-left: 10px;
         }
 
-        /* --- STATS CARD STYLE --- */
+
         .stats-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -72,10 +72,10 @@
         .stat-row:last-child { border-bottom: none; }
         .stat-value { font-family: 'Special Elite', monospace; font-weight: bold; font-size: 1.2rem; }
 
-        /* --- MAP SECTION --- */
+
         #dashboard-map { width: 100%; height: 500px; background: #f8f8f8; border-radius: 4px; border: 1px solid #eee; }
 
-        /* --- NOTIFICATIONS --- */
+
         .notif-alert {
             background: #fdf6e3;
             color: var(--pc-ink);
@@ -91,7 +91,7 @@
             border-radius: 4px;
         }
 
-        /* --- CHARTS --- */
+
         .charts-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -138,12 +138,11 @@
             <i class="bi bi-journal-album"></i> My Travel Log
         </h2>
 
-        <!-- Notifications -->
         @foreach($recentNotifications as $notif)
             <div class="notif-alert">
                 <div>
                     <i class="bi bi-envelope-open"></i> 
-                    News! Postcard <b>{{ $notif->postcard_id }}</b> has arrived in <b>{{ $notif->negara }}</b>!
+                    News! Postcard <b>{{ $notif->postcard_id }}</b> has arrived in <b>{{ $notif->country?->nama_inggris ?? $notif->country?->nama_indonesia ?? 'its destination' }}</b>!
                 </div>
                 <button wire:click="markAsRead({{ $notif->id }})" class="text-sm underline hover:text-green-800">
                     Dismiss <i class="bi bi-check"></i>
@@ -151,7 +150,6 @@
             </div>
         @endforeach
 
-        <!-- Interactive Map -->
         <div class="vintage-container airmail-border mb-10">
              <h3 style="margin-top:15px; color:#444; font-family:'Special Elite'; margin-bottom:15px; text-align: left; padding-left: 15px;">
                 Distribution Map <span style="font-size:0.7em; color: #94a3b8;">(🔵 SENT | 🟢 RECEIVED)</span>
@@ -159,7 +157,6 @@
             <div id="dashboard-map"></div>
         </div>
 
-        <!-- Stats In Numbers -->
         <div class="stats-container">
             <!-- SENT Stats -->
             <div class="stats-card">
@@ -208,7 +205,6 @@
             </div>
         </div>
 
-        <!-- Charts -->
         <div class="vintage-container airmail-border mb-10">
              <h3 style="margin-top:15px; color:#444; font-family:'Special Elite'; text-align: left; margin-bottom: 20px; padding-left: 15px;">Monthly Postcard Trends</h3>
              <div style="height: 300px; padding: 10px;"><canvas id="lineChart"></canvas></div>
@@ -225,7 +221,6 @@
             </div>
         </div>
 
-        <!-- Data Tables with Tabs -->
         <div x-data="{ activeTab: 'sent' }" class="mb-10">
             <div class="flex w-full mb-0">
                 <button @click="activeTab = 'sent'" 
@@ -252,12 +247,10 @@
 
     </div>
 
-    <!-- SCRIPTS -->
     <script src="{{ asset('vendor/chartjs/chart.js') }}"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_API_KEY') }}&callback=initDashboardMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('app.google_api_key') }}&callback=initDashboardMap&loading=async" async defer></script>
 
     <script>
-        // --- MAP LOGIC using Google Maps ---
         const markersData = @json($mapMarkers);
         let dashboardMap;
         let mapMarkers = [];
@@ -347,7 +340,6 @@
             }
         }
 
-        // --- CHARTS LOGIC ---
         document.addEventListener('livewire:initialized', () => {
             const chartData = @json($chartData);
             

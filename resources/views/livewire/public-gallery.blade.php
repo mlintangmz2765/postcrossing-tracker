@@ -10,11 +10,10 @@
 }" @keydown.escape.window="modalOpen = false">
 
     <style>
-        /* --- FONTS --- */
 
 
-        /* --- CSS UTAMA --- */
-        /* Fonts already in app.css, but ensuring classes work */
+
+
         
         .gallery-page-wrapper {
             background-color: #fdf6e3;
@@ -28,7 +27,7 @@
             min-height: 100vh;
         }
 
-        /* --- STAMP SLIDER --- */
+        /* STAMP SLIDER */
         .stamp-marquee {
             width: 100%; 
             overflow: hidden; 
@@ -80,7 +79,7 @@
         }
         @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-        /* --- MAP CONTAINER --- */
+        /* MAP CONTAINER */
         #map-container {
             width: 100%; height: 450px; 
             margin-top: 50px; margin-bottom: 50px; 
@@ -89,7 +88,7 @@
         }
         #map { width: 100%; height: 100%; }
 
-        /* --- HEADER --- */
+        /* HEADER */
         .paravion-top { position: fixed; top: 0; left: 0; right: 0; height: 12px; background: repeating-linear-gradient(45deg, #e63946, #e63946 20px, #fff 20px, #fff 40px, #457b9d 40px, #457b9d 60px, #fff 60px, #fff 80px); z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .gallery-header { text-align: center; padding: 60px 20px 20px; position: relative; }
         .gallery-header h1 { font-family: 'Dancing Script', cursive; font-size: 5.5rem; margin: 0; color: #1e293b; text-shadow: 4px 4px 0px #fff; font-weight: 700; }
@@ -104,7 +103,7 @@
         select.vintage-select { padding: 12px 15px; font-family: 'Special Elite', cursive; background: #fff; border: 2px solid #457b9d; border-radius: 5px; cursor: pointer; outline: none; box-shadow: 3px 3px 0px #457b9d; transition: 0.3s; font-size: 1rem; min-width: 180px; }
         select.vintage-select:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0px #457b9d; }
 
-        /* --- GRID GALLERY --- */
+        /* GRID GALLERY */
         .gallery-wrapper { max-width: 1400px; margin: 0 auto; padding: 20px; column-count: 3; column-gap: 2.5rem; }
         @media (max-width: 1100px) { .gallery-wrapper { column-count: 2; } }
         @media (max-width: 600px) { .gallery-wrapper { column-count: 1; } }
@@ -149,7 +148,7 @@
         }
         .overlay-desc { font-size: 0.95rem; line-height: 1.6; color: #000; background: rgba(255,255,255,0.7); padding: 10px; border-radius: 5px; font-style: italic; }
 
-        /* --- STAMPS ONLY MODE SPECIFIC STYLES --- */
+        /* STAMP MODE */
         .stamp-mode-card {
             background: #fff;
             padding: 15px 15px 10px 15px; 
@@ -218,7 +217,7 @@
     <div class="paravion-top"></div>
 
     <header class="gallery-header">
-        <h1>mlintangmz Mailbox</h1>
+        <h1>{{ config('app.owner_username') }} Mailbox</h1>
         <div class="paravion-badge">
             <svg width="45" height="45" viewBox="0 0 24 24">
                 <path d="M21,16L21,14L13,9L13,3.5C13,2.67 12.33,2 11.5,2C10.67,2 10,2.67 10,3.5L10,9L2,14L2,16L10,13.5L10,19L8,20.5L8,22L11.5,21L15,22L15,20.5L13,19L13,13.5L21,16Z" fill="#457b9d" />
@@ -232,7 +231,6 @@
         <div id="map-container" wire:ignore><div id="map"></div></div>
 
         <div class="filter-container">
-            <!-- Livewire Filter Controls -->
             <div style="display:contents;">
                 
                 <select wire:model.live="viewMode" class="vintage-select">
@@ -360,7 +358,7 @@
     </main>
 
     <footer style="text-align:center; padding: 80px 20px; opacity: 0.5; font-family: 'Special Elite'; font-size: 0.9rem;">
-        <p>&copy; {{ date('Y') }} mlintangmz Postcrossing Archive • All Rights Reserved.</p>
+        <p>&copy; {{ date('Y') }} {{ config('app.owner_username') }} Postcrossing Archive • All Rights Reserved.</p>
     </footer>
 
     <!-- Alpine Modal -->
@@ -385,11 +383,9 @@
     <!-- Conditional Map Script Loading -->
     @if ($isChina)
         <script type="text/javascript">
-            window._AMapSecurityConfig = { securityJsCode: '{{ env('AMAP_WEB_KEY') }}' };
+            window._AMapSecurityConfig = { securityJsCode: '{{ config('app.amap_web_key') }}' };
         </script>
-        <script src="https://webapi.amap.com/maps?v=2.0&key={{ env('AMAP_JS_KEY') }}&callback=initMap"></script>
-    @else
-        <script src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_API_KEY') }}&libraries=marker&callback=initMap&loading=async" async defer></script>
+        <script src="https://webapi.amap.com/maps?v=2.0&key={{ config('app.amap_js_key') }}"></script>
     @endif
 
 </div>
@@ -400,11 +396,11 @@
     let markers = [];
     const isChina = {{ $isChina ? 'true' : 'false' }}; 
 
-    async function initMap() {
+    function initMap() {
         if (rawMarkers.length === 0) return;
 
         if (isChina) {
-            // --- GAODE MAPS (AMap) Logic ---
+            // GAODE MAPS (AMap) Logic
             map = new AMap.Map('map', { zoom: 3, center: [104, 35], lang: 'en', zooms: [3, 10]});
 
             rawMarkers.forEach(m => {
@@ -430,10 +426,8 @@
             }
 
         } else {
-            // --- GOOGLE MAPS Logic ---
-            const { Map } = await google.maps.importLibrary("maps");
-
-            map = new Map(document.getElementById("map"), {
+            // GOOGLE MAPS Logic
+            map = new google.maps.Map(document.getElementById("map"), {
                 zoom: 2, 
                 center: { lat: 20, lng: 0 }, 
                 maxZoom: 10, 
@@ -456,7 +450,7 @@
         }
     }
 
-    async function updateMarkers(fitMap = false) {
+    function updateMarkers(fitMap = false) {
         if (isChina) return;
         
         // Clear existing markers
@@ -530,6 +524,15 @@
             });
         }
     }
+
+    // Initialize map on page load
+    @if ($isChina)
+        window.onload = function() { initMap(); };
+    @endif
 </script>
+
+@if (!$isChina)
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('app.google_api_key') }}&libraries=marker&callback=initMap&loading=async" async defer></script>
+@endif
 
 </div>

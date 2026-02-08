@@ -1,4 +1,4 @@
-<div class="register-wrapper paper-texture py-20 px-6" data-wire-id="{{ $this->getId() }}">
+<div class="register-wrapper paper-texture py-20 px-6" x-data="{ img_d_preview: null, img_b_preview: null }">
     <div class="container max-w-4xl mx-auto airmail-border bg-white shadow-xl overflow-hidden">
         <div class="form-inner p-0">
             <div class="p-8 border-b-2 border-dashed border-gray-100 text-center">
@@ -7,7 +7,6 @@
             </div>
 
             <form wire:submit.prevent="save" class="p-8 space-y-8">
-                <!-- Type Selection -->
                 <!-- Type Selection -->
                 <div class="flex space-x-4 p-2 bg-gray-100/50 rounded-xl border-2 border-dashed border-gray-200">
                     <button type="button" 
@@ -40,6 +39,11 @@
                         </datalist>
                     </div>
 
+                    <div>
+                        <label class="vintage-label">Phone Number</label>
+                        <input type="text" wire:model="nomor_telepon" class="vintage-input w-full" placeholder="e.g. +62 812...">
+                    </div>
+
                     <div class="md:col-span-2">
                         <label class="vintage-label">Mailing Address</label>
                         <textarea wire:model="alamat" rows="3" class="vintage-input w-full" required placeholder="Write the full address here..."></textarea>
@@ -50,43 +54,81 @@
                         <input type="text" id="negaraInput" wire:model.blur="negara" class="vintage-input w-full" placeholder="Where is it from/to?" required @blur="updateCurrencyFromCountry($el.value)">
                     </div>
 
-                    <div>
+                    <div wire:ignore
+                         x-data="{ dateValue: @entangle('tanggal_kirim') }"
+                         x-init="
+                            flatpickr($refs.input, {
+                                altInput: true,
+                                altFormat: 'd/m/Y',
+                                dateFormat: 'Y-m-d',
+                                allowInput: true,
+                                onChange: function(selectedDates, dateStr, instance) {
+                                    dateValue = dateStr;
+                                    $wire.set('tanggal_kirim', dateStr);
+                                    instance.element.setAttribute('data-date-value', dateStr);
+                                    updateRate(dateStr, 'sent');
+                                },
+                                onClose: function(selectedDates, dateStr, instance) {
+                                    updateRate(dateStr, 'sent');
+                                }
+                            });
+                         ">
                         <label class="vintage-label">Registry Date</label>
-                        <input type="date" id="tanggalKirim" wire:model="tanggal_kirim" class="vintage-input w-full" required @change="updateRate()">
+                        <input x-ref="input" type="text" id="tanggalKirim" x-model="dateValue" class="vintage-input w-full" required>
+                        <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
                     </div>
                 </div>
 
-                <!-- Image Upload Section -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t-2 border-dashed border-gray-100" x-data="scannerApp()">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t-2 border-dashed border-gray-100">
                     <!-- Front Image -->
                     <div>
                         <label class="vintage-label">Front Visual (Artwork)</label>
-                        <div @click="openScanner('d')" class="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 transition group bg-gray-50">
-                            <div x-show="!img_d_preview">
-                                <i class="bi bi-camera text-4xl text-gray-300 group-hover:text-pc-blue"></i>
-                                <p class="mt-2 text-xs font-postcard text-gray-400">SCAN FRONT</p>
+                        <div class="relative group">
+                            <div onclick="openScanner('d')" class="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 transition group bg-gray-50">
+                                <div x-show="!img_d_preview">
+                                    <i class="bi bi-camera text-4xl text-gray-300 group-hover:text-pc-blue"></i>
+                                    <p class="mt-2 text-xs font-postcard text-gray-400">SCAN FRONT</p>
+                                </div>
+                                <img x-show="img_d_preview" :src="img_d_preview" class="w-full h-auto max-h-[500px] object-contain rounded border-4 border-white shadow-md bg-gray-100">
                             </div>
-                            <img x-show="img_d_preview" :src="img_d_preview" class="w-full h-48 object-cover rounded border-4 border-white shadow-md">
+                            <div x-show="img_d_preview" class="absolute top-4 right-4 flex gap-2 z-[100]" style="display: none;">
+                                <button type="button" onclick="event.stopPropagation(); rotateFinal('d')" class="bg-blue-600 text-white p-2 rounded-full shadow-2xl hover:bg-blue-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px;" title="Rotate">
+                                    <i class="bi bi-arrow-clockwise text-lg"></i>
+                                </button>
+                                <button type="button" onclick="event.stopPropagation(); const al = Alpine.$data(this.closest('[x-data]')); if(al) al.img_d_preview = null; Livewire.find(document.querySelector('.register-wrapper').getAttribute('data-wire-id')).set('img_d_data', null)" class="bg-red-600 text-white p-2 rounded-full shadow-2xl hover:bg-red-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px; background-color: #ef4444 !important;" title="Delete">
+                                    <i class="bi bi-trash text-lg"></i>
+                                </button>
+                            </div>
                         </div>
-                        <input type="file" id="input_d" accept="image/*" class="hidden" @change="handleFile($event, 'd')">
+                        <input type="file" id="input_d" accept="image/*" class="hidden" onchange="handleFile(event, 'd')">
                     </div>
 
                     <!-- Back Image -->
                     <div>
                         <label class="vintage-label">Back Message (Postal)</label>
-                        <div @click="openScanner('b')" class="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 transition group bg-gray-50">
-                            <div x-show="!img_b_preview">
-                                <i class="bi bi-chat-left-text text-4xl text-gray-300 group-hover:text-pc-blue"></i>
-                                <p class="mt-2 text-xs font-postcard text-gray-400">SCAN BACK</p>
+                        <div class="relative group">
+                            <div onclick="openScanner('b')" class="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 transition group bg-gray-50">
+                                <div x-show="!img_b_preview">
+                                    <i class="bi bi-chat-left-text text-4xl text-gray-300 group-hover:text-pc-blue"></i>
+                                    <p class="mt-2 text-xs font-postcard text-gray-400">SCAN BACK</p>
+                                </div>
+                                <img x-show="img_b_preview" :src="img_b_preview" class="w-full h-auto max-h-[500px] object-contain rounded border-4 border-white shadow-md bg-gray-100">
                             </div>
-                            <img x-show="img_b_preview" :src="img_b_preview" class="w-full h-48 object-cover rounded border-4 border-white shadow-md">
+                            <div x-show="img_b_preview" class="absolute top-4 right-4 flex gap-2 z-[100]" style="display: none;">
+                                <button type="button" onclick="event.stopPropagation(); rotateFinal('b')" class="bg-blue-600 text-white p-2 rounded-full shadow-2xl hover:bg-blue-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px;" title="Rotate">
+                                    <i class="bi bi-arrow-clockwise text-lg"></i>
+                                </button>
+                                <button type="button" onclick="event.stopPropagation(); const al = Alpine.$data(this.closest('[x-data]')); if(al) al.img_b_preview = null; Livewire.find(document.querySelector('.register-wrapper').getAttribute('data-wire-id')).set('img_b_data', null)" class="bg-red-600 text-white p-2 rounded-full shadow-2xl hover:bg-red-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px; background-color: #ef4444 !important;" title="Delete">
+                                    <i class="bi bi-trash text-lg"></i>
+                                </button>
+                            </div>
                         </div>
-                        <input type="file" id="input_b" accept="image/*" class="hidden" @change="handleFile($event, 'b')">
+                        <input type="file" id="input_b" accept="image/*" class="hidden" onchange="handleFile(event, 'b')">
                     </div>
                 </div>
                 
                 <!-- Stamps Section -->
-                <div class="pt-6 border-t-2 border-dashed border-gray-100" x-data="scannerApp()">
+                <div class="pt-6 border-t-2 border-dashed border-gray-100">
                      <label class="vintage-label">Philately Collection (Stamps)</label>
                      <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 mb-4" id="stamps-grid">
                          @foreach($stamp_data as $index => $stamp)
@@ -96,18 +138,37 @@
                             </div>
                          @endforeach
                          
-                         <button type="button" @click="openScanner('s')" class="aspect-square flex flex-col items-center justify-center border-2 border-dotted border-gray-300 rounded-lg text-gray-400 hover:bg-gray-50 transition bg-gray-50">
+                         <button type="button" onclick="openScanner('s')" class="aspect-square flex flex-col items-center justify-center border-2 border-dotted border-gray-300 rounded-lg text-gray-400 hover:bg-gray-50 transition bg-gray-50">
                              <i class="bi bi-plus-circle text-2xl"></i>
                          </button>
                      </div>
-                     <input type="file" id="input_s" accept="image/*" class="hidden" @change="handleFile($event, 's')">
+                     <input type="file" id="input_s" accept="image/*" class="hidden" onchange="handleFile(event, 's')">
                 </div>
 
                 @if($type === 'received')
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t-2 border-dashed border-gray-100" wire:ignore>
-                    <div>
+                    <div wire:ignore
+                         x-data="{ dateValue: @entangle('tanggal_terima') }"
+                         x-init="
+                            flatpickr($refs.input, {
+                                defaultDate: dateValue,
+                                altInput: true,
+                                altFormat: 'd/m/Y',
+                                dateFormat: 'Y-m-d',
+                                allowInput: true,
+                                onChange: function(selectedDates, dateStr, instance) {
+                                    dateValue = dateStr;
+                                    $wire.set('tanggal_terima', dateStr);
+                                    instance.element.setAttribute('data-date-value', dateStr);
+                                },
+                                onClose: function(selectedDates, dateStr, instance) {
+
+                                }
+                            });
+                         ">
                         <label class="vintage-label">Received Date</label>
-                        <input type="date" id="tanggalTerima" wire:model="tanggal_terima" class="vintage-input w-full" @change="updateRate()">
+                        <input x-ref="input" type="text" id="tanggalTerima" x-model="dateValue" class="vintage-input w-full">
+                        <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
                     </div>
                     <div>
                         <label class="vintage-label">Currency</label>
@@ -132,26 +193,29 @@
                 @endif
                 
                 @if($type === 'sent')
-                {{-- For sent postcards, just show a simple postage input --}}
                 <div class="pt-6 border-t-2 border-dashed border-gray-100">
                     <label class="vintage-label">Total Postage (IDR)</label>
                     <input type="number" wire:model="biaya_prangko" class="vintage-input w-full text-lg" placeholder="0" required>
                 </div>
                 @else
-                {{-- For received, show the calculated total display --}}
                 <div class="pt-6 border-t-2 border-dashed border-gray-100">
                     <label class="vintage-label">Calculated Total</label>
                     <div class="text-3xl font-postcard text-pc-blue bg-blue-50 p-4 rounded-lg text-center border-2 border-pc-blue border-dotted">
-                        Rp {{ number_format((float)($biaya_prangko ?? 0), 0, ',', '.') }}
+                        IDR {{ number_format((float)($biaya_prangko ?? 0), 0, ',', '.') }}
                     </div>
                 </div>
                 @endif
+
+                <div class="pt-6 border-t-2 border-dashed border-gray-100">
+                    <label class="vintage-label">Archive Description</label>
+                    <textarea wire:model="deskripsi_gambar" rows="3" class="vintage-input w-full" placeholder="Write a short memory about this postcard..."></textarea>
+                </div>
 
                 <div class="pt-8">
                     <button type="submit" class="vintage-btn w-full text-xl py-5">
                         <i class="bi bi-journal-check me-2"></i> CONFIRM REGISTRY
                     </button>
-                    <a href="{{ route('home') }}" class="block text-center mt-6 text-gray-400 font-postcard hover:text-pc-ink transition">
+                    <a href="{{ route('dashboard') }}" class="block text-center mt-6 text-gray-400 font-postcard hover:text-pc-ink transition">
                         <i class="bi bi-arrow-left"></i> Cancel and Return
                     </a>
                 </div>
@@ -165,80 +229,113 @@
              <canvas id="scannerCanvas" class="max-w-full max-h-full touch-none"></canvas>
         </div>
         <div class="h-24 bg-gray-900 flex items-center justify-around px-4">
-            <button onclick="closeScanner()" class="px-6 py-3 bg-gray-600 rounded-lg font-bold text-white">BATAL</button>
-            <button id="btnWarp" class="px-6 py-3 bg-green-500 rounded-lg font-bold text-white">CROP & USE</button>
+            <button type="button" onclick="closeScanner()" class="px-4 py-3 bg-gray-600 rounded-lg font-bold text-white uppercase">Cancel</button>
+            <button type="button" onclick="rotateSource()" class="px-4 py-3 bg-blue-600 rounded-lg font-bold text-white uppercase"><i class="bi bi-arrow-clockwise"></i> Rotate</button>
+            <button type="button" id="btnCropRegister" class="px-4 py-3 bg-green-500 rounded-lg font-bold text-white uppercase">Crop & Use</button>
         </div>
     </div>
-</div>
 
-@assets
     <script src="/js/opencv.js"></script>
     <script src="/js/jscanify.min.js"></script>
     <link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.css') }}">
     <script>
-    // --- Global Scanner & Logic (Available before Alpine init) ---
-    var scanner, activeMode = '', originalImage = new Image();
-    var canvas, ctx;
-    var defaultPoints = [{x: 0.15, y: 0.15}, {x: 0.85, y: 0.15}, {x: 0.85, y: 0.85}, {x: 0.15, y: 0.85}];
+    const defaultPoints = [{x: 0.15, y: 0.15}, {x: 0.85, y: 0.15}, {x: 0.85, y: 0.85}, {x: 0.15, y: 0.85}];
     var points = JSON.parse(JSON.stringify(defaultPoints)), draggingIndex = -1;
+    var canvas, ctx, activeMode, originalImage, scanner;
 
-    window.scannerApp = () => {
-        return {
-            img_d_preview: null,
-            img_b_preview: null,
-            init() {
-                canvas = document.getElementById('scannerCanvas');
-                ctx = canvas ? canvas.getContext('2d') : null;
-                if(canvas) {
-                    canvas.addEventListener('mousedown', e => startDrag(getMousePos(e)));
-                    canvas.addEventListener('touchstart', e => { e.preventDefault(); startDrag(getMousePos(e)); });
-                    window.addEventListener('mousemove', e => { if(draggingIndex !== -1) doDrag(getMousePos(e)); });
-                    window.addEventListener('touchmove', e => { if(draggingIndex !== -1) doDrag(getMousePos(e)); });
-                    window.addEventListener('mouseup', () => draggingIndex = -1);
-                    window.addEventListener('touchend', () => draggingIndex = -1);
-                }
-            },
-            openScanner(mode) {
-                activeMode = mode;
-                document.getElementById('input_' + mode).click();
-            },
-            handleFile(e, mode) {
-                const input = e.target;
-                if (input.files && input.files[0]) {
-                     if(typeof cv === 'undefined' || !cv.Mat) { alert("Scanner loading..."); return; }
-                     if(!scanner) scanner = new jscanify();
-                     const reader = new FileReader();
-                     reader.onload = (evt) => {
-                         originalImage = new Image();
-                         originalImage.onload = () => {
-                             document.getElementById('scannerModal').classList.remove('hidden');
-                             autoDetect();
-                         };
-                         originalImage.src = evt.target.result;
-                     };
-                     reader.readAsDataURL(input.files[0]);
-                }
-            }
+    window.openScanner = (mode) => {
+        activeMode = mode;
+        document.getElementById('input_' + mode).click();
+    };
+
+    window.handleFile = (e, mode) => {
+        const input = e.target;
+        if (input.files && input.files[0]) {
+             if(typeof cv === 'undefined' || !cv.Mat) { alert("Scanner loading..."); return; }
+             if(!scanner) scanner = new jscanify();
+             const reader = new FileReader();
+             reader.onload = (evt) => {
+                 originalImage = new Image();
+                 originalImage.onload = () => {
+                     document.getElementById('scannerModal').classList.remove('hidden');
+                     autoDetect();
+                 };
+                 originalImage.src = evt.target.result;
+             };
+             reader.readAsDataURL(input.files[0]);
         }
+    };
+
+    window.rotateFinal = (mode) => {
+        // Get the current component to access data
+        const rootEl = document.querySelector('.register-wrapper');
+        const componentId = rootEl ? rootEl.getAttribute('data-wire-id') : null;
+        const component = Livewire.find(componentId);
+        
+        const alData = alEl ? window.Alpine.$data(alEl) : null;
+        
+        const preview = alData ? alData['img_' + mode + '_preview'] : null;
+        if(!preview) return;
+
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.height; canvas.height = img.width;
+            const ctx = canvas.getContext('2d');
+            ctx.translate(canvas.width/2, canvas.height/2);
+            ctx.rotate(90 * Math.PI / 180);
+            ctx.drawImage(img, -img.width/2, -img.height/2);
+            const newData = canvas.toDataURL('image/jpeg', 0.85);
+            
+            if(alData) alData['img_' + mode + '_preview'] = newData;
+            if(component) component.set('img_' + mode + '_data', newData);
+        };
+        img.src = preview;
     };
     
     window.closeScanner = () => document.getElementById('scannerModal').classList.add('hidden');
 
+    window.rotateSource = () => {
+        const can = document.createElement('canvas');
+        can.width = originalImage.height; can.height = originalImage.width;
+        const ctx = can.getContext('2d');
+        ctx.translate(can.width/2, can.height/2);
+        ctx.rotate(90 * Math.PI / 180);
+        ctx.drawImage(originalImage, -originalImage.width/2, -originalImage.height/2);
+        originalImage = new Image();
+        originalImage.onload = () => autoDetect();
+        originalImage.src = can.toDataURL();
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        canvas = document.getElementById('scannerCanvas');
+        ctx = canvas ? canvas.getContext('2d') : null;
+        if(canvas) {
+            canvas.addEventListener('mousedown', e => startDrag(getMousePos(e)));
+            canvas.addEventListener('touchstart', e => { e.preventDefault(); startDrag(getMousePos(e)); });
+            window.addEventListener('mousemove', e => { if(draggingIndex !== -1) doDrag(getMousePos(e)); });
+            window.addEventListener('touchmove', e => { if(draggingIndex !== -1) doDrag(getMousePos(e)); });
+            window.addEventListener('mouseup', () => draggingIndex = -1);
+            window.addEventListener('touchend', () => draggingIndex = -1);
+        }
+    });
+
     function autoDetect() {
-         const maxWidth = window.innerWidth * 0.95;
-         const maxHeight = window.innerHeight - 150;
-         const ratio = Math.min(maxWidth / originalImage.width, maxHeight / originalImage.height);
-         canvas.width = originalImage.width * ratio; canvas.height = originalImage.height * ratio;
-         try {
-             const resultMat = cv.imread(originalImage);
-             const paperContour = scanner.findPaperContour(resultMat);
-             if (paperContour) {
-                 const corners = scanner.getCornerPoints(paperContour);
-                 points = corners.map(p => ({ x: p.x / originalImage.width, y: p.y / originalImage.height }));
-             } else { points = JSON.parse(JSON.stringify(defaultPoints)); }
-             resultMat.delete();
-         } catch (e) { points = JSON.parse(JSON.stringify(defaultPoints)); }
-         render();
+          const maxWidth = window.innerWidth * 0.95;
+          const maxHeight = window.innerHeight - 150;
+          const ratio = Math.min(maxWidth / originalImage.width, maxHeight / originalImage.height);
+          canvas.width = originalImage.width * ratio; canvas.height = originalImage.height * ratio;
+          try {
+              const resultMat = cv.imread(originalImage);
+              const paperContour = scanner.findPaperContour(resultMat);
+              if (paperContour) {
+                  const corners = scanner.getCornerPoints(paperContour);
+                  // Ensure proper order for warpPerspective: TL, TR, BR, BL
+                  points = corners.map(p => ({ x: p.x / originalImage.width, y: p.y / originalImage.height }));
+              } else { points = JSON.parse(JSON.stringify(defaultPoints)); }
+              resultMat.delete();
+          } catch (e) { points = JSON.parse(JSON.stringify(defaultPoints)); }
+          render();
     }
 
     function render() {
@@ -248,8 +345,8 @@
          points.forEach((p, i) => { const x = p.x * canvas.width, y = p.y * canvas.height; if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
          ctx.closePath(); ctx.stroke();
          points.forEach(p => {
-             ctx.fillStyle = '#007bff'; ctx.beginPath(); ctx.arc(p.x * canvas.width, p.y * canvas.height, 22, 0, Math.PI * 2); ctx.fill();
-             ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.stroke();
+              ctx.fillStyle = '#007bff'; ctx.beginPath(); ctx.arc(p.x * canvas.width, p.y * canvas.height, 8, 0, Math.PI * 2); ctx.fill();
+              ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.stroke();
          });
     }
 
@@ -273,8 +370,62 @@
         points[draggingIndex].y = Math.max(0, Math.min(1, pos.y / canvas.height));
         render();
     }
+    
+    
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'btnCropRegister') {
+            processCropRegister();
+        }
+    });
 
-    // --- Exchange Rate Logics ---
+    window.processCropRegister = function() {
+        if (typeof cv === 'undefined' || !cv.Mat) { return; }
+        try {
+            const src = cv.imread(originalImage);
+            const p = points.map(pt => ({ x: pt.x * src.cols, y: pt.y * src.rows }));
+            
+            // Re-calculate target dimensions properly
+            const targetW = Math.max(Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y), Math.hypot(p[2].x - p[3].x, p[2].y - p[3].y));
+            const targetH = Math.max(Math.hypot(p[3].x - p[0].x, p[3].y - p[0].y), Math.hypot(p[2].x - p[1].x, p[2].y - p[1].y));
+            
+            const srcCoords = cv.matFromArray(4, 1, cv.CV_32FC2, [p[0].x, p[0].y, p[1].x, p[1].y, p[2].x, p[2].y, p[3].x, p[3].y]);
+            const dstCoords = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, targetW, 0, targetW, targetH, 0, targetH]);
+            const M = cv.getPerspectiveTransform(srcCoords, dstCoords);
+            const dst = new cv.Mat();
+            cv.warpPerspective(src, dst, M, new cv.Size(targetW, targetH));
+            
+            const tempCanvas = document.createElement('canvas'); 
+            cv.imshow(tempCanvas, dst);
+            const finalCanvas = document.createElement('canvas');
+            const MAX_DIM = 1200; 
+            let scale = Math.min(1, MAX_DIM / Math.max(targetW, targetH));
+            finalCanvas.width = targetW * scale; finalCanvas.height = targetH * scale;
+            finalCanvas.getContext('2d').drawImage(tempCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
+            const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.85);
+            
+            const rootEl = document.querySelector('.register-wrapper');
+            const componentId = rootEl ? rootEl.getAttribute('data-wire-id') : null;
+            const component = Livewire.find(componentId);
+
+            if (component) {
+                if (activeMode === 's') { 
+                    component.set('stamp_data', [...component.get('stamp_data'), dataUrl]);
+                } else { 
+                    component.set('img_' + activeMode + '_data', dataUrl);
+                    const alEl = document.querySelector('.register-wrapper');
+                    if (alEl && window.Alpine) {
+                        const data = window.Alpine.$data(alEl);
+                        if (data) data['img_' + activeMode + '_preview'] = dataUrl;
+                    }
+                }
+            }
+            
+            src.delete(); dst.delete(); M.delete(); srcCoords.delete(); dstCoords.delete();
+            closeScanner();
+        } catch(e) { console.error(e); }
+    };
+
+
     function getComponent() {
         const root = document.querySelector('.register-wrapper');
         const id = root?.dataset.wireId;
@@ -300,7 +451,7 @@
         } catch (e) { }
     }
 
-    async function updateRate() {
+    async function updateRate(overrideDate = null, type = null) {
         const component = getComponent();
         if(!component) return;
         const cur = document.getElementById('mata_uang')?.value || component.get('mata_uang');
@@ -311,9 +462,14 @@
             hitungIDR();
             return;
         }
-        const tglKirim = document.getElementById('tanggalKirim')?.value;
-        const tglTerima = document.getElementById('tanggalTerima')?.value;
-        const tgl = tglTerima || tglKirim || new Date().toISOString().split('T')[0];
+        
+        let tglKirim = document.getElementById('tanggalKirim')?.getAttribute('data-date-value');
+        if (!tglKirim) tglKirim = document.getElementById('tanggalKirim')?.value;
+        if (!tglKirim && component) tglKirim = await component.get('tanggal_kirim');
+
+        if (type === 'sent' && overrideDate) tglKirim = overrideDate;
+
+        const tgl = (tglKirim || new Date().toISOString().split('T')[0]);
 
         const rateDisplay = document.getElementById('kurs_idr');
         if (rateDisplay) rateDisplay.classList.add('animate-pulse', 'bg-yellow-50');
@@ -344,47 +500,25 @@
     function hitungIDR() {
        const component = getComponent();
        if(!component) return;
-       const val = parseFloat(document.getElementById('nilai_asli')?.value || 0);
+       
+       const nilaiInput = document.getElementById('nilai_asli');
+       if (!nilaiInput) return; 
+       
+       const val = parseFloat(nilaiInput.value || 0);
+       if (val <= 0) return; 
+       
        const rate = parseFloat(document.getElementById('kurs_idr')?.value || 1);
        const totalDisplay = document.getElementById('biaya_prangko');
-       if (val >= 0) {
-           const total = Math.round(val * rate);
-           if (totalDisplay) totalDisplay.value = total;
-           component.set('biaya_prangko', total);
-       }
+       const total = Math.round(val * rate);
+       if (totalDisplay) totalDisplay.value = total;
+       component.set('biaya_prangko', total);
     }
 
 
     </script>
-@endassets
 
 @script
     window.livewire_register_id = $wire.id;
-    
-    document.getElementById('btnWarp').onclick = function() {
-        if (!cv || !cv.Mat) return;
-        const src = cv.imread(originalImage);
-        const p = points.map(pt => ({ x: pt.x * src.cols, y: pt.y * src.rows }));
-        const targetW = Math.max(Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y), Math.hypot(p[2].x - p[3].x, p[2].y - p[3].y));
-        const targetH = Math.max(Math.hypot(p[3].x - p[0].x, p[3].y - p[0].y), Math.hypot(p[2].x - p[1].x, p[2].y - p[1].y));
-        const srcCoords = cv.matFromArray(4, 1, cv.CV_32FC2, [p[0].x, p[0].y, p[1].x, p[1].y, p[2].x, p[2].y, p[3].x, p[3].y]);
-        const dstCoords = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, targetW, 0, targetW, targetH, 0, targetH]);
-        const M = cv.getPerspectiveTransform(srcCoords, dstCoords);
-        const dst = new cv.Mat();
-        cv.warpPerspective(src, dst, M, new cv.Size(targetW, targetH));
-        const tempCanvas = document.createElement('canvas'); cv.imshow(tempCanvas, dst);
-        const finalCanvas = document.createElement('canvas');
-        const MAX_DIM = 1200; 
-        let scale = Math.min(1, MAX_DIM / Math.max(targetW, targetH));
-        finalCanvas.width = targetW * scale; finalCanvas.height = targetH * scale;
-        finalCanvas.getContext('2d').drawImage(tempCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
-        const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.85);
-        if (activeMode === 's') { $wire.set('stamp_data', [...$wire.get('stamp_data'), dataUrl]); }
-        else { $wire.set('img_' + activeMode + '_data', dataUrl); }
-        src.delete(); dst.delete(); M.delete(); srcCoords.delete(); dstCoords.delete();
-        closeScanner();
-    };
-
     $wire.on('check-currency', (event) => updateCurrencyFromCountry(event.country));
     $wire.on('check-rate', () => updateRate());
 @endscript

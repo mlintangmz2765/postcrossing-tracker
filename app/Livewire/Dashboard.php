@@ -2,127 +2,137 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Postcard;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
 
 class Dashboard extends Component
 {
     public $statsSent = [];
+
     public $statsReceived = [];
+
     public $chartData = [];
+
     public $mapMarkers = [];
+
     public $recentNotifications = [];
 
     public function mount()
     {
         $user_id = Auth::id();
-        $myLat = -7.756378; // Yogyakarta
-        $myLng = 110.376618;
+        $myLat = (float) config('app.home_lat');
+        $myLng = (float) config('app.home_lng');
 
-        // 1. Stats Calculation
         $this->statsSent = $this->getSummaryStats('sent', $user_id, $myLat, $myLng);
         $this->statsReceived = $this->getSummaryStats('received', $user_id, $myLat, $myLng);
 
-        // 2. Notifications
-        $this->recentNotifications = DB::table('postcards')
+        $this->recentNotifications = Postcard::with(['contact', 'country'])
             ->where('user_id', $user_id)
             ->where('type', 'sent')
             ->whereNotNull('tanggal_terima')
             ->where('notif_read', 0)
             ->limit(5)
-            ->get(); // Using 'sent' arrived as notification based on legacy logic roughly
+            ->get();
 
-        // 3. Chart Data
         $this->prepareChartData($user_id);
-
-        // 4. Map Markers
         $this->prepareMapData($user_id);
     }
 
     private function getSummaryStats($type, $user_id, $lat, $lng)
     {
-        // Legacy Formula: 6371 * acos(cos(radians($myLat)) * cos(radians(lat)) * cos(radians(lng) - radians($myLng)) + sin(radians($myLat)) * sin(radians(lat)))
-        $distanceQuery = "SUM(6371 * acos(cos(radians($lat)) * cos(radians(lat)) * cos(radians(lng) - radians($lng)) + sin(radians($lat)) * sin(radians(lat)))) as total_km";
-
-        $res = DB::table('postcards')
-            ->selectRaw("
-                COUNT(*) as total_cards,
-                COUNT(DISTINCT negara) as total_countries,
-                COUNT(DISTINCT nama_kontak) as total_people,
-                SUM(CASE WHEN postcard_id LIKE '%-%' THEN 1 ELSE 0 END) as total_pc,
-                SUM(CASE WHEN (postcard_id NOT LIKE '%-%' OR postcard_id IS NULL OR postcard_id = '') THEN 1 ELSE 0 END) as total_swap,
-                $distanceQuery
-            ")
+        $cards = Postcard::with(['contact', 'country'])
             ->where('user_id', $user_id)
             ->where('type', $type)
-            ->whereNotNull('lat')
-            ->where('lat', '!=', 0)
-            ->first();
+            ->get();
 
-        $km = $res->total_km ?? 0;
-        
+        $totalKm = 0;
+        $totalCountries = $cards->unique('country_id')->count();
+        $totalPeople = $cards->unique('contact_id')->count();
+        $totalPc = $cards->filter(fn ($c) => str_contains($c->postcard_id ?? '', '-'))->count();
+        $totalSwap = $cards->filter(fn ($c) => ! str_contains($c->postcard_id ?? '', '-') || empty($c->postcard_id))->count();
+
+        foreach ($cards as $card) {
+            $lat_c = $card->contact?->lat;
+            $lng_c = $card->contact?->lng;
+            if ($lat_c && $lng_c && is_numeric($lat_c) && is_numeric($lng_c)) {
+                $totalKm += $this->calculateDistance($lat, $lng, (float) $lat_c, (float) $lng_c);
+            }
+        }
+
         return [
-            'countries' => $res->total_countries ?? 0,
-            'people'    => $res->total_people ?? 0,
-            'cards'     => $res->total_cards ?? 0,
-            'pc'        => $res->total_pc ?? 0,
-            'swap'      => $res->total_swap ?? 0,
-            'km'        => $km,
-            'laps'      => $km / 40075 // Earth Circumference ~40,075km
+            'countries' => $totalCountries,
+            'people' => $totalPeople,
+            'cards' => $cards->count(),
+            'pc' => $totalPc,
+            'swap' => $totalSwap,
+            'km' => $totalKm,
+            'laps' => $totalKm / 40075,
         ];
+    }
+
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371;
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+             sin($dLon / 2) * sin($dLon / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 
     private function prepareChartData($user_id)
     {
-        // Line Chart: Last 12 Months
         $labels = [];
         $sentData = [];
         $receivedData = [];
+
+        // Pre-fetch all relevant cards for the last 12 months for optimization
+        $cutoff = Carbon::now()->subMonths(11)->startOfMonth();
+        $allCards = Postcard::where('user_id', $user_id)
+            ->where(function ($q) use ($cutoff) {
+                $q->where('tanggal_kirim', '>=', $cutoff)
+                    ->orWhere('tanggal_terima', '>=', $cutoff);
+            })->get();
 
         for ($i = 11; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
             $m = $date->format('Y-m');
             $labels[] = $date->format('M Y');
 
-            $sentData[] = DB::table('postcards')
-                ->where('user_id', $user_id)
-                ->where('type', 'sent')
-                ->where('tanggal_kirim', 'like', "$m%")
+            $sentData[] = $allCards->where('type', 'sent')
+                ->filter(fn ($c) => $c->tanggal_kirim?->format('Y-m') === $m)
                 ->count();
 
-            $receivedData[] = DB::table('postcards')
-                ->where('user_id', $user_id)
-                ->where('type', 'received')
-                ->where(function($q) use ($m) {
-                    $q->where('tanggal_terima', 'like', "$m%")
-                      ->orWhere(function($sub) use ($m) {
-                          $sub->where('type', 'received')->where('tanggal_kirim', 'like', "$m%");
-                      });
+            $receivedData[] = $allCards->where('type', 'received')
+                ->filter(function ($c) use ($m) {
+                    return ($c->tanggal_terima?->format('Y-m') === $m) ||
+                           ($c->tanggal_kirim?->format('Y-m') === $m);
                 })
                 ->count();
         }
 
-        // Doughnut Charts: Top Countries
-        $sentCountries = DB::table('postcards')
-            ->select('negara', DB::raw('count(*) as total'))
+        // Top Countries
+        $sentCountries = Postcard::with('country')
             ->where('user_id', $user_id)
             ->where('type', 'sent')
-            ->groupBy('negara')
-            ->orderByDesc('total')
-            // ->limit(10) // Removed to show all countries
-            ->pluck('total', 'negara')
+            ->get()
+            ->groupBy(fn ($c) => $c->country?->nama_inggris ?? $c->country?->nama_indonesia ?? 'Unknown')
+            ->map(fn ($group) => $group->count())
+            ->sortByDesc(fn ($count) => $count)
             ->toArray();
 
-        $receivedCountries = DB::table('postcards')
-            ->select('negara', DB::raw('count(*) as total'))
+        $receivedCountries = Postcard::with('country')
             ->where('user_id', $user_id)
             ->where('type', 'received')
-            ->groupBy('negara')
-            ->orderByDesc('total')
-            // ->limit(10) // Removed
-            ->pluck('total', 'negara')
+            ->get()
+            ->groupBy(fn ($c) => $c->country?->nama_inggris ?? $c->country?->nama_indonesia ?? 'Unknown')
+            ->map(fn ($group) => $group->count())
+            ->sortByDesc(fn ($count) => $count)
             ->toArray();
 
         $this->chartData = [
@@ -130,33 +140,35 @@ class Dashboard extends Component
             'sent' => $sentData,
             'received' => $receivedData,
             'sentCountries' => $sentCountries,
-            'receivedCountries' => $receivedCountries
+            'receivedCountries' => $receivedCountries,
         ];
     }
 
     private function prepareMapData($user_id)
     {
-        $this->mapMarkers = DB::table('postcards')
-            ->select('lat', 'lng', 'type', 'alamat', 'nama_kontak')
+        $this->mapMarkers = Postcard::with(['contact', 'country'])
             ->where('user_id', $user_id)
-            ->whereNotNull('lat')
-            ->where('lat', '!=', 0)
+            ->whereHas('contact', function ($q) {
+                $q->whereNotNull('lat');
+            })
             ->get()
-            ->map(function($m) {
+            ->filter(fn ($c) => is_numeric($c->contact?->lat) && $c->contact?->lat != 0)
+            ->map(function ($m) {
                 return [
-                    'lat' => (float)$m->lat,
-                    'lng' => (float)$m->lng,
-                    'color' => ($m->type == 'sent') ? '#007bff' : '#28a745', // Legacy: Blue=Sent, Green=Received
-                    'content' => "<b>".htmlspecialchars($m->nama_kontak)."</b><br>".htmlspecialchars($m->alamat)
+                    'lat' => (float) $m->contact?->lat,
+                    'lng' => (float) $m->contact?->lng,
+                    'color' => ($m->type == 'sent') ? '#007bff' : '#28a745',
+                    'content' => '<b>'.htmlspecialchars($m->contact?->nama_kontak ?? '').'</b><br>'.htmlspecialchars($m->contact?->alamat ?? ''),
                 ];
             })
+            ->values()
             ->toArray();
     }
 
     public function markAsRead($id)
     {
-        DB::table('postcards')->where('id', $id)->update(['notif_read' => 1]);
-        $this->mount(); // Refresh
+        Postcard::where('id', $id)->where('user_id', Auth::id())->update(['notif_read' => 1]);
+        $this->mount();
     }
 
     public function render()

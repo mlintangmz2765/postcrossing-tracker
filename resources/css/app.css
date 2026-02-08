@@ -141,4 +141,102 @@
         transform: translateY(4px);
         box-shadow: none;
     }
+
+    /* GLOBAL LOADER STYLES */
+    .pc-loader-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(253, 246, 227, 0.85); /* PC Paper color with transparency */
+        backdrop-filter: blur(4px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .pc-envelope {
+        position: relative;
+        width: 100px;
+        height: 60px;
+        background-color: #ffffff;
+        border-radius: 4px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        background-image: repeating-linear-gradient(
+            45deg,
+            var(--pc-red) 0px,
+            var(--pc-red) 10px,
+            transparent 10px,
+            transparent 20px,
+            var(--pc-blue) 20px,
+            var(--pc-blue) 30px,
+            transparent 30px,
+            transparent 40px
+        );
+        background-size: 100% 100%;
+        padding: 5px;
+        animation: pc-float 2s ease-in-out infinite;
+        z-index: 2;
+    }
+
+    .pc-envelope::after {
+        content: '';
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        right: 5px;
+        bottom: 5px;
+        background-color: #fff;
+        z-index: 1;
+    }
+
+    .pc-envelope::before {
+        content: '';
+        position: absolute;
+        top: 5px;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+        width: 0;
+        height: 0;
+        border-left: 45px solid transparent;
+        border-right: 45px solid transparent;
+        border-top: 30px solid #eee;
+        z-index: 3;
+    }
+
+    .pc-shadow {
+        width: 80px;
+        height: 10px;
+        background-color: rgba(0,0,0,0.2);
+        border-radius: 50%;
+        margin-top: 20px;
+        animation: pc-shadow-scale 2s ease-in-out infinite;
+    }
+
+    .pc-loading-text {
+        margin-top: 20px;
+        color: var(--pc-ink);
+        font-family: 'Special Elite', monospace;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        animation: pc-text-blink 2s ease-in-out infinite;
+    }
+
+    @keyframes pc-float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+
+    @keyframes pc-shadow-scale {
+        0%, 100% { transform: scale(1); opacity: 0.2; }
+        50% { transform: scale(0.6); opacity: 0.1; }
+    }
+
+    @keyframes pc-text-blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
 }
