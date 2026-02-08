@@ -263,6 +263,7 @@
                  originalImage.src = evt.target.result;
              };
              reader.readAsDataURL(input.files[0]);
+             input.value = "";
         }
     };
 

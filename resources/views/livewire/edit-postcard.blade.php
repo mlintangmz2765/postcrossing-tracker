@@ -346,10 +346,12 @@
             if(imgEl) imgEl.style.display = 'none';
             if(btnEl) btnEl.style.display = 'none';
             
-            const rootEl = document.querySelector('.edit-wrapper');
-            const componentId = rootEl ? rootEl.getAttribute('data-wire-id') : null;
-            const component = Livewire.find(componentId);
+            const component = getComponent();
             if(component) component.set(mode === 'front' ? 'newFotoDepanBase64' : 'newFotoBelakangBase64', null);
+            
+            // Reset input so it can be re-uploaded immediately
+            const fileInput = document.getElementById('hiddenInput');
+            if (fileInput) fileInput.value = "";
         };
 
         window.rotateFinal = (mode) => {
@@ -443,8 +445,12 @@
         function closeScanner() { document.getElementById('scannerModal').style.display = 'none'; }
 
         function getComponent() {
+            if (window.livewire_edit_id) {
+                const comp = Livewire.find(window.livewire_edit_id);
+                if (comp) return comp;
+            }
             const root = document.querySelector('.edit-wrapper');
-            const id = root?.dataset.wireId;
+            const id = root?.getAttribute('data-wire-id');
             if (id) return Livewire.find(id);
             return null;
         }
