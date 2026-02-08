@@ -120,7 +120,7 @@ class ReceiveConfirm extends Component
         $this->alreadyConfirmed = true;
         $this->justConfirmed = true;
 
-        // Send Email - Using .env configuration
+        // Send Email - Using beautiful HTML template
         try {
             $ownerName = config('app.owner_name', 'Owner');
             $ownerEmail = config('app.owner_email', 'lintangmaulanazulfan@gmail.com');
@@ -128,9 +128,13 @@ class ReceiveConfirm extends Component
             $fromName = config('mail.from.name', 'Postcard Tracker');
 
             $subject = '📬 Postcard Arrived! ['.($this->postcard->country?->nama_indonesia ?? 'Unknown').']';
-            $emailContent = "Hello {$ownerName},\n\nYour postcard has arrived safely!\n\nID: ".($this->postcard->postcard_id ?? 'Direct Swap')."\nRecipient: ".($this->postcard->contact?->nama_kontak ?? 'Unknown')."\n\nMessage: \"{$this->message}\"";
+            $senderMessage = $this->message;
 
-            Mail::raw($emailContent, function ($message) use ($ownerEmail, $fromAddress, $fromName, $subject) {
+            Mail::send('emails.postcard-arrived', [
+                'ownerName' => $ownerName,
+                'postcard' => $this->postcard,
+                'senderMessage' => $senderMessage
+            ], function ($message) use ($ownerEmail, $fromAddress, $fromName, $subject) {
                 $message->to($ownerEmail)
                     ->from($fromAddress, $fromName)
                     ->subject($subject);
