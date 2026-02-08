@@ -1,4 +1,4 @@
-<div class="register-wrapper paper-texture py-20 px-6" x-data="{ img_d_preview: null, img_b_preview: null }">
+<div class="register-wrapper paper-texture py-20 px-6" x-data="{ img_d_preview: null, img_b_preview: null }" data-wire-id="{{ $this->getId() }}">
     <div class="container max-w-4xl mx-auto airmail-border bg-white shadow-xl overflow-hidden">
         <div class="form-inner p-0">
             <div class="p-8 border-b-2 border-dashed border-gray-100 text-center">
@@ -95,7 +95,7 @@
                                 <button type="button" onclick="event.stopPropagation(); rotateFinal('d')" class="bg-blue-600 text-white p-2 rounded-full shadow-2xl hover:bg-blue-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px;" title="Rotate">
                                     <i class="bi bi-arrow-clockwise text-lg"></i>
                                 </button>
-                                <button type="button" onclick="event.stopPropagation(); const al = Alpine.$data(this.closest('[x-data]')); if(al) al.img_d_preview = null; Livewire.find(document.querySelector('.register-wrapper').getAttribute('data-wire-id')).set('img_d_data', null)" class="bg-red-600 text-white p-2 rounded-full shadow-2xl hover:bg-red-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px; background-color: #ef4444 !important;" title="Delete">
+                                <button type="button" onclick="event.stopPropagation(); const al = Alpine.$data(document.querySelector('.register-wrapper')); if(al) al.img_d_preview = null; const comp = getComponent(); if(comp) comp.set('img_d_data', null)" class="bg-red-600 text-white p-2 rounded-full shadow-2xl hover:bg-red-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px; background-color: #ef4444 !important;" title="Delete">
                                     <i class="bi bi-trash text-lg"></i>
                                 </button>
                             </div>
@@ -118,7 +118,7 @@
                                 <button type="button" onclick="event.stopPropagation(); rotateFinal('b')" class="bg-blue-600 text-white p-2 rounded-full shadow-2xl hover:bg-blue-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px;" title="Rotate">
                                     <i class="bi bi-arrow-clockwise text-lg"></i>
                                 </button>
-                                <button type="button" onclick="event.stopPropagation(); const al = Alpine.$data(this.closest('[x-data]')); if(al) al.img_b_preview = null; Livewire.find(document.querySelector('.register-wrapper').getAttribute('data-wire-id')).set('img_b_data', null)" class="bg-red-600 text-white p-2 rounded-full shadow-2xl hover:bg-red-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px; background-color: #ef4444 !important;" title="Delete">
+                                <button type="button" onclick="event.stopPropagation(); const al = Alpine.$data(document.querySelector('.register-wrapper')); if(al) al.img_b_preview = null; const comp = getComponent(); if(comp) comp.set('img_b_data', null)" class="bg-red-600 text-white p-2 rounded-full shadow-2xl hover:bg-red-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px; background-color: #ef4444 !important;" title="Delete">
                                     <i class="bi bi-trash text-lg"></i>
                                 </button>
                             </div>
@@ -267,12 +267,9 @@
     };
 
     window.rotateFinal = (mode) => {
-        // Get the current component to access data
         const rootEl = document.querySelector('.register-wrapper');
-        const componentId = rootEl ? rootEl.getAttribute('data-wire-id') : null;
-        const component = Livewire.find(componentId);
-        
-        const alData = alEl ? window.Alpine.$data(alEl) : null;
+        const component = getComponent();
+        const alData = rootEl ? window.Alpine.$data(rootEl) : null;
         
         const preview = alData ? alData['img_' + mode + '_preview'] : null;
         if(!preview) return;
@@ -403,9 +400,7 @@
             finalCanvas.getContext('2d').drawImage(tempCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
             const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.85);
             
-            const rootEl = document.querySelector('.register-wrapper');
-            const componentId = rootEl ? rootEl.getAttribute('data-wire-id') : null;
-            const component = Livewire.find(componentId);
+            const component = getComponent();
 
             if (component) {
                 if (activeMode === 's') { 
@@ -427,9 +422,21 @@
 
 
     function getComponent() {
+        // Try global ID first
+        if (window.livewire_register_id) {
+            const comp = Livewire.find(window.livewire_register_id);
+            if (comp) return comp;
+        }
+        
+        // Fallback to data attribute
         const root = document.querySelector('.register-wrapper');
-        const id = root?.dataset.wireId;
+        const id = root?.getAttribute('data-wire-id');
         if (id) return Livewire.find(id);
+        
+        // Last resort: standard Livewire discovery
+        const el = document.querySelector('[wire\\:id]');
+        if (el) return Livewire.find(el.getAttribute('wire:id'));
+        
         return null;
     }
 
