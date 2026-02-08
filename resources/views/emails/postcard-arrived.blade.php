@@ -150,11 +150,11 @@
             <div class="airmail-header"></div>
             
             <div class="content">
-                <h1>📬 Greeting from Afar!</h1>
+                <h1>📬 Good News! Your Postcard Arrived!</h1>
                 
                 <p class="intro">
                     Hello, <strong>{{ $ownerName }}</strong>!<br>
-                    Your postcard from <strong>{{ $postcard->country?->nama_indonesia ?? 'somewhere special' }}</strong> has just arrived safely in your mailbox.
+                    Your postcard sent to <strong>{{ $postcard->contact?->nama_kontak ?? 'your recipient' }}</strong> in <strong>{{ $postcard->country?->nama_indonesia ?? 'their country' }}</strong> has just been marked as <strong>Received</strong>.
                 </p>
 
                 <div class="postcard-box">
@@ -164,23 +164,24 @@
                     </div>
                     
                     <div class="detail-row">
-                        <div class="label">From / Recipient Name</div>
+                        <div class="label">Recipient</div>
                         <div class="value">{{ $postcard->contact?->nama_kontak ?? 'Anonymous' }}</div>
                     </div>
 
                     <div class="detail-row">
-                        <div class="label">Arrival Date</div>
+                        <div class="label">Date Received</div>
                         <div class="value">{{ $postcard->tanggal_terima->format('d M Y') }}</div>
                     </div>
 
                     <div class="message-box">
                         <span class="quote-icon">“</span>
+                        <strong>Message from recipient:</strong><br>
                         {{ $senderMessage }}
                     </div>
                 </div>
 
                 <div style="text-align: center;">
-                    <a href="{{ config('app.url') }}/view/{{ $postcard->id }}" class="btn">View Collection</a>
+                    <a href="{{ config('app.url') }}/view/{{ $postcard->id }}" class="btn">View Postcard Details</a>
                 </div>
             </div>
 
