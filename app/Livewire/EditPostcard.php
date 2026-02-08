@@ -237,7 +237,7 @@ class EditPostcard extends Component
             'foto_belakang' => $this->currentFotoBelakang,
         ]);
 
-        return redirect()->route('dashboard');
+        return redirect()->route('view', ['id' => $this->id]);
     }
 
     private function saveBase64Image($base64, $prefix, $suffix)
