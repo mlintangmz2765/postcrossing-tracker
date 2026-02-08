@@ -216,7 +216,7 @@
                         <label class="vintage-label">Philately Collection (Stamps)</label>
                         <div class="stamp-gallery">
                             @foreach($existingStamps as $st)
-                                <div class="stamp-item">
+                                <div class="stamp-item" wire:key="existing-stamp-{{ $st->id }}">
                                     <img src="{{ asset($st->foto_prangko) }}?t={{ time() }}">
                                     <button type="button" class="btn-rot-stamp" wire:click="rotateStamp({{ $st->id }})"><i class="bi bi-arrow-clockwise"></i></button>
                                     <button type="button" class="btn-del-stamp" wire:click="deleteStamp({{ $st->id }})" onclick="return confirm('Delete?')">×</button>
@@ -224,7 +224,12 @@
                             @endforeach
                             
                             <!-- New Stamps Preview -->
-                            <div id="new-stamps-container" style="display: contents;"></div>
+                            @foreach($newStampsBase64 as $index => $base64)
+                                <div class="stamp-item" wire:key="new-stamp-{{ $index }}">
+                                    <img src="{{ $base64 }}">
+                                    <button type="button" class="btn-del-stamp" wire:click="removeNewStamp({{ $index }})">×</button>
+                                </div>
+                            @endforeach
                         </div>
                         
                         <div class="upload-card" onclick="openScanner('stamp')" style="border-style: dotted;">
@@ -429,10 +434,6 @@
                         let currentStamps = component.get('newStampsBase64') || [];
                         currentStamps.push(dataUrl);
                         component.set('newStampsBase64', currentStamps);
-                        
-                        const div = document.createElement('div'); div.className = 'stamp-item';
-                        div.innerHTML = `<img src="${dataUrl}">`;
-                        document.getElementById('new-stamps-container').appendChild(div);
                     }
                 }
                 

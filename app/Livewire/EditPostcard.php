@@ -240,6 +240,14 @@ class EditPostcard extends Component
         return redirect()->route('view', ['id' => $this->id]);
     }
 
+    public function removeNewStamp($index)
+    {
+        if (isset($this->newStampsBase64[$index])) {
+            unset($this->newStampsBase64[$index]);
+            $this->newStampsBase64 = array_values($this->newStampsBase64);
+        }
+    }
+
     private function saveBase64Image($base64, $prefix, $suffix)
     {
         $image_parts = explode(';base64,', $base64);

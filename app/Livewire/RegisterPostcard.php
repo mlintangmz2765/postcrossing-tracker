@@ -181,6 +181,14 @@ class RegisterPostcard extends Component
         return redirect()->route('view', ['id' => $newPostcardId]);
     }
 
+    public function removeStamp($index)
+    {
+        if (isset($this->stamp_data[$index])) {
+            unset($this->stamp_data[$index]);
+            $this->stamp_data = array_values($this->stamp_data);
+        }
+    }
+
     public function render()
     {
         return view('livewire.register-postcard')->layout('components.layouts.app', ['title' => 'Register New Postcard - Archive']);

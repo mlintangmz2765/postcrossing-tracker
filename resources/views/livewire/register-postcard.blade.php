@@ -132,7 +132,7 @@
                      <label class="vintage-label">Philately Collection (Stamps)</label>
                      <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 mb-4" id="stamps-grid">
                          @foreach($stamp_data as $index => $stamp)
-                            <div class="relative group aspect-square">
+                            <div class="relative group aspect-square" wire:key="reg-stamp-{{ $index }}">
                                 <img src="{{ $stamp }}" class="w-full h-full object-cover rounded border-2 border-white shadow-sm">
                                 <button type="button" wire:click="removeStamp({{ $index }})" class="absolute -top-2 -right-2 bg-pc-red text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md border-2 border-white">X</button>
                             </div>
@@ -405,7 +405,9 @@
 
             if (component) {
                 if (activeMode === 's') { 
-                    component.set('stamp_data', [...component.get('stamp_data'), dataUrl]);
+                    let stamps = component.get('stamp_data') || [];
+                    stamps.push(dataUrl);
+                    component.set('stamp_data', stamps);
                 } else { 
                     component.set('img_' + activeMode + '_data', dataUrl);
                     const alEl = document.querySelector('.register-wrapper');
