@@ -181,7 +181,7 @@
             <!-- Left Panel -->
             <div class="postcard-left relative">
                 <div class="md:hidden mb-4 flex justify-center">
-                    <i class="bi bi-postcard-heart text-4xl text-red-500"></i>
+                    <!-- Icon removed as requested -->
                 </div>
 
                 <h2 class="text-3xl text-gray-800 mb-2 font-hand font-bold">Manager Access</h2>
@@ -194,7 +194,7 @@
                 </div>
 
                 <a href="{{ route('home') }}" class="mt-auto md:mt-0 no-underline text-gray-500 text-sm hover:text-red-500 transition-colors font-special">
-                    <i class="bi bi-arrow-left"></i> Return to Public Gallery
+                    <i class="bi bi-arrow-left"></i> Return to Home
                 </a>
             </div>
 
@@ -238,7 +238,7 @@
                     </button>
                     
                     <div class="text-center mt-6 text-gray-400 text-xs font-special border-t pt-4 w-full">
-                        &copy; {{ date('Y') }} Postcard Tracker | v1.1-split
+                        &copy; {{ date('Y') }} Postcard Tracker
                     </div>
                 </form>
             </div>
