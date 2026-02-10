@@ -173,8 +173,9 @@
                 <p class="subtitle text-gray-500 text-sm mb-6 font-special">Authorized Personnel Only</p>
 
                 <div class="disclaimer-box mb-6 font-body text-left">
-                    <strong><i class="bi bi-info-circle-fill"></i> POSTCARD INFO:</strong><br>
-                    This portal is for the administration of the personal postcard archive. 
+                    <strong><i class="bi bi-info-circle-fill"></i> IMPORTANT NOTICE:</strong><br>
+                    This portal is for the administration of the personal postcard archive.
+                    It is <u>NOT</u> the official Postcrossing.com website.
                     Please do not use your official Postcrossing credentials.
                 </div>
 
