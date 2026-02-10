@@ -78,10 +78,89 @@
         }
     </style>
     
+    <style>
+        /* Force split layout on wider screens */
+        .postcard-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 850px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #ddd;
+        }
+
+        .postcard-left {
+            width: 100%;
+            padding: 30px;
+            background-color: #f9f9f9;
+            border-bottom: 2px dashed #ddd;
+            text-align: center;
+        }
+
+        .postcard-right {
+            width: 100%;
+            padding: 30px;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Desktop specific layout (> 768px) */
+        @media (min-width: 768px) {
+            .postcard-container {
+                flex-direction: row;
+                min-height: 450px;
+            }
+            .postcard-left {
+                width: 50%;
+                border-bottom: none;
+                border-right: 2px dashed #ddd; /* Vertical divider */
+                text-align: left;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .postcard-right {
+                width: 50%;
+            }
+        }
+
+        /* Ensure button is always visible */
+        .btn-login-custom {
+            display: block !important;
+            width: 100%;
+            padding: 12px;
+            background-color: #2c3e50;
+            color: white;
+            font-family: 'Special Elite', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        .btn-login-custom:hover {
+            background-color: #34495e;
+        }
+        .btn-login-custom:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    </style>
+
     <div class="login-bg-pattern min-h-screen flex items-center justify-center p-4">
         <!-- Main Card Container -->
-        <div class="relative bg-white shadow-2xl rounded-sm flex flex-col md:flex-row overflow-hidden border border-gray-200" 
-             style="width: 100%; max-width: 850px; margin: 0 auto; min-height: 450px;">
+        <div class="postcard-container">
             
             <!-- Airmail Borders -->
             <div class="airmail-strip absolute top-0 left-0 z-10"></div>
@@ -99,17 +178,16 @@
                 </div>
             </div>
 
-            <!-- Left Panel: Info & Titles -->
-            <div class="w-full md:w-1/2 p-8 md:pr-10 border-b md:border-b-0 md:border-r border-dashed border-gray-300 flex flex-col justify-center text-center md:text-left relative bg-gray-50">
+            <!-- Left Panel -->
+            <div class="postcard-left relative">
                 <div class="md:hidden mb-4 flex justify-center">
-                    <!-- Mobile Logo/Icon if needed -->
                     <i class="bi bi-postcard-heart text-4xl text-red-500"></i>
                 </div>
 
                 <h2 class="text-3xl text-gray-800 mb-2 font-hand font-bold">Manager Access</h2>
                 <p class="subtitle text-gray-500 text-sm mb-6 font-special">Authorized Personnel Only</p>
 
-                <div class="disclaimer-box mb-6 font-body">
+                <div class="disclaimer-box mb-6 font-body text-left">
                     <strong><i class="bi bi-info-circle-fill"></i> POSTCARD INFO:</strong><br>
                     This portal is for the administration of the personal postcard archive. 
                     Please do not use your official Postcrossing credentials.
@@ -120,8 +198,8 @@
                 </a>
             </div>
 
-            <!-- Right Panel: Form & Login Button -->
-            <div class="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center items-center z-10 bg-white relative">
+            <!-- Right Panel -->
+            <div class="postcard-right relative z-10">
                 
                 @if($error)
                     <div class="error-msg text-center w-full mb-6 relative z-10 bg-red-50 border border-red-200 text-red-700 p-3 rounded font-body">
@@ -130,21 +208,21 @@
                 @endif
 
                 <form wire:submit.prevent="authenticate" class="w-full relative z-10">
-                    <div class="mb-5">
+                    <div class="mb-5 text-left">
                         <label class="block mb-2 text-gray-700 font-special uppercase tracking-wider text-xs">Username</label>
                         <input type="text" wire:model="username" 
                                class="w-full p-3 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition font-body bg-gray-50 focus:bg-white" 
                                placeholder="" required>
                     </div>
 
-                    <div class="mb-6">
+                    <div class="mb-6 text-left">
                         <label class="block mb-2 text-gray-700 font-special uppercase tracking-wider text-xs">Password</label>
                         <input type="password" wire:model="password" 
                                class="w-full p-3 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition font-body bg-gray-50 focus:bg-white" 
                                placeholder="" required>
                     </div>
 
-                    <div class="flex justify-center mb-8">
+                    <div class="flex justify-center mb-4">
                         <div wire:ignore>
                             <div class="g-recaptcha" 
                                  data-sitekey="{{ config('app.recaptcha_site_key') }}" 
@@ -154,8 +232,8 @@
                         </div>
                     </div>
 
-                    <!-- LOGIN BUTTON: Explicitly placed here -->
-                    <button type="submit" class="w-full py-3 bg-[#2c3e50] text-white font-special uppercase tracking-wider rounded shadow hover:bg-[#34495e] transition transform hover:-translate-y-1" id="loginBtn">
+                    <!-- LOGIN BUTTON: Custom styling to force display -->
+                    <button type="submit" class="btn-login-custom" id="loginBtn">
                         <i class="bi bi-box-arrow-in-right"></i> Sign In
                     </button>
                     
