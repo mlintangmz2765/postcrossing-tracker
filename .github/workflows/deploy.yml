@@ -23,7 +23,10 @@ jobs:
             cd ${{ secrets.DEPLOY_PATH }}
             git fetch --all --tags
             git reset --hard origin/main
-            # composer install --no-dev --optimize-autoloader
-            # php artisan migrate --force
+            
+            # Debugging: Write version info to public file
+            echo "Deployed at $(date) - Commit: $(git rev-parse --short HEAD)" > public/version.txt
+            
+            # Clear caches
             php artisan view:clear
             php artisan config:clear
