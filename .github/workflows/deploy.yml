@@ -23,6 +23,7 @@ jobs:
             cd ${{ secrets.DEPLOY_PATH }}
             git fetch --all --tags
             git reset --hard origin/main
-            composer install --no-dev --optimize-autoloader
-            php artisan migrate --force
-            php artisan optimize:clear
+            # composer install --no-dev --optimize-autoloader
+            # php artisan migrate --force
+            php artisan view:clear
+            php artisan config:clear

@@ -238,7 +238,7 @@
                     </button>
                     
                     <div class="text-center mt-6 text-gray-400 text-xs font-special border-t pt-4 w-full">
-                        &copy; {{ date('Y') }} Postcard Tracker
+                        &copy; {{ date('Y') }} Postcard Tracker | v1.1-split
                     </div>
                 </form>
             </div>
