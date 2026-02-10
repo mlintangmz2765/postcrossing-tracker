@@ -81,7 +81,7 @@
     <div class="login-bg-pattern min-h-screen flex items-center justify-center p-4">
         <!-- Main Card Container -->
         <div class="relative bg-white shadow-2xl rounded-sm flex flex-col md:flex-row overflow-hidden border border-gray-200" 
-             style="width: 100%; max-width: 850px; margin: 0 auto;">
+             style="width: 100%; max-width: 850px; margin: 0 auto; min-height: 450px;">
             
             <!-- Airmail Borders -->
             <div class="airmail-strip absolute top-0 left-0 z-10"></div>
@@ -99,9 +99,13 @@
                 </div>
             </div>
 
-            <!-- Left Panel -->
-            <div class="flex-1 p-8 md:pr-10 border-b md:border-b-0 md:border-r border-dashed border-gray-300 flex flex-col justify-center text-center md:text-left relative bg-gray-50">
-                
+            <!-- Left Panel: Info & Titles -->
+            <div class="w-full md:w-1/2 p-8 md:pr-10 border-b md:border-b-0 md:border-r border-dashed border-gray-300 flex flex-col justify-center text-center md:text-left relative bg-gray-50">
+                <div class="md:hidden mb-4 flex justify-center">
+                    <!-- Mobile Logo/Icon if needed -->
+                    <i class="bi bi-postcard-heart text-4xl text-red-500"></i>
+                </div>
+
                 <h2 class="text-3xl text-gray-800 mb-2 font-hand font-bold">Manager Access</h2>
                 <p class="subtitle text-gray-500 text-sm mb-6 font-special">Authorized Personnel Only</p>
 
@@ -111,13 +115,13 @@
                     Please do not use your official Postcrossing credentials.
                 </div>
 
-                <a href="{{ route('home') }}" class="no-underline text-gray-500 text-sm hover:text-red-500 transition-colors font-special">
+                <a href="{{ route('home') }}" class="mt-auto md:mt-0 no-underline text-gray-500 text-sm hover:text-red-500 transition-colors font-special">
                     <i class="bi bi-arrow-left"></i> Return to Public Gallery
                 </a>
             </div>
 
-            <!-- Right Panel (Form) -->
-            <div class="flex-1 p-8 md:p-10 flex flex-col justify-center items-center z-10 bg-white relative">
+            <!-- Right Panel: Form & Login Button -->
+            <div class="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center items-center z-10 bg-white relative">
                 
                 @if($error)
                     <div class="error-msg text-center w-full mb-6 relative z-10 bg-red-50 border border-red-200 text-red-700 p-3 rounded font-body">
@@ -127,20 +131,20 @@
 
                 <form wire:submit.prevent="authenticate" class="w-full relative z-10">
                     <div class="mb-5">
-                        <label class="block mb-2 text-gray-700 font-special">Username</label>
+                        <label class="block mb-2 text-gray-700 font-special uppercase tracking-wider text-xs">Username</label>
                         <input type="text" wire:model="username" 
-                               class="w-full p-3 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition font-body" 
-                               required>
+                               class="w-full p-3 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition font-body bg-gray-50 focus:bg-white" 
+                               placeholder="" required>
                     </div>
 
                     <div class="mb-6">
-                        <label class="block mb-2 text-gray-700 font-special">Password</label>
+                        <label class="block mb-2 text-gray-700 font-special uppercase tracking-wider text-xs">Password</label>
                         <input type="password" wire:model="password" 
-                               class="w-full p-3 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition font-body" 
-                               required>
+                               class="w-full p-3 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition font-body bg-gray-50 focus:bg-white" 
+                               placeholder="" required>
                     </div>
 
-                    <div class="flex justify-center mb-6">
+                    <div class="flex justify-center mb-8">
                         <div wire:ignore>
                             <div class="g-recaptcha" 
                                  data-sitekey="{{ config('app.recaptcha_site_key') }}" 
@@ -150,11 +154,12 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full py-3 bg-[#2c3e50] text-white font-special uppercase tracking-wider rounded shadow hover:bg-[#34495e] transition" id="loginBtn">
+                    <!-- LOGIN BUTTON: Explicitly placed here -->
+                    <button type="submit" class="w-full py-3 bg-[#2c3e50] text-white font-special uppercase tracking-wider rounded shadow hover:bg-[#34495e] transition transform hover:-translate-y-1" id="loginBtn">
                         <i class="bi bi-box-arrow-in-right"></i> Sign In
                     </button>
                     
-                    <div class="text-center mt-5 text-gray-400 text-xs font-special">
+                    <div class="text-center mt-6 text-gray-400 text-xs font-special border-t pt-4 w-full">
                         &copy; {{ date('Y') }} Postcard Tracker
                     </div>
                 </form>
