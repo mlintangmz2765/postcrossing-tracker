@@ -25,5 +25,6 @@ jobs:
             git reset --hard ${{ github.sha }}
             composer install --no-dev --optimize-autoloader
             php artisan migrate --force
+            php artisan optimize:clear
             php artisan view:clear
             php artisan config:clear
