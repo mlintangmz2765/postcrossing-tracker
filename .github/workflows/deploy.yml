@@ -21,7 +21,7 @@ jobs:
           port: 48291
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
-            git fetch --all --tags
+            git fetch --all --tags -f
             git reset --hard ${{ github.sha }}
             composer install --no-dev --optimize-autoloader
             php artisan migrate --force
