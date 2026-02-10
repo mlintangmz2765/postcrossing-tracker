@@ -1,17 +1,14 @@
 <div>
     <style>
-        /* Use global fonts where possible to avoid double-loading */
         .font-special { font-family: 'Special Elite', 'Courier New', monospace; }
         .font-hand { font-family: 'Dancing Script', cursive; }
         .font-body { font-family: 'Quicksand', sans-serif; }
 
-        /* Vintage background pattern - Subtle Paper */
         .login-bg-pattern {
             background-color: #fdf6e3;
             background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4c5a9' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
 
-        /* Airmail Strip Border - CSS only, no images */
         .airmail-strip {
              height: 10px;
              width: 100%;
@@ -32,13 +29,12 @@
             color: #5d4037;
         }
 
-        /* Custom Input Underline Animation */
         .input-group { position: relative; margin-bottom: 25px; }
         .input-underline {
             display: block;
             width: 100%;
             border: none;
-            border-bottom: 2px solid #ccc; /* Light gray line like paper */
+            border-bottom: 2px solid #ccc;
             background: transparent;
             padding: 10px 5px;
             font-family: 'Special Elite', monospace;
@@ -48,7 +44,7 @@
         }
         .input-underline:focus {
             outline: none;
-            border-bottom-color: #e63946; /* Red ink when writing */
+            border-bottom-color: #e63946;
             background: rgba(255,255,255,0.5);
         }
         
@@ -79,7 +75,6 @@
     </style>
     
     <style>
-        /* Force split layout on wider screens */
         .postcard-container {
             display: flex;
             flex-direction: column;
@@ -112,7 +107,6 @@
             align-items: center;
         }
 
-        /* Desktop specific layout (> 768px) */
         @media (min-width: 768px) {
             .postcard-container {
                 flex-direction: row;
@@ -121,7 +115,7 @@
             .postcard-left {
                 width: 50%;
                 border-bottom: none;
-                border-right: 2px dashed #ddd; /* Vertical divider */
+                border-right: 2px dashed #ddd;
                 text-align: left;
                 display: flex;
                 flex-direction: column;
@@ -132,7 +126,6 @@
             }
         }
 
-        /* Ensure button is always visible */
         .btn-login-custom {
             display: block !important;
             width: 100%;
@@ -159,14 +152,11 @@
     </style>
 
     <div class="login-bg-pattern min-h-screen flex items-center justify-center p-4">
-        <!-- Main Card Container -->
         <div class="postcard-container">
             
-            <!-- Airmail Borders -->
             <div class="airmail-strip absolute top-0 left-0 z-10"></div>
             <div class="airmail-strip absolute bottom-0 left-0 z-10"></div>
 
-            <!-- Par Avion Badge (Desktop Only) -->
             <div class="absolute top-6 right-6 z-20 hidden md:block" style="transform: rotate(5deg);">
                  <div style="display: inline-flex; align-items: center; gap: 8px; border: 2px solid #457b9d; padding: 4px 12px; background: rgba(255,255,255,0.95);">
                     <svg width="24" height="24" viewBox="0 0 24 24">
@@ -178,12 +168,7 @@
                 </div>
             </div>
 
-            <!-- Left Panel -->
             <div class="postcard-left relative">
-                <div class="md:hidden mb-4 flex justify-center">
-                    <!-- Icon removed as requested -->
-                </div>
-
                 <h2 class="text-3xl text-gray-800 mb-2 font-hand font-bold">Manager Access</h2>
                 <p class="subtitle text-gray-500 text-sm mb-6 font-special">Authorized Personnel Only</p>
 
@@ -198,7 +183,6 @@
                 </a>
             </div>
 
-            <!-- Right Panel -->
             <div class="postcard-right relative z-10">
                 
                 @if($error)
@@ -232,7 +216,6 @@
                         </div>
                     </div>
 
-                    <!-- LOGIN BUTTON: Custom styling to force display -->
                     <button type="submit" class="btn-login-custom" id="loginBtn">
                         <i class="bi bi-box-arrow-in-right"></i> Sign In
                     </button>
@@ -245,7 +228,6 @@
         </div>
     </div>
 
-    <!-- ReCaptcha Script -->
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script>
         function onRecaptchaSuccess(token) {
