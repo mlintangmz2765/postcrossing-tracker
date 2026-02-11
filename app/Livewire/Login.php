@@ -31,8 +31,9 @@ class Login extends Component
     {
         $this->validate();
 
-        if (!$this->recaptchaToken) {
+        if (! $this->recaptchaToken) {
             $this->error = 'Please complete the reCAPTCHA verification.';
+
             return;
         }
 

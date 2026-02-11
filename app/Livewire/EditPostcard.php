@@ -153,6 +153,7 @@ class EditPostcard extends Component
     }
 
     public $showContactConflictModal = false;
+
     public $pendingUpdateData = [];
 
     public function preUpdate(\App\Services\GeocodingService $geoService)
@@ -167,15 +168,16 @@ class EditPostcard extends Component
         // Check for contact changes
         $postcard = Postcard::where('id', $this->id)->where('user_id', auth()->id())->firstOrFail();
         $currentContact = $postcard->contact;
-        
+
         $contactChanged = false;
         if ($currentContact) {
             $isAddressChanged = trim($currentContact->alamat) !== trim($this->alamat);
             $isPhoneChanged = trim($currentContact->nomor_telepon) !== trim($this->nomor_telepon);
-            
+
             // If details changed AND this contact is used by MORE than just this postcard (or other postcards exist for it)
             if (($isAddressChanged || $isPhoneChanged) && $currentContact->postcards()->count() > 1) {
                 $this->showContactConflictModal = true;
+
                 return; // Stop here, wait for user decision
             }
         }
@@ -184,7 +186,7 @@ class EditPostcard extends Component
         $this->performUpdate($geoService, 'update_all');
     }
 
-    public function resolveContactConflict($mode) 
+    public function resolveContactConflict($mode)
     {
         // $mode = 'update_all' (Edit existing Contact) OR 'create_new' (New Contact for this postcard)
         $this->showContactConflictModal = false;
@@ -270,7 +272,7 @@ class EditPostcard extends Component
             $contact = Contact::updateOrCreate(
                 ['id' => $postcard->contact_id], // Try to find by ID first if exists
                 [
-                    'user_id' => auth()->id() ?? 1, 
+                    'user_id' => auth()->id() ?? 1,
                     'nama_kontak' => $this->nama_kontak,
                     'alamat' => $this->alamat,
                     'country_id' => $country_id,
