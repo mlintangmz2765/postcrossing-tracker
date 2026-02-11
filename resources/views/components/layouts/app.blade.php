@@ -226,7 +226,8 @@
         @livewireScripts
         
         <!-- Global Postcard Loader -->
-        <div wire:loading.delay class="pc-loader-overlay">
+        <!-- wire:loading.flex handles Livewire actions, style="display: none;" handles initial state for JS navigation -->
+        <div id="global-loader" wire:loading.flex class="pc-loader-overlay" style="display: none;">
             <div class="pc-envelope"></div>
             <div class="pc-shadow"></div>
             <div class="pc-loading-text">Traveling to destination...</div>
@@ -262,6 +263,50 @@
                     }
                 });
             }
+
+            // Global Navigation Loader Logic
+            document.addEventListener('DOMContentLoaded', () => {
+                const loader = document.getElementById('global-loader');
+                
+                // Show loader on link clicks (internal navigation only)
+                document.body.addEventListener('click', (e) => {
+                    const link = e.target.closest('a');
+                    if (!link) return;
+
+                    const href = link.getAttribute('href');
+                    const target = link.getAttribute('target');
+
+                    // Skip if:
+                    // 1. External link
+                    // 2. Hash link (#) or same page anchor
+                    // 3. New tab target (_blank)
+                    // 4. Download attribute
+                    // 5. JavaScript void
+                    if (
+                        !href || 
+                        href.startsWith('#') || 
+                        href.startsWith('javascript:') || 
+                        target === '_blank' || 
+                        link.hasAttribute('download') ||
+                        (link.origin && link.origin !== window.location.origin)
+                    ) {
+                        return;
+                    }
+
+                    // Special case: Don't show loader for PWA install button or similar JS-handled links
+                    if (link.getAttribute('@click.prevent')) return;
+
+                    // Show loader immediately
+                    if (loader) loader.style.display = 'flex';
+                });
+
+                // Hide loader when page is restored from bfcache (back/forward navigation)
+                window.addEventListener('pageshow', (event) => {
+                    if (event.persisted && loader) {
+                        loader.style.display = 'none';
+                    }
+                });
+            });
         </script>
         @endauth
     </body>
