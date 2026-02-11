@@ -217,7 +217,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn-login-custom" id="loginBtn" disabled>
+                    <button type="submit" class="btn-login-custom" id="loginBtn" @if(!$recaptchaToken) disabled @endif wire:loading.attr="disabled">
                         <i class="bi bi-box-arrow-in-right"></i> Sign In
                     </button>
                     
