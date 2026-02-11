@@ -31,7 +31,11 @@ class Login extends Component
     {
         $this->validate();
 
-        // Verify ReCaptcha
+        if (!$this->recaptchaToken) {
+            $this->error = 'Please complete the reCAPTCHA verification.';
+            return;
+        }
+
         // Authenticate user
         if (Auth::attempt(['username' => $this->username, 'password' => $this->password])) {
             session()->regenerate();

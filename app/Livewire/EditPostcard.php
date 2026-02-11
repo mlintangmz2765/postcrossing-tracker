@@ -152,7 +152,10 @@ class EditPostcard extends Component
         }
     }
 
-    public function update(\App\Services\GeocodingService $geoService)
+    public $showContactConflictModal = false;
+    public $pendingUpdateData = [];
+
+    public function preUpdate(\App\Services\GeocodingService $geoService)
     {
         $this->validate([
             'postcard_id' => 'nullable',
@@ -161,6 +164,36 @@ class EditPostcard extends Component
             'tanggal_kirim' => 'required|date',
         ]);
 
+        // Check for contact changes
+        $postcard = Postcard::where('id', $this->id)->where('user_id', auth()->id())->firstOrFail();
+        $currentContact = $postcard->contact;
+        
+        $contactChanged = false;
+        if ($currentContact) {
+            $isAddressChanged = trim($currentContact->alamat) !== trim($this->alamat);
+            $isPhoneChanged = trim($currentContact->nomor_telepon) !== trim($this->nomor_telepon);
+            
+            // If details changed AND this contact is used by MORE than just this postcard (or other postcards exist for it)
+            if (($isAddressChanged || $isPhoneChanged) && $currentContact->postcards()->count() > 1) {
+                $this->showContactConflictModal = true;
+                return; // Stop here, wait for user decision
+            }
+        }
+
+        // If no conflict, proceed with standard update
+        $this->performUpdate($geoService, 'update_all');
+    }
+
+    public function resolveContactConflict($mode) 
+    {
+        // $mode = 'update_all' (Edit existing Contact) OR 'create_new' (New Contact for this postcard)
+        $this->showContactConflictModal = false;
+        $geoService = app(\App\Services\GeocodingService::class); // Manually resolve service since this is triggered by UI
+        $this->performUpdate($geoService, $mode);
+    }
+
+    public function performUpdate(\App\Services\GeocodingService $geoService, $contactMode)
+    {
         $postcard = Postcard::where('id', $this->id)->where('user_id', auth()->id())->firstOrFail();
 
         if ($this->type === 'received') {
@@ -176,7 +209,6 @@ class EditPostcard extends Component
             if ($this->currentFotoDepan && file_exists(public_path($this->currentFotoDepan))) {
                 @unlink(public_path($this->currentFotoDepan));
             }
-
             $this->currentFotoDepan = $this->saveBase64Image($this->newFotoDepanBase64, 'f', 'd');
         }
 
@@ -184,7 +216,6 @@ class EditPostcard extends Component
             if ($this->currentFotoBelakang && file_exists(public_path($this->currentFotoBelakang))) {
                 @unlink(public_path($this->currentFotoBelakang));
             }
-
             $this->currentFotoBelakang = $this->saveBase64Image($this->newFotoBelakangBase64, 'b', 'b');
         }
 
@@ -201,9 +232,12 @@ class EditPostcard extends Component
             ->first();
         $country_id = $country?->id;
 
+        // Geocoding Logic
         $lat = $postcard->contact?->lat ?? 0;
         $lng = $postcard->contact?->lng ?? 0;
 
+        // Check if address actually changed from what is currently in DB (not just what is in form)
+        // Note: We use the FORM data ($this->alamat) vs DB data for geocoding trigger
         $addressChanged = ($postcard->contact?->alamat !== $this->alamat) || ($postcard->country?->nama_indonesia !== $this->negara);
         $isZeroCoords = ($lat == 0 && $lng == 0);
 
@@ -215,20 +249,42 @@ class EditPostcard extends Component
             }
         }
 
-        $contact = Contact::updateOrCreate(
-            ['user_id' => auth()->id() ?? 1, 'nama_kontak' => $this->nama_kontak],
-            [
+        // SMART CONTACT SYNC
+        $contactId = $postcard->contact_id;
+
+        if ($contactMode === 'create_new') {
+            // Create NEW contact specific for this postcard
+            $newContact = Contact::create([
+                'user_id' => auth()->id(),
+                'nama_kontak' => $this->nama_kontak, // Can keep same name
                 'alamat' => $this->alamat,
                 'country_id' => $country_id,
                 'nomor_telepon' => $this->nomor_telepon,
                 'lat' => $lat,
                 'lng' => $lng,
-            ]
-        );
+            ]);
+            $contactId = $newContact->id;
+        } else {
+            // Update Existing Contact (Standard)
+            // If contact doesn't exist yet, create it
+            $contact = Contact::updateOrCreate(
+                ['id' => $postcard->contact_id], // Try to find by ID first if exists
+                [
+                    'user_id' => auth()->id() ?? 1, 
+                    'nama_kontak' => $this->nama_kontak,
+                    'alamat' => $this->alamat,
+                    'country_id' => $country_id,
+                    'nomor_telepon' => $this->nomor_telepon,
+                    'lat' => $lat,
+                    'lng' => $lng,
+                ]
+            );
+            $contactId = $contact->id;
+        }
 
         $postcard->update([
             'postcard_id' => $this->postcard_id,
-            'contact_id' => $contact->id,
+            'contact_id' => $contactId,
             'country_id' => $country_id,
             'tanggal_kirim' => $this->tanggal_kirim,
             'tanggal_terima' => $this->tanggal_terima ?: null,

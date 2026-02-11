@@ -97,7 +97,7 @@
                 <div style="font-family: 'Special Elite'; color: #64748b; font-size: 0.9rem;">Updating Log: {{ strtoupper($type) }} ({{ $postcard_id ?: 'NO-ID' }})</div>
             </div>
 
-            <form wire:submit.prevent="update">
+            <form wire:submit.prevent="preUpdate">
                 <div class="form-grid">
                     <div class="form-group"><label class="vintage-label">Postcard ID</label><input type="text" class="vintage-input" wire:model="postcard_id" value="{{ $postcard_id }}" placeholder="e.g. ID-123456">
                         @error('postcard_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
@@ -273,10 +273,46 @@
                     </div>
                 </div>
 
-                <button type="submit" class="vintage-btn w-full mt-8" wire:loading.attr="disabled" wire:target="update">
-                    <span wire:loading.remove wire:target="update">CONFIRM LOG UPDATES</span>
-                    <span wire:loading wire:target="update">UPDATING...</span>
-                </button>
+                <div class="mt-8">
+                    <button type="submit" class="vintage-btn w-full" wire:loading.attr="disabled" wire:target="preUpdate">
+                        <span wire:loading.remove wire:target="preUpdate">CONFIRM LOG UPDATES</span>
+                        <span wire:loading wire:target="preUpdate">CHECKING DATA...</span>
+                    </button>
+                    
+                    <!-- Smart Contact Conflict Modal -->
+                    @if($showContactConflictModal)
+                    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900 bg-opacity-75 backdrop-blur-sm">
+                        <div class="bg-[#fdf6e3] rounded-lg shadow-2xl max-w-md w-full border-4 border-[#2c3e50] p-6 relative">
+                            <div class="text-center mb-6">
+                                <h3 class="text-2xl font-bold text-[#2c3e50] mb-2 font-special" style="font-family: 'Special Elite';">
+                                    <i class="bi bi-person-lines-fill"></i> Contact Update
+                                </h3>
+                                <p class="text-gray-600 text-sm">
+                                    This contact <strong>({{ $nama_kontak }})</strong> is shared by other postcards in your archive.
+                                </p>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <button type="button" wire:click="resolveContactConflict('update_all')" class="w-full text-left p-4 rounded border-2 border-[#457b9d] bg-white hover:bg-blue-50 transition group">
+                                    <div class="font-bold text-[#457b9d] group-hover:text-blue-700">Update for ALL Postcards</div>
+                                    <div class="text-xs text-gray-500">The sender moved perfectly. Update their address everywhere.</div>
+                                </button>
+                                
+                                <button type="button" wire:click="resolveContactConflict('create_new')" class="w-full text-left p-4 rounded border-2 border-[#e63946] bg-white hover:bg-red-50 transition group">
+                                    <div class="font-bold text-[#e63946] group-hover:text-red-700">Update ONLY this Postcard</div>
+                                    <div class="text-xs text-gray-500">Create a new separate contact profile for this specific card.</div>
+                                </button>
+                            </div>
+
+                            <div class="mt-6 text-center">
+                                <button type="button" wire:click="$set('showContactConflictModal', false)" class="text-xs text-gray-500 underline hover:text-gray-800">
+                                    Cancel and Review
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                </div>
                 
                 <div class="flex justify-between items-center mt-8 pt-6 border-t-2 border-dashed border-gray-100">
                     <a href="{{ route('view', ['id' => $id]) }}" style="color:#94a3b8; text-decoration:none; font-family: 'Special Elite'; font-size: 0.9rem;">
