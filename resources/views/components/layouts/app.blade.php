@@ -226,8 +226,7 @@
         @livewireScripts
         
         <!-- Global Postcard Loader -->
-        <!-- wire:loading.flex handles Livewire actions, style="display: none;" handles initial state for JS navigation -->
-        <div id="global-loader" wire:loading.flex class="pc-loader-overlay" style="display: none;">
+        <div id="global-loader" class="pc-loader-overlay" style="display: none;">
             <div class="pc-envelope"></div>
             <div class="pc-shadow"></div>
             <div class="pc-loading-text">Traveling to destination...</div>
@@ -268,7 +267,7 @@
             document.addEventListener('DOMContentLoaded', () => {
                 const loader = document.getElementById('global-loader');
                 
-                // Show loader on link clicks (internal navigation only)
+                // 1. Handle Standard Link Navigation
                 document.body.addEventListener('click', (e) => {
                     const link = e.target.closest('a');
                     if (!link) return;
@@ -276,31 +275,42 @@
                     const href = link.getAttribute('href');
                     const target = link.getAttribute('target');
 
-                    // Skip if:
-                    // 1. External link
-                    // 2. Hash link (#) or same page anchor
-                    // 3. New tab target (_blank)
-                    // 4. Download attribute
-                    // 5. JavaScript void
+                    // Skip checks
                     if (
                         !href || 
                         href.startsWith('#') || 
                         href.startsWith('javascript:') || 
                         target === '_blank' || 
                         link.hasAttribute('download') ||
-                        (link.origin && link.origin !== window.location.origin)
+                        (link.origin && link.origin !== window.location.origin) ||
+                        link.getAttribute('wire:click') // Skip pure Livewire actions usually handled by hooks
                     ) {
-                        return;
+                        return; // Do nothing
                     }
 
-                    // Special case: Don't show loader for PWA install button or similar JS-handled links
+                    // Special case for PWA
                     if (link.getAttribute('@click.prevent')) return;
 
-                    // Show loader immediately
+                    // Show loader for standard navigation
                     if (loader) loader.style.display = 'flex';
                 });
 
-                // Hide loader when page is restored from bfcache (back/forward navigation)
+                // 2. Handle Livewire Navigation & Requests
+                // We use hooks to ensure it shows during component updates too
+                if (typeof Livewire !== 'undefined') {
+                    Livewire.hook('request.start', () => {
+                        if (loader) loader.style.display = 'flex';
+                    });
+                    
+                    Livewire.hook('request.end', () => {
+                        // Small delay to ensure smooth transition
+                        setTimeout(() => {
+                           if (loader) loader.style.display = 'none';
+                        }, 300);
+                    });
+                }
+
+                // 3. Hide on BF Cache Restore (Back Button)
                 window.addEventListener('pageshow', (event) => {
                     if (event.persisted && loader) {
                         loader.style.display = 'none';

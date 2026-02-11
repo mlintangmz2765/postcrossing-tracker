@@ -21,8 +21,11 @@ jobs:
           port: 48291
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
-            git fetch --all --tags -f
-            git reset --hard ${{ github.sha }}
+            git fetch origin main
+            git reset --hard FETCH_HEAD
+            git clean -df
+            npm install
+            npm run build
             composer install --no-dev --optimize-autoloader
             php artisan migrate --force
             php artisan optimize:clear
