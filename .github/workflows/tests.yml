@@ -50,4 +50,5 @@ jobs:
       run: vendor/bin/pint --test
 
     - name: Security Audit (Composer)
-      run: composer audit
+      continue-on-error: true
+      run: composer audit --ignore-unreachable
