@@ -70,7 +70,7 @@
         }
 
 
-        #scannerModal { display: none; position: fixed; z-index: 10000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.95); flex-direction: column; }
+        #scannerModal { position: fixed; z-index: 10000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.95); flex-direction: column; }
         .scanner-body { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         #scannerCanvas { max-width: 95vw; max-height: 85vh; cursor: crosshair; }
         .scanner-footer { padding: 20px; background: #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 20px; }
@@ -332,7 +332,7 @@
     <input type="file" id="hiddenInput" accept="image/*" style="display:none">
 
     <div wire:ignore>
-        <div id="scannerModal" x-show="isScannerOpen" style="display: none; position: fixed; z-index: 10000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.95); flex-direction: column;">
+        <div id="scannerModal" x-show="isScannerOpen" style="position: fixed; z-index: 10000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.95); flex-direction: column;">
             <div class="scanner-body"><canvas id="scannerCanvas"></canvas></div>
             <div class="scanner-footer">
                 <button type="button" class="btn-scan uppercase" style="background:#444" onclick="closeScanner()">Cancel</button>

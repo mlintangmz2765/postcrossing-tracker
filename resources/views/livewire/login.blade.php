@@ -232,12 +232,24 @@
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script>
         function onRecaptchaSuccess(token) {
-            @this.set('recaptchaToken', token);
-            document.getElementById('loginBtn').disabled = false;
+            const btn = document.getElementById('loginBtn');
+            const originalHtml = btn.innerHTML;
+            
+            // Show waiting state
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-shield-check"></i> Verified, please wait...';
+            
+            // Add a small delay as requested
+            setTimeout(() => {
+                @this.set('recaptchaToken', token);
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }, 1500);
         }
         function onRecaptchaExpired() {
             @this.set('recaptchaToken', null);
-            document.getElementById('loginBtn').disabled = true;
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
         }
     </script>
 </div>
