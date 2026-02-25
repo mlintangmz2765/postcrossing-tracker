@@ -1,7 +1,9 @@
 <div class="edit-wrapper paper-texture" x-data="{ 
     new_stamp_previews: @entangle('newStampsBase64').defer,
     biaya_prangko: @entangle('biaya_prangko'),
-    isScannerOpen: false
+    isScannerOpen: false,
+    img_d_preview: '{{ $currentFotoDepan ? asset($currentFotoDepan) : '' }}',
+    img_b_preview: '{{ $currentFotoBelakang ? asset($currentFotoBelakang) : '' }}'
 }" data-wire-id="{{ $this->getId() }}">
     <style>
         .edit-wrapper {
@@ -216,8 +218,8 @@
                             SCAN FRONT
                         </div>
                         <div class="relative mt-4">
-                            <img id="p_front" class="preview-img" src="{{ $currentFotoDepan ? asset($currentFotoDepan) : '' }}" style="{{ $currentFotoDepan ? '' : 'display:none' }}">
-                            <div id="btn-actions-front" class="absolute top-4 right-4 flex gap-2 z-[100]" style="display: {{ $currentFotoDepan ? 'flex' : 'none' }};">
+                            <img id="p_front" class="preview-img" :src="img_d_preview" x-show="img_d_preview" style="display:none">
+                            <div id="btn-actions-front" class="absolute top-4 right-4 flex gap-2 z-[100]" x-show="img_d_preview" style="display:none">
                                 <button type="button" onclick="rotateFinal('front')" class="bg-blue-600 text-white p-2 rounded-full shadow-2xl hover:bg-blue-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px;" title="Rotate">
                                     <i class="bi bi-arrow-clockwise text-lg"></i>
                                 </button>
@@ -235,8 +237,8 @@
                             SCAN BACK
                         </div>
                         <div class="relative mt-4">
-                            <img id="p_back" class="preview-img" src="{{ $currentFotoBelakang ? asset($currentFotoBelakang) : '' }}" style="{{ $currentFotoBelakang ? '' : 'display:none' }}">
-                            <div id="btn-actions-back" class="absolute top-4 right-4 flex gap-2 z-[100]" style="display: {{ $currentFotoBelakang ? 'flex' : 'none' }};">
+                            <img id="p_back" class="preview-img" :src="img_b_preview" x-show="img_b_preview" style="display:none">
+                            <div id="btn-actions-back" class="absolute top-4 right-4 flex gap-2 z-[100]" x-show="img_b_preview" style="display:none">
                                 <button type="button" onclick="rotateFinal('back')" class="bg-blue-600 text-white p-2 rounded-full shadow-2xl hover:bg-blue-700 transition flex items-center justify-center border-2 border-white" style="width: 40px; height: 40px;" title="Rotate">
                                     <i class="bi bi-arrow-clockwise text-lg"></i>
                                 </button>
@@ -427,10 +429,12 @@
         });
 
         window.deletePreview = (mode) => {
-            const imgEl = document.getElementById(mode === 'front' ? 'p_front' : 'p_back');
-            const btnEl = document.getElementById(mode === 'front' ? 'btn-actions-front' : 'btn-actions-back');
-            if(imgEl) imgEl.style.display = 'none';
-            if(btnEl) btnEl.style.display = 'none';
+            const rootEl = document.querySelector('.edit-wrapper');
+            const alData = window.Alpine ? window.Alpine.$data(rootEl) : null;
+            if(alData) {
+                if(mode === 'front') alData.img_d_preview = '';
+                else alData.img_b_preview = '';
+            }
             
             const component = getComponent();
             if(component) component.set(mode === 'front' ? 'newFotoDepanBase64' : 'newFotoBelakangBase64', null);
@@ -440,8 +444,11 @@
         };
 
         window.rotateFinal = (mode) => {
-            const imgEl = document.getElementById(mode === 'front' ? 'p_front' : 'p_back');
-            if(!imgEl || !imgEl.src) return;
+            const rootEl = document.querySelector('.edit-wrapper');
+            const alData = window.Alpine ? window.Alpine.$data(rootEl) : null;
+            const preview = alData ? (mode === 'front' ? alData.img_d_preview : alData.img_b_preview) : null;
+            if(!preview) return;
+
             const img = new Image();
             img.onload = () => {
                 const can = document.createElement('canvas');
@@ -451,13 +458,17 @@
                 c.rotate(90 * Math.PI / 180);
                 c.drawImage(img, -img.width/2, -img.height/2);
                 const dataUrl = can.toDataURL('image/jpeg', 0.85);
-                imgEl.src = dataUrl;
-                const rootEl = document.querySelector('.edit-wrapper');
+
+                if(alData) {
+                    if(mode === 'front') alData.img_d_preview = dataUrl;
+                    else alData.img_b_preview = dataUrl;
+                }
+
                 const componentId = rootEl ? rootEl.getAttribute('data-wire-id') : null;
                 const component = Livewire.find(componentId);
                 if(component) component.set(mode === 'front' ? 'newFotoDepanBase64' : 'newFotoBelakangBase64', dataUrl, true);
             };
-            img.src = imgEl.src;
+            img.src = preview;
         };
 
         window.rotateSource = () => {
@@ -502,15 +513,11 @@
 
                 if (component) {
                     if (activeMode === 'front') {
-                        component.set('newFotoDepanBase64', dataUrl);
-                        document.getElementById('p_front').src = dataUrl;
-                        document.getElementById('p_front').style.display = 'block';
-                        document.getElementById('btn-actions-front').style.display = 'flex';
+                        if(alData) alData.img_d_preview = dataUrl;
+                        component.set('newFotoDepanBase64', dataUrl, true);
                     } else if (activeMode === 'back') {
-                        component.set('newFotoBelakangBase64', dataUrl);
-                        document.getElementById('p_back').src = dataUrl;
-                        document.getElementById('p_back').style.display = 'block';
-                        document.getElementById('btn-actions-back').style.display = 'flex';
+                        if(alData) alData.img_b_preview = dataUrl;
+                        component.set('newFotoBelakangBase64', dataUrl, true);
                     } else if (activeMode === 'stamp') {
                         const alEl = document.querySelector('.edit-wrapper');
                         const alData = alEl && window.Alpine ? window.Alpine.$data(alEl) : null;
