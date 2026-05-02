@@ -3,12 +3,15 @@
 namespace App\Livewire;
 
 use App\Models\Postcard;
+use App\Traits\CalculatesDistance;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
 class ReceiveConfirm extends Component
 {
+    use CalculatesDistance;
+
     public $uid;
 
     public $postcard;
@@ -94,16 +97,7 @@ class ReceiveConfirm extends Component
         $this->isChina = false;
     }
 
-    public function calculateDistance($lat1, $lon1, $lat2, $lon2)
-    {
-        $theta = $lon1 - $lon2;
-        $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
-        $dist = acos($dist);
-        $dist = rad2deg($dist);
-        $miles = $dist * 60 * 1.1515;
-
-        return round($miles * 1.609344);
-    }
+    // calculateDistance() provided by CalculatesDistance trait
 
     public function confirm()
     {

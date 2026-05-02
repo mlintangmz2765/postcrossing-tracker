@@ -72,11 +72,11 @@ class EncryptExistingPii extends Command
             $updates = [];
 
             // Only encrypt if not already encrypted (checking for Laravel encrypted format)
-            if ($record->alamat && ! $this->isAlreadyEncrypted($record->alamat)) {
+            if (isset($record->alamat) && $record->alamat && ! $this->isAlreadyEncrypted($record->alamat)) {
                 $updates['alamat'] = Crypt::encryptString($record->alamat);
             }
 
-            if ($record->nomor_telepon && ! $this->isAlreadyEncrypted($record->nomor_telepon)) {
+            if (isset($record->nomor_telepon) && $record->nomor_telepon && ! $this->isAlreadyEncrypted($record->nomor_telepon)) {
                 $updates['nomor_telepon'] = Crypt::encryptString($record->nomor_telepon);
             }
 

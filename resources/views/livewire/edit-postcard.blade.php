@@ -1,5 +1,5 @@
 <div class="edit-wrapper paper-texture" x-data="{ 
-    new_stamp_previews: @entangle('newStampsBase64').defer,
+    new_stamp_previews: @entangle('newStampsBase64'),
     biaya_prangko: @entangle('biaya_prangko'),
     isScannerOpen: false,
     img_d_preview: '{{ $currentFotoDepan ? asset($currentFotoDepan) : '' }}',

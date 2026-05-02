@@ -163,7 +163,7 @@ class RegisterPostcard extends Component
 
             $postcard = Postcard::create([
                 'user_id' => auth()->id() ?? 1,
-                'uid' => uniqid('pc_'),
+                'uid' => Str::ulid(),
                 'contact_id' => $contact?->id,
                 'country_id' => $country_id,
                 'postcard_id' => $this->postcard_id,

@@ -3,12 +3,15 @@
 namespace App\Livewire;
 
 use App\Models\Postcard;
+use App\Traits\CalculatesDistance;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class Dashboard extends Component
 {
+    use CalculatesDistance;
+
     public $statsSent = [];
 
     public $statsReceived = [];
@@ -72,18 +75,7 @@ class Dashboard extends Component
         ];
     }
 
-    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
-    {
-        $earthRadius = 6371;
-        $dLat = deg2rad($lat2 - $lat1);
-        $dLon = deg2rad($lon2 - $lon1);
-        $a = sin($dLat / 2) * sin($dLat / 2) +
-             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-             sin($dLon / 2) * sin($dLon / 2);
-        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-
-        return $earthRadius * $c;
-    }
+    // calculateDistance() provided by CalculatesDistance trait
 
     private function prepareChartData($user_id)
     {
@@ -148,9 +140,6 @@ class Dashboard extends Component
     {
         $this->mapMarkers = Postcard::with(['contact', 'country'])
             ->where('user_id', $user_id)
-            ->whereHas('contact', function ($q) {
-                $q->whereNotNull('lat');
-            })
             ->get()
             ->filter(fn ($c) => is_numeric($c->contact?->lat) && $c->contact?->lat != 0)
             ->map(function ($m) {

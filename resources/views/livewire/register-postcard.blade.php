@@ -1,7 +1,7 @@
 <div class="register-wrapper paper-texture py-20 px-6" x-data="{ 
     img_d_preview: null, 
     img_b_preview: null,
-    stamp_previews: @entangle('stamp_data').defer,
+    stamp_previews: @entangle('stamp_data'),
     biaya_prangko: @entangle('biaya_prangko'),
     isScannerOpen: false
 }" data-wire-id="{{ $this->getId() }}">

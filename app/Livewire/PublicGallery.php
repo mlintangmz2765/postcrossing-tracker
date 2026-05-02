@@ -103,12 +103,10 @@ class PublicGallery extends Component
         $stampsByCard = [];
 
         if ($this->viewMode === 'stamp') {
-            // Fetch stamp images
-            // Eloquent equivalent:
+            // Fetch postcard IDs matching current filters, then load their stamps
+            $postcardIds = (clone $query)->pluck('id');
             $stamps = PostcardStamp::with(['postcard.country', 'postcard.contact'])
-                ->whereHas('postcard', function ($q) use ($query) {
-                    $q->mergeConstraintsFrom($query);
-                })->get();
+                ->whereIn('postcard_id', $postcardIds)->get();
 
             foreach ($stamps as $s) {
                 $p = $s->postcard;

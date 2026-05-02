@@ -142,9 +142,24 @@ class EditPostcard extends Component
 
         if ($stamp && file_exists(public_path($stamp->foto_prangko))) {
             $path = public_path($stamp->foto_prangko);
-            $source = imagecreatefromjpeg($path);
+            $imageData = file_get_contents($path);
+            $source = @imagecreatefromstring($imageData);
+
+            if ($source === false) {
+                return; // Unsupported or corrupt image
+            }
+
             $rotate = imagerotate($source, -90, 0);
-            imagejpeg($rotate, $path);
+
+            // Detect original format and save accordingly
+            $mime = @mime_content_type($path);
+            match ($mime) {
+                'image/png' => imagepng($rotate, $path),
+                'image/gif' => imagegif($rotate, $path),
+                'image/webp' => imagewebp($rotate, $path),
+                default => imagejpeg($rotate, $path),
+            };
+
             imagedestroy($source);
             imagedestroy($rotate);
             $this->loadStamps();

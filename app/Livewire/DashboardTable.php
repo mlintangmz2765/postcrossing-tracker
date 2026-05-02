@@ -3,13 +3,14 @@
 namespace App\Livewire;
 
 use App\Models\Postcard;
+use App\Traits\CalculatesDistance;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class DashboardTable extends Component
 {
-    use WithPagination;
+    use CalculatesDistance, WithPagination;
 
     public $type = 'sent'; // 'sent' or 'received'
 
@@ -59,7 +60,7 @@ class DashboardTable extends Component
             $query->whereBetween('tanggal_terima', [$this->start_terima, $this->end_terima]);
         }
 
-        // Search Filter
+        // Search Filter (alamat & nomor_telepon excluded — they are encrypted at rest)
         if ($this->search) {
             $searchTerm = '%'.$this->search.'%';
             $query->where(function ($q) use ($searchTerm) {
@@ -68,12 +69,30 @@ class DashboardTable extends Component
                         ->orWhere('nama_inggris', 'like', $searchTerm);
                 })
                     ->orWhereHas('contact', function ($sq) use ($searchTerm) {
-                        $sq->where('nama_kontak', 'like', $searchTerm)
-                            ->orWhere('alamat', 'like', $searchTerm)
-                            ->orWhere('nomor_telepon', 'like', $searchTerm);
+                        $sq->where('nama_kontak', 'like', $searchTerm);
                     })
                     ->orWhere('postcard_id', 'like', $searchTerm)
                     ->orWhere('deskripsi_gambar', 'like', $searchTerm);
+            });
+        }
+
+        // Category Filter
+        if ($this->filter_kategori === 'postcrossing') {
+            $query->where('postcard_id', 'like', '%-%');
+        } elseif ($this->filter_kategori === 'swap') {
+            $query->where(function ($q) {
+                $q->where('postcard_id', 'not like', '%-%')
+                    ->orWhereNull('postcard_id')
+                    ->orWhere('postcard_id', '');
+            });
+        }
+
+        // Status Filter
+        if ($this->filter_status === 'arrived') {
+            $query->whereNotNull('tanggal_terima')->where('tanggal_terima', '>', '2000-01-01');
+        } elseif ($this->filter_status === 'travelling') {
+            $query->where(function ($q) {
+                $q->whereNull('tanggal_terima')->orWhere('tanggal_terima', '<=', '2000-01-01');
             });
         }
 
@@ -139,18 +158,7 @@ class DashboardTable extends Component
         ]);
     }
 
-    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
-    {
-        $earthRadius = 6371;
-        $dLat = deg2rad($lat2 - $lat1);
-        $dLon = deg2rad($lon2 - $lon1);
-        $a = sin($dLat / 2) * sin($dLat / 2) +
-             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-             sin($dLon / 2) * sin($dLon / 2);
-        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-
-        return $earthRadius * $c;
-    }
+    // calculateDistance() provided by CalculatesDistance trait
 
     public function getDuration($start, $end)
     {

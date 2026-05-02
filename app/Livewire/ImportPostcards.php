@@ -7,6 +7,7 @@ use App\Services\CurrencyService;
 use App\Services\GeocodingService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -45,12 +46,22 @@ class ImportPostcards extends Component
                 $type = strtolower(trim($data[0]));
                 $pc_id = trim($data[1] ?? '');
 
-                // Date conversion DD/MM/YYYY -> YYYY-MM-DD
-                $tgl_k_raw = str_replace('/', '-', trim($data[2] ?? ''));
-                $tgl_k = ! empty($tgl_k_raw) ? date('Y-m-d', strtotime($tgl_k_raw)) : null;
+                // Date conversion DD/MM/YYYY -> YYYY-MM-DD (explicit format to avoid day/month swap)
+                $tgl_k_raw = trim($data[2] ?? '');
+                $tgl_k = null;
+                if (! empty($tgl_k_raw)) {
+                    $parsed = \DateTime::createFromFormat('d/m/Y', $tgl_k_raw)
+                           ?? \DateTime::createFromFormat('Y-m-d', $tgl_k_raw);
+                    $tgl_k = $parsed ? $parsed->format('Y-m-d') : null;
+                }
 
-                $tgl_t_raw = str_replace('/', '-', trim($data[3] ?? ''));
-                $tgl_t = ! empty($tgl_t_raw) ? date('Y-m-d', strtotime($tgl_t_raw)) : null;
+                $tgl_t_raw = trim($data[3] ?? '');
+                $tgl_t = null;
+                if (! empty($tgl_t_raw)) {
+                    $parsed = \DateTime::createFromFormat('d/m/Y', $tgl_t_raw)
+                           ?? \DateTime::createFromFormat('Y-m-d', $tgl_t_raw);
+                    $tgl_t = $parsed ? $parsed->format('Y-m-d') : null;
+                }
 
                 $desc = trim($data[4] ?? '');
                 $nama = trim($data[5] ?? '');
@@ -91,7 +102,7 @@ class ImportPostcards extends Component
                 $contact = null;
                 if ($nama && $nama !== '-') {
                     $contact = \App\Models\Contact::updateOrCreate(
-                        ['user_id' => 1, 'nama_kontak' => $nama],
+                        ['user_id' => auth()->id(), 'nama_kontak' => $nama],
                         [
                             'alamat' => $almt,
                             'country_id' => $country_id,
@@ -103,8 +114,8 @@ class ImportPostcards extends Component
                 }
 
                 $newPostcard = Postcard::create([
-                    'user_id' => 1,
-                    'uid' => uniqid('pc_'),
+                    'user_id' => auth()->id(),
+                    'uid' => Str::ulid(),
                     'postcard_id' => $pc_id,
                     'type' => $type,
                     'contact_id' => $contact?->id,
