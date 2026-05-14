@@ -30,11 +30,17 @@ class ImportPostcards extends Component
         $path = $this->file_csv->getRealPath();
         $handle = fopen($path, 'r');
 
+        if ($handle === false) {
+            $this->message = 'Import failed: unable to read uploaded file.';
+            $this->messageType = 'error';
+
+            return;
+        }
+
         // Skip header
         fgetcsv($handle, 1000, ';');
 
         $count = 0;
-        $errors = 0;
 
         DB::beginTransaction();
         try {
@@ -142,10 +148,10 @@ class ImportPostcards extends Component
             Log::error('Import failed: '.$e->getMessage());
             $this->message = 'Import failed: '.$e->getMessage();
             $this->messageType = 'error';
+        } finally {
+            fclose($handle);
+            $this->file_csv = null;
         }
-
-        fclose($handle);
-        $this->file_csv = null;
     }
 
     public function render()
