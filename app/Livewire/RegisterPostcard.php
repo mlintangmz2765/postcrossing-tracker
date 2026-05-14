@@ -50,7 +50,10 @@ class RegisterPostcard extends Component
     public function mount()
     {
         $this->tanggal_kirim = date('Y-m-d');
-        $userId = auth()->id() ?? 1;
+
+        $userId = auth()->id();
+        abort_unless($userId, 403);
+
         $this->contacts = Contact::where('user_id', $userId)->orderBy('nama_kontak')->pluck('nama_kontak')->toArray();
     }
 
@@ -61,7 +64,8 @@ class RegisterPostcard extends Component
             return;
         }
 
-        $userId = auth()->id() ?? 1;
+        $userId = auth()->id();
+        abort_unless($userId, 403);
 
         $contact = Contact::where('user_id', $userId)
             ->where('nama_kontak', $value)
@@ -150,7 +154,7 @@ class RegisterPostcard extends Component
             $contact = null;
             if ($this->nama_kontak) {
                 $contact = Contact::updateOrCreate(
-                    ['user_id' => auth()->id() ?? 1, 'nama_kontak' => $this->nama_kontak],
+                    ['user_id' => auth()->id(), 'nama_kontak' => $this->nama_kontak],
                     [
                         'alamat' => $this->alamat,
                         'country_id' => $country_id,
@@ -162,7 +166,7 @@ class RegisterPostcard extends Component
             }
 
             $postcard = Postcard::create([
-                'user_id' => auth()->id() ?? 1,
+                'user_id' => auth()->id(),
                 'uid' => Str::ulid(),
                 'contact_id' => $contact?->id,
                 'country_id' => $country_id,

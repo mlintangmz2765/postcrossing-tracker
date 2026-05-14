@@ -287,7 +287,7 @@ class EditPostcard extends Component
             $contact = Contact::updateOrCreate(
                 ['id' => $postcard->contact_id], // Try to find by ID first if exists
                 [
-                    'user_id' => auth()->id() ?? 1,
+                    'user_id' => auth()->id(),
                     'nama_kontak' => $this->nama_kontak,
                     'alamat' => $this->alamat,
                     'country_id' => $country_id,
