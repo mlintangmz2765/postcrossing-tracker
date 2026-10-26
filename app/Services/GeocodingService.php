@@ -45,6 +45,10 @@ class GeocodingService
 
     protected function getCoordinatesChina($alamat)
     {
+        if (! $this->amapWebKey) {
+            return ['lat' => 0.0, 'lng' => 0.0];
+        }
+
         $urlPOI = 'https://restapi.amap.com/v3/place/text';
         $resPOI = Http::get($urlPOI, [
             'keywords' => $alamat,
