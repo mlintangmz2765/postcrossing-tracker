@@ -80,12 +80,17 @@ AMAP_WEB_KEY=your_web_service_key
 
 ## Tracking Costs & Currency
 
-When you get a card, you can record exactly what the stamp cost in the sender's currency.
+Costs are recorded in a **base currency** set by `APP_BASE_CURRENCY` (default `IDR`; use `USD`, `EUR`, ... as needed). Display formats per currency live in `config/currency.php`.
+
+When you get a card, you can record exactly what the stamp cost in the sender's currency; it is converted to the base currency using the rate for the send date (Frankfurter / ECB rates, falling back to open.er-api.com; neither needs an API key).
 
 - `nilai_asal`: The price on the stamp (e.g., 5.00).
 - `mata_uang`: The currency code (USD, EUR, CNY, etc.).
-- `kurs_idr`: The exchange rate you used at that time.
-- `biaya_prangko`: The final cost in IDR (calculated as `nilai_asal × kurs_idr`).
+- `exchange_rate`: The rate from `mata_uang` to the base currency at that time.
+- `biaya_prangko`: The final cost in the base currency (`nilai_asal × exchange_rate`).
+- `base_currency`: The base currency the card was recorded in.
+
+> Set `APP_BASE_CURRENCY` before entering data. Changing it later does not convert existing cards: each card keeps its own `base_currency`, and totals/statistics only include cards recorded in the current base currency (the UI says how many were left out).
 
 ---
 
@@ -103,7 +108,7 @@ Since Google Maps doesn't work in mainland China, we have to detect those visito
 
 ### Adding New Countries
 Edit `countries` table in database. Required fields:
-- `nama_indonesia` - Country name in Indonesian
+- `nama_indonesia` - Country name in Indonesian (imports and forms also accept the English name or ISO code)
 - `nama_inggris` - Country name in English  
 - `kode_iso` - ISO 3166-1 alpha-2 code
 - `benua` - Continent
@@ -150,7 +155,7 @@ The database structure is designed with strict relational normalization (3rd Nor
 The app implements **Encryption at Rest** for Personal Identifiable Information (PII).
 
 ### Encrypted Fields:
-- **Contacts**: `nama_kontak`, `alamat`, `nomor_telepon`, `lat`, `lng`
+- **Contacts**: `alamat`, `nomor_telepon`, `lat`, `lng`
 
 ### Architectural Impact:
 Because fields are encrypted in the database, SQL-level operations like `WHERE alamat LIKE '%...%'` are no longer possible directly in the database.

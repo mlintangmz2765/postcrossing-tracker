@@ -188,11 +188,11 @@
             <div>
                 <div class="info-item">
                     <label>Sent Date</label>
-                    <span>{{ \Carbon\Carbon::parse($card->tanggal_kirim)->format('d/m/Y') }}</span>
+                    <span>{{ \Carbon\Carbon::parse($card->tanggal_kirim)->format($dateFormat) }}</span>
                 </div>
                 <div class="info-item">
                     <label>Received Date</label>
-                    <span>{{ (!empty($card->tanggal_terima) && $card->tanggal_terima != '0000-00-00') ? \Carbon\Carbon::parse($card->tanggal_terima)->format('d/m/Y') : 'Travelling / Not Yet Received' }}</span>
+                    <span>{{ (!empty($card->tanggal_terima) && $card->tanggal_terima != '0000-00-00') ? \Carbon\Carbon::parse($card->tanggal_terima)->format($dateFormat) : 'Travelling / Not Yet Received' }}</span>
                 </div>
                 <div class="info-item">
                     <label>Duration</label>
@@ -200,18 +200,18 @@
                 </div>
                 <div class="info-item">
                     <label>Est. Distance</label>
-                    <span style="color:var(--post-blue); font-weight:bold;">{{ number_format($distance, 0, ',', '.') }} KM</span>
+                    <span style="color:var(--post-blue); font-weight:bold;">{{ \App\Support\Money::number($distance) }} KM</span>
                 </div>
                 <div class="info-item">
                     <label>Postage Cost / Value</label>
                     <span>
                         @if($card->type == 'received' && !empty($card->mata_uang) && $card->nilai_asal > 0)
                             <span style="font-size: 13px; color: #64748b; display: block;">
-                                {{ $card->mata_uang }} {{ number_format($card->nilai_asal, 2) }}
-                                <small>(Rate: {{ number_format($card->kurs_idr, 0, ',', '.') }})</small>
+                                {{ $card->mata_uang }} {{ \App\Support\Money::amount($card->nilai_asal, $card->mata_uang) }}
+                                <small>(Rate: {{ \App\Support\Money::rate($card->exchange_rate) }})</small>
                             </span>
                         @endif
-                        <strong style="color: var(--post-blue);">IDR {{ number_format($card->biaya_prangko, 0, ',', '.') }}</strong>
+                        <strong style="color: var(--post-blue);">{{ \App\Support\Money::format($card->biaya_prangko, $card->base_currency) }}</strong>
                     </span>
                 </div>
             </div>
@@ -274,7 +274,7 @@
                 position: myPos,
                 map: map,
                 icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#ff4b4b', fillOpacity: 0.8, scale: 8, strokeColor: 'white', strokeWeight: 2 },
-                title: 'My Location (Yogyakarta)'
+                title: @js(config('app.owner_location') ? 'My Location ('.config('app.owner_location').')' : 'My Location')
             });
 
             const targetMarker = new google.maps.Marker({
@@ -329,7 +329,7 @@
                     })
                     .catch(function (error) {
                         console.error('oops, something went wrong!', error);
-                        alert('Gagal: ' + error);
+                        alert('Failed: ' + error);
                     });
             }
         @endif

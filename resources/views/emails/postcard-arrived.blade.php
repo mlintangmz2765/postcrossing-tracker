@@ -159,7 +159,7 @@
                 
                 <p class="intro">
                     Hello, <strong>{{ $ownerName }}</strong>!<br>
-                    Your postcard sent to <strong>{{ $postcard->contact?->nama_kontak ?? 'your recipient' }}</strong> in <strong>{{ $postcard->country?->nama_indonesia ?? 'their country' }}</strong> has just been marked as <strong>Received</strong>.
+                    Your postcard sent to <strong>{{ $postcard->contact?->nama_kontak ?? 'your recipient' }}</strong> in <strong>{{ $postcard->country?->display_name ?? 'their country' }}</strong> has just been marked as <strong>Received</strong>.
                 </p>
 
                 <div class="postcard-box">
@@ -192,7 +192,7 @@
 
             <div class="footer">
                 Sent automatically by <strong>Postcard Tracker</strong><br>
-                &copy; {{ date('Y') }} mlintangmz. Every postcard tells a story.
+                &copy; {{ date('Y') }} {{ config('app.owner_name') }}. Every postcard tells a story.
             </div>
         </div>
     </div>

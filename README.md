@@ -17,7 +17,7 @@ A personal postcard collection management system built with Laravel and Livewire
 - **Email Alerts** - Get notified automatically as soon as your card is registered by the recipient.
 - **China-Friendly Maps** - The site automatically switches to AMap for visitors from China (since Google Maps is blocked there).
 - **Crypto-Safe Privacy** - Contact addresses and phone numbers are AES-encrypted at rest.
-- **Any Currency** - Record costs in any currency (USD, EUR, CNY, etc.) with auto-conversion to IDR.
+- **Any Currency** - Record costs in any currency (USD, EUR, CNY, etc.) with auto-conversion to your base currency (`APP_BASE_CURRENCY`, default IDR).
 
 > 📖 See [Configuration Guide](docs/CONFIGURATION.md) and [International Usage Guide](docs/INTERNATIONAL.md) for customization and i18n instructions.
 
@@ -64,6 +64,11 @@ php artisan key:generate
 
 Edit `.env` with your database and API credentials:
 ```env
+APP_BASE_CURRENCY=IDR                    # currency costs are recorded in (USD, EUR, ...)
+APP_TIMEZONE=Asia/Jakarta                # default UTC
+APP_DATE_FORMAT=d/m/Y                    # m/d/Y for month-first
+OWNER_LOCATION="Yogyakarta, Indonesia"   # shown to recipients on the arrival page
+
 DB_DATABASE=your_database
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
