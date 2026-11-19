@@ -109,7 +109,7 @@ class CurrencyDisplayTest extends TestCase
 
     public function test_currency_migration_backfills_existing_rows_as_idr(): void
     {
-        $this->artisan('migrate:rollback', ['--step' => 1])->assertSuccessful();
+        $this->artisan('migrate:rollback', ['--path' => 'database/migrations/2026_11_18_000000_make_postcard_currency_base_neutral.php'])->assertSuccessful();
 
         DB::table('postcards')->insert([
             'uid' => 'legacy-1',

@@ -149,6 +149,9 @@
                         </td>
                         <td>
                             {{ \App\Support\Money::number($row->jarak_hitung) }} km
+                            @if($type === 'sent' && $row->origin)
+                                <div style="font-size: 0.7rem; color: #94a3b8;">from {{ $row->origin->name }}</div>
+                            @endif
                         </td>
                         <td style="max-width: 250px; word-wrap: break-word;" title="{{ $row->deskripsi_gambar }}">
                             {{ $row->deskripsi_gambar }}

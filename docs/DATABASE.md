@@ -72,6 +72,19 @@
 | foto_belakang | VARCHAR(255) | Back image path |
 | notif_read | TINYINT(1) | Notification read status |
 
+### origins
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Auto-increment ID |
+| user_id | INT (FK) | References users.id |
+| name | VARCHAR(150) | Place name, shown to recipients |
+| lat | TEXT | Latitude **🔒 Encrypted at rest** |
+| lng | TEXT | Longitude **🔒 Encrypted at rest** |
+| last_used_at | TIMESTAMP | For the "recent places" list |
+| created_at | TIMESTAMP | |
+
+`postcards.origin_id` (nullable, references origins.id, set to NULL if the origin is deleted) records where a **sent** card was mailed from; NULL means home (`HOME_LAT` / `HOME_LNG`).
+
 ### postcard_stamps
 | Column | Type | Description |
 |--------|------|-------------|

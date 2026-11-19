@@ -81,6 +81,7 @@
                     </tbody>
                 </table>
                 <p class="mt-4 text-xs italic text-gray-500">* Note: Column index shifts if "telepon" is included (Sent). Use semicolon (;) as separator.</p>
+                <p class="mt-2 text-xs italic text-gray-500">Optional for sent rows: columns 12-14 <b>origin_name</b>; <b>origin_lat</b>; <b>origin_lng</b> record where the card was sent from (leave blank for home).</p>
             </div>
 
             <div class="mt-10 text-center">

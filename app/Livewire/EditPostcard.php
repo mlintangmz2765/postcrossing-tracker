@@ -2,8 +2,10 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\PicksOrigin;
 use App\Models\Contact;
 use App\Models\Country;
+use App\Models\Origin;
 use App\Models\Postcard;
 use App\Models\PostcardStamp;
 use App\Support\Money;
@@ -14,7 +16,7 @@ use Livewire\WithFileUploads;
 
 class EditPostcard extends Component
 {
-    use WithFileUploads;
+    use PicksOrigin, WithFileUploads;
 
     public $id;
 
@@ -89,6 +91,7 @@ class EditPostcard extends Component
         $this->base_currency = $data->base_currency ?: Money::base();
         $this->mata_uang = $data->mata_uang ?: $this->base_currency;
         $this->exchange_rate = $data->exchange_rate ?? 1;
+        $this->origin_choice = $data->origin_id ? (string) $data->origin_id : 'home';
 
         $this->currentFotoDepan = $data->foto_depan;
         $this->currentFotoBelakang = $data->foto_belakang;
@@ -190,7 +193,7 @@ class EditPostcard extends Component
             'negara' => 'required',
             'alamat' => 'required',
             'tanggal_kirim' => 'required|date',
-        ]);
+        ] + $this->originRules());
 
         // Check for contact changes
         $postcard = Postcard::where('id', $this->id)->where('user_id', auth()->id())->firstOrFail();
@@ -321,6 +324,7 @@ class EditPostcard extends Component
             'nilai_asal' => $this->nilai_asal,
             'mata_uang' => $this->mata_uang,
             'exchange_rate' => $this->exchange_rate,
+            'origin_id' => $this->resolveOriginId(false),
             'foto_depan' => $this->currentFotoDepan,
             'foto_belakang' => $this->currentFotoBelakang,
         ]);
@@ -372,6 +376,14 @@ class EditPostcard extends Component
 
     public function render()
     {
-        return view('livewire.edit-postcard')->layout('components.layouts.app', ['title' => 'Edit Postcard']);
+        $recentOrigins = Origin::recentFor(auth()->id());
+        if (is_numeric($this->origin_choice) && ! $recentOrigins->contains('id', (int) $this->origin_choice)) {
+            $current = Origin::where('user_id', auth()->id())->find((int) $this->origin_choice);
+            if ($current) {
+                $recentOrigins->push($current);
+            }
+        }
+
+        return view('livewire.edit-postcard', ['recentOrigins' => $recentOrigins])->layout('components.layouts.app', ['title' => 'Edit Postcard']);
     }
 }

@@ -3,11 +3,15 @@
 namespace App\Models;
 
 use App\Support\Money;
+use App\Support\Place;
+use App\Traits\CalculatesDistance;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Postcard extends Model
 {
+    use CalculatesDistance;
+
     protected $table = 'postcards';
 
     public $timestamps = false;
@@ -60,5 +64,44 @@ class Postcard extends Model
     public function country()
     {
         return $this->belongsTo(Country::class);
+    }
+
+    /**
+     * Where a sent card was mailed from; null means home.
+     */
+    public function origin()
+    {
+        return $this->belongsTo(Origin::class);
+    }
+
+    /**
+     * The owner's end of the journey: the card's origin for sent cards
+     * (home when none is set), and home for received cards.
+     */
+    public function ownerPlace(): Place
+    {
+        if ($this->type === 'sent' && $this->origin) {
+            return Place::fromOrigin($this->origin);
+        }
+
+        return Place::home();
+    }
+
+    /**
+     * Distance between the owner's end and the contact, or null when the
+     * contact has no coordinates.
+     */
+    public function distanceKm(): ?float
+    {
+        $lat = $this->contact?->lat;
+        $lng = $this->contact?->lng;
+
+        if (! $lat || ! $lng || ! is_numeric($lat) || ! is_numeric($lng)) {
+            return null;
+        }
+
+        $from = $this->ownerPlace();
+
+        return $this->calculateDistance($from->lat, $from->lng, (float) $lat, (float) $lng);
     }
 }

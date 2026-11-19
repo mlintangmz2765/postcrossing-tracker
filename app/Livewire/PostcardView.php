@@ -22,18 +22,20 @@ class PostcardView extends Component
 
     public $travelTime = 0;
 
-    // Origin (Home)
+    // The owner's end of the journey: this card's origin, or home
     public $originLat;
 
     public $originLng;
 
+    public $originName;
+
+    public $originIsHome = true;
+
     public function mount($id)
     {
-        $this->originLat = (float) config('app.home_lat');
-        $this->originLng = (float) config('app.home_lng');
         $this->postcardId = $id;
 
-        $this->card = Postcard::with(['contact', 'country'])
+        $this->card = Postcard::with(['contact', 'country', 'origin'])
             ->where('id', $id)
             ->where('user_id', Auth::id())
             ->first();
@@ -42,10 +44,13 @@ class PostcardView extends Component
             abort(404);
         }
 
-        // Calculate Distance
-        if ($this->card->contact?->lat && $this->card->contact?->lng && is_numeric($this->card->contact->lat)) {
-            $this->distance = $this->calculateDistance($this->originLat, $this->originLng, (float) $this->card->contact->lat, (float) $this->card->contact->lng);
-        }
+        $origin = $this->card->ownerPlace();
+        $this->originLat = $origin->lat;
+        $this->originLng = $origin->lng;
+        $this->originName = $origin->name;
+        $this->originIsHome = $origin->isHome;
+
+        $this->distance = $this->card->distanceKm() ?? 0;
 
         if ($this->card->tanggal_kirim && $this->card->tanggal_terima && $this->card->tanggal_terima > '2000-01-01') {
             $start = \Carbon\Carbon::parse($this->card->tanggal_kirim);

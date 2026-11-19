@@ -96,6 +96,12 @@
                      </div>
                 </div>
 
+                @if($type === 'sent')
+                <div class="pt-6 border-t-2 border-dashed border-gray-100">
+                    @include('livewire.partials.origin-picker')
+                </div>
+                @endif
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t-2 border-dashed border-gray-100">
                     <div>
                         <label class="vintage-label">Front Visual (Artwork)</label>

@@ -125,7 +125,7 @@
                         <strong style="font-size:22px; color:#1e293b;">{{ $postcard->contact?->nama_kontak ?? 'Friend' }}</strong>
                     </div>
                     <p style="font-size: 14px; color: #6b7280; margin-bottom: 20px;">
-                        Greetings! A postcard{{ config('app.owner_location') ? ' from '.config('app.owner_location') : '' }} has reached you. Please confirm to notify the sender.
+                        Greetings! A postcard{{ $originName ? ' from '.$originName : '' }} has reached you. Please confirm to notify the sender.
                     </p>
                     <div class="pc-info-card">
                         @if (!$isSwap)
@@ -133,8 +133,8 @@
                         @endif
                         <div class="pc-info-item"><span>Sent on:</span> <b>{{ \Carbon\Carbon::parse($postcard->tanggal_kirim)->format('F d, Y') }}</b></div>
                         <div class="pc-info-item"><span>Est. Distance:</span> <b>~{{ \App\Support\Money::number($distance) }} km</b></div>
-                        @if (config('app.owner_location'))
-                            <div class="pc-info-item"><span>Origin:</span> <b>{{ config('app.owner_location') }}</b></div>
+                        @if ($originName)
+                            <div class="pc-info-item"><span>Origin:</span> <b>{{ $originName }}</b></div>
                         @endif
                     </div>
 

@@ -46,7 +46,16 @@ HOME_LNG=0.000000
 
 > 💡 **Tip:** Find your coordinates at [latlong.net](https://www.latlong.net/)
 
-> ⚠️ **Privacy:** These values are in `.env` which is git-ignored, so your exact location won't be exposed in the public repository.
+> ⚠️ **Privacy:** These values are in `.env` which is git-ignored, so your exact location won't be exposed in the public repository. The public arrival page only shows the origin rounded to one decimal (about 11 km).
+
+### Sending from somewhere else (per-card origin)
+
+Each **sent** card has a "Sent From" place. It defaults to home (`HOME_LAT` / `HOME_LNG`, named by `OWNER_LOCATION`); when you post cards while travelling, pick a recent place or add a new one (name + latitude/longitude, or "Use my current location", which needs HTTPS or localhost). Distances, the postcard map and the dashboard totals are measured from the card's own origin. A non-home pick stays selected for the rest of your login session, so a batch of cards from one trip needs one pick.
+
+- Saved places live in the `origins` table (coordinates encrypted at rest); `postcards.origin_id` is empty for cards sent from home, so changing `HOME_*` moves those cards' origin too.
+- The place name is shown to the recipient on the arrival page; the exact coordinates are not.
+- CSV import accepts optional columns 12-14 on sent rows: `origin_name;origin_lat;origin_lng`.
+- Received cards are always measured from home.
 
 ---
 
@@ -156,6 +165,7 @@ The app implements **Encryption at Rest** for Personal Identifiable Information 
 
 ### Encrypted Fields:
 - **Contacts**: `alamat`, `nomor_telepon`, `lat`, `lng`
+- **Origins** (per-card "sent from" places): `lat`, `lng`
 
 ### Architectural Impact:
 Because fields are encrypted in the database, SQL-level operations like `WHERE alamat LIKE '%...%'` are no longer possible directly in the database.

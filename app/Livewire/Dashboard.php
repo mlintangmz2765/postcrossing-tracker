@@ -25,11 +25,9 @@ class Dashboard extends Component
     public function mount()
     {
         $user_id = Auth::id();
-        $myLat = (float) config('app.home_lat');
-        $myLng = (float) config('app.home_lng');
 
-        $this->statsSent = $this->getSummaryStats('sent', $user_id, $myLat, $myLng);
-        $this->statsReceived = $this->getSummaryStats('received', $user_id, $myLat, $myLng);
+        $this->statsSent = $this->getSummaryStats('sent', $user_id);
+        $this->statsReceived = $this->getSummaryStats('received', $user_id);
 
         $this->recentNotifications = Postcard::with(['contact', 'country'])
             ->where('user_id', $user_id)
@@ -43,9 +41,9 @@ class Dashboard extends Component
         $this->prepareMapData($user_id);
     }
 
-    private function getSummaryStats($type, $user_id, $lat, $lng)
+    private function getSummaryStats($type, $user_id)
     {
-        $cards = Postcard::with(['contact', 'country'])
+        $cards = Postcard::with(['contact', 'country', 'origin'])
             ->where('user_id', $user_id)
             ->where('type', $type)
             ->get();
@@ -56,12 +54,9 @@ class Dashboard extends Component
         $totalPc = $cards->filter(fn ($c) => str_contains($c->postcard_id ?? '', '-'))->count();
         $totalSwap = $cards->filter(fn ($c) => ! str_contains($c->postcard_id ?? '', '-') || empty($c->postcard_id))->count();
 
+        // Each sent card is measured from its own origin (home when unset)
         foreach ($cards as $card) {
-            $lat_c = $card->contact?->lat;
-            $lng_c = $card->contact?->lng;
-            if ($lat_c && $lng_c && is_numeric($lat_c) && is_numeric($lng_c)) {
-                $totalKm += $this->calculateDistance($lat, $lng, (float) $lat_c, (float) $lng_c);
-            }
+            $totalKm += $card->distanceKm() ?? 0;
         }
 
         return [

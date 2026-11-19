@@ -198,6 +198,12 @@
                     <label>Duration</label>
                     <span>{{ $travelTime }} days</span>
                 </div>
+                @if($card->type == 'sent')
+                <div class="info-item">
+                    <label>Sent From</label>
+                    <span>{{ $originName }}@if($originIsHome) <small style="color:#94a3b8;">(home)</small>@endif</span>
+                </div>
+                @endif
                 <div class="info-item">
                     <label>Est. Distance</label>
                     <span style="color:var(--post-blue); font-weight:bold;">{{ \App\Support\Money::number($distance) }} KM</span>
@@ -274,7 +280,7 @@
                 position: myPos,
                 map: map,
                 icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#ff4b4b', fillOpacity: 0.8, scale: 8, strokeColor: 'white', strokeWeight: 2 },
-                title: @js(config('app.owner_location') ? 'My Location ('.config('app.owner_location').')' : 'My Location')
+                title: @js(($card->type == 'sent' ? 'Sent from: ' : 'Home: ').$originName)
             });
 
             const targetMarker = new google.maps.Marker({

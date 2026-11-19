@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Country;
+use App\Models\Origin;
 use App\Models\Postcard;
 use App\Services\CurrencyService;
 use App\Services\GeocodingService;
@@ -72,12 +73,15 @@ class ImportPostcards extends Component
                     $telp = trim($data[8] ?? '');
                     $raw_cost = $data[9] ?? 0;
                     $curr_code = ! empty($data[10]) ? strtoupper(trim($data[10])) : $base;
+                    // Optional columns 12-14: where the card was sent from (blank = home)
+                    $origin_id = $this->importOrigin($data[11] ?? '', $data[12] ?? '', $data[13] ?? '', $line);
                 } else {
                     // RECEIVED structure (no phone)
                     $neg = trim($data[7] ?? '');
                     $telp = '';
                     $raw_cost = $data[8] ?? 0;
                     $curr_code = ! empty($data[9]) ? strtoupper(trim($data[9])) : $base;
+                    $origin_id = null;
                 }
 
                 $clean_cost = preg_replace('/[^0-9.]/', '', str_replace(',', '.', $raw_cost));
@@ -121,6 +125,7 @@ class ImportPostcards extends Component
                     'type' => $type,
                     'contact_id' => $contact?->id,
                     'country_id' => $country_id,
+                    'origin_id' => $origin_id,
                     'tanggal_kirim' => $tgl_k,
                     'tanggal_terima' => $tgl_t,
                     'biaya_prangko' => $biaya,
@@ -148,6 +153,27 @@ class ImportPostcards extends Component
             fclose($handle);
             $this->file_csv = null;
         }
+    }
+
+    /**
+     * Resolve the optional origin columns of a sent row to a saved origin
+     * (null = sent from home).
+     */
+    protected function importOrigin(string $name, string $lat, string $lng, int $line): ?int
+    {
+        $name = trim($name);
+        $lat = str_replace(',', '.', trim($lat));
+        $lng = str_replace(',', '.', trim($lng));
+
+        if ($name === '' && $lat === '' && $lng === '') {
+            return null;
+        }
+
+        if ($name === '' || ! is_numeric($lat) || ! is_numeric($lng) || abs((float) $lat) > 90 || abs((float) $lng) > 180) {
+            throw new \RuntimeException("CSV row $line: origin needs a name, latitude (-90..90) and longitude (-180..180).");
+        }
+
+        return Origin::remember(auth()->id(), $name, (float) $lat, (float) $lng)->id;
     }
 
     /**

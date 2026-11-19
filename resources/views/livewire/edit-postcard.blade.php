@@ -126,6 +126,12 @@
                             <div class="text-red-600 text-xs mt-1 font-bold"><i class="bi bi-exclamation-circle"></i> {{ session('geo_error') }}</div>
                         @endif
                     </div>
+                    @if($type == 'sent')
+                    <div class="form-group full">
+                        @include('livewire.partials.origin-picker')
+                    </div>
+                    @endif
+
                     <div class="form-group" wire:ignore
                          x-data="{ dateValue: @entangle('tanggal_kirim') }"
                          x-init="

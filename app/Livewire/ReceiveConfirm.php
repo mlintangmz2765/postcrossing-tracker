@@ -32,10 +32,13 @@ class ReceiveConfirm extends Component
 
     public $distance = 0;
 
-    // Map markers
+    // Map markers. This page is public, so the sender's marker uses rounded
+    // coordinates (about 11 km); the exact origin never reaches the browser.
     public $myLat;
 
     public $myLng;
+
+    public $originName;
 
     public $targetLat = 0;
 
@@ -43,10 +46,13 @@ class ReceiveConfirm extends Component
 
     public function mount($uid)
     {
-        $this->myLat = (float) config('app.home_lat');
-        $this->myLng = (float) config('app.home_lng');
         $this->uid = $uid;
-        $this->postcard = Postcard::with(['contact', 'country'])->where('uid', $uid)->where('type', 'sent')->firstOrFail();
+        $this->postcard = Postcard::with(['contact', 'country', 'origin'])->where('uid', $uid)->where('type', 'sent')->firstOrFail();
+
+        $origin = $this->postcard->ownerPlace();
+        ['lat' => $this->myLat, 'lng' => $this->myLng] = $origin->coarse();
+        // Home is shown as OWNER_LOCATION (hidden when unset); a travel origin by its name
+        $this->originName = $origin->isHome ? config('app.owner_location') : $origin->name;
 
         $this->alreadyConfirmed = ! empty($this->postcard->tanggal_terima) && $this->postcard->tanggal_terima != '0000-00-00';
         $this->isSwap = ! Str::contains($this->postcard->postcard_id, '-');
@@ -73,9 +79,8 @@ class ReceiveConfirm extends Component
         $this->targetLat = (float) ($this->postcard->contact?->lat ?? 0);
         $this->targetLng = (float) ($this->postcard->contact?->lng ?? 0);
 
-        if ($this->targetLat && $this->targetLng) {
-            $this->distance = $this->calculateDistance($this->myLat, $this->myLng, $this->targetLat, $this->targetLng);
-        }
+        // Distance uses the exact origin, server-side
+        $this->distance = $this->postcard->distanceKm() ?? 0;
     }
 
     public function detectChinaViewer()
