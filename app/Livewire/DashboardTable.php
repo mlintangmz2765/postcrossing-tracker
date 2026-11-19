@@ -46,10 +46,8 @@ class DashboardTable extends Component
     public function render()
     {
         $user_id = Auth::id();
-        $myLat = (float) config('app.home_lat');
-        $myLng = (float) config('app.home_lng');
 
-        $query = Postcard::with(['contact', 'country'])
+        $query = Postcard::with(['contact', 'country', 'origin'])
             ->where('user_id', $user_id)
             ->where('type', $this->type);
 
@@ -98,12 +96,8 @@ class DashboardTable extends Component
 
         // Handle Sorting
         if (str_starts_with($this->sort, 'jarak')) {
-            $allRows = $query->get()->each(function ($row) use ($myLat, $myLng) {
-                if ($row->contact && $row->contact->lat && $row->contact->lng) {
-                    $row->jarak_hitung = $this->calculateDistance($myLat, $myLng, $row->contact->lat, $row->contact->lng);
-                } else {
-                    $row->jarak_hitung = 0;
-                }
+            $allRows = $query->get()->each(function ($row) {
+                $row->jarak_hitung = $row->distanceKm() ?? 0;
             });
 
             if ($this->sort === 'jarak_desc') {
@@ -141,20 +135,21 @@ class DashboardTable extends Component
 
             $rows = $query->paginate($this->perPage);
 
-            $rows->getCollection()->each(function ($row) use ($myLat, $myLng) {
-                if ($row->contact && $row->contact->lat && $row->contact->lng) {
-                    $row->jarak_hitung = $this->calculateDistance($myLat, $myLng, $row->contact->lat, $row->contact->lng);
-                } else {
-                    $row->jarak_hitung = 0;
-                }
+            $rows->getCollection()->each(function ($row) {
+                $row->jarak_hitung = $row->distanceKm() ?? 0;
             });
         }
 
-        $totalCost = Postcard::where('user_id', $user_id)->where('type', $this->type)->sum('biaya_prangko');
+        // Only sum costs recorded in the current base currency; mixing currencies
+        // would make the total meaningless.
+        $totalCost = Postcard::where('user_id', $user_id)->where('type', $this->type)->inBaseCurrency()->sum('biaya_prangko');
+        $otherCurrencyCount = Postcard::where('user_id', $user_id)->where('type', $this->type)->count()
+            - Postcard::where('user_id', $user_id)->where('type', $this->type)->inBaseCurrency()->count();
 
         return view('livewire.dashboard-table', [
             'rows' => $rows,
             'totalCost' => $totalCost,
+            'otherCurrencyCount' => $otherCurrencyCount,
         ]);
     }
 

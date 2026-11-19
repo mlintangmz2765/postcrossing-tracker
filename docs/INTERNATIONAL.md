@@ -2,21 +2,18 @@
 
 This project was originally developed with an Indonesian context. While the UI is primarily in English, some internal components (database schema, currency logic) use Indonesian conventions. This guide helps international users adapt the system.
 
-## 💱 Currency System (IDR)
+## 💱 Currency, Timezone & Date Format
 
-The application uses **IDR (Indonesian Rupiah)** as the internal base currency for cost tracking.
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `APP_BASE_CURRENCY` | `IDR` | Currency costs are recorded and reported in. Rates are fetched to this currency (e.g. `USD`, `EUR`). |
+| `APP_TIMEZONE` | `UTC` | Decides which day an arrival confirmation is dated. |
+| `APP_DATE_FORMAT` | `d/m/Y` | How dates are shown and typed (`m/d/Y` for the US). |
+| `OWNER_LOCATION` | _(unset)_ | Where your cards are sent from; shown on the arrival page and home page. |
 
-### How to use with your own currency:
-You don't necessarily need to change the code to use your local currency. You can treat the "IDR" fields as your "Home Currency":
-1. When the app asks for an "Exchange Rate to IDR", enter the rate from the foreign currency to **your local currency**.
-2. All calculations (`Original Value` × `Rate`) will result in your local currency value, even if the label says IDR.
+Display formats per currency (symbol, decimals, separators) are in `config/currency.php`; the base currency's separators are also used for distances.
 
-### Hardcoded Logic:
-- **Automated Fetching**: `app/Services/CurrencyService.php` is hardcoded to fetch exchange rates against **IDR**. If you use a different base currency, the automatic "Fetch Rate" feature will still retrieve IDR rates.
-- **Model Casting**: `app/Models/Postcard.php` casts the exchange rate column as `kurs_idr`.
-- **Database Column**: The column is named `kurs_idr` in the `postcards` table.
-
-> 🛠️ **Developer Note:** To change the automated base currency, you need to modify the `getHistoricalRate` method in `app/Services/CurrencyService.php` and replace all instances of `'IDR'` with your preferred ISO currency code.
+Each postcard stores the `base_currency` it was recorded in. Changing `APP_BASE_CURRENCY` later does not convert old cards; totals only include cards in the current base currency. Rows that existed before this column was added are marked `IDR`. If you previously followed the old advice here and entered amounts in your own currency while the labels said IDR, correct them once after migrating, e.g. `UPDATE postcards SET base_currency = 'EUR';`.
 
 ---
 
@@ -36,7 +33,8 @@ Below is a translation of all Indonesian column names across all tables. Use thi
 | `biaya_prangko` | Stamp Cost (Base Currency) | |
 | `nilai_asal` | Original Value (Foreign Currency) | |
 | `mata_uang` | Currency Code | |
-| `kurs_idr` | Exchange Rate (to Base) | |
+| `base_currency` | Base Currency of `biaya_prangko` | |
+| `exchange_rate` | Exchange Rate (to Base) | Formerly `kurs_idr` |
 | `foto_depan` | Front Photo | |
 | `foto_belakang` | Back Photo | |
 | `notif_read` | Notification Read Status | |
@@ -71,8 +69,8 @@ Below is a translation of all Indonesian column names across all tables. Use thi
 
 The application uses a strict relational mapping system:
 - **Foreign Key**: Postcards and Contacts link to the `countries` table via `country_id`.
-- **Validation**: When registering or importing, the app looks up the `nama_indonesia` field in the `countries` table to find the correct ID.
-- **Display**: The UI uses `nama_indonesia` for internal logic but can display `nama_inggris` (English) in reports.
+- **Validation**: When registering or importing, the app matches the English name (`nama_inggris`), the Indonesian name (`nama_indonesia`) or the ISO code (`kode_iso`), case-insensitively.
+- **Display**: The UI shows `nama_inggris` (English), falling back to `nama_indonesia`.
 
 ---
 
@@ -84,12 +82,12 @@ The Mass Data Import feature uses a CSV file with Indonesian header names. Here 
 |------------|-----------------|-------|
 | `type` | Type | "sent" or "received" |
 | `postcard_id` | Postcrossing ID | e.g., ID-123456 |
-| `tgl_kirim` | Send Date | DD/MM/YYYY |
-| `tgl_terima` | Receive Date | DD/MM/YYYY (optional) |
+| `tgl_kirim` | Send Date | DD/MM/YYYY or YYYY-MM-DD |
+| `tgl_terima` | Receive Date | DD/MM/YYYY or YYYY-MM-DD (optional) |
 | `deskripsi` | Description | Subject or picture description |
 | `nama` | Contact Name | |
 | `alamat` | Address | Full address for geocoding |
-| `negara` | Country | Must match `nama_indonesia` in `countries` table |
+| `negara` | Country | English or Indonesian name, or ISO code (e.g. `Germany`, `Jerman`, `DE`) |
 | `telepon` | Phone Number | **ONLY for "sent" type (11 cols)** |
 | `biaya_asal` | Original Cost | Digits only (e.g., 10000 or 1.50) |
 | `mata_uang` | Currency Code | ISO 4217 code (USD, EUR, CNY, etc.) |
@@ -101,15 +99,12 @@ The Mass Data Import feature uses a CSV file with Indonesian header names. Here 
 ## 🖼️ UI / User-Facing Layer
 
 ### Home Page Language Switcher
-The **Public Home Page** (`resources/views/livewire/home.blade.php`) defaults to **Indonesian (ID)** but includes a built-in language switcher supporting:
-- **ID** (Bahasa Indonesia) - Default
+The **Public Home Page** (`resources/views/livewire/home.blade.php`) includes a built-in language switcher supporting:
+- **ID** (Bahasa Indonesia)
 - **EN** (English)
 - **CN** (Chinese / 中文)
 
-The language preference is stored in `localStorage`. If you want to change the default language to English, modify line 517:
-```javascript
-const savedLang = localStorage.getItem('preferredLang') || 'en'; // Change 'id' to 'en'
-```
+The default language follows `APP_LOCALE` (`id`, `en` or `zh`; anything else falls back to `en`), and a visitor's choice is stored in `localStorage`. The greeting uses `OWNER_LOCATION`. The rest of the page text is the original author's personal introduction, so edit it in `home.blade.php` for your own site.
 
 ### Stamp Decoration Text
 The decorative CSS stamp on the home page displays `"IDN"` (ISO code for Indonesia). This is purely cosmetic (CSS `::after` content) in line 255 of `home.blade.php`.

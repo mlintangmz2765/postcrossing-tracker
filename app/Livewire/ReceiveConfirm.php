@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Postcard;
 use App\Traits\CalculatesDistance;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -31,10 +32,13 @@ class ReceiveConfirm extends Component
 
     public $distance = 0;
 
-    // Map markers
+    // Map markers. This page is public, so the sender's marker uses rounded
+    // coordinates (about 11 km); the exact origin never reaches the browser.
     public $myLat;
 
     public $myLng;
+
+    public $originName;
 
     public $targetLat = 0;
 
@@ -42,10 +46,13 @@ class ReceiveConfirm extends Component
 
     public function mount($uid)
     {
-        $this->myLat = (float) config('app.home_lat');
-        $this->myLng = (float) config('app.home_lng');
         $this->uid = $uid;
-        $this->postcard = Postcard::with(['contact', 'country'])->where('uid', $uid)->where('type', 'sent')->firstOrFail();
+        $this->postcard = Postcard::with(['contact', 'country', 'origin'])->where('uid', $uid)->where('type', 'sent')->firstOrFail();
+
+        $origin = $this->postcard->ownerPlace();
+        ['lat' => $this->myLat, 'lng' => $this->myLng] = $origin->coarse();
+        // Home is shown as OWNER_LOCATION (hidden when unset); a travel origin by its name
+        $this->originName = $origin->isHome ? config('app.owner_location') : $origin->name;
 
         $this->alreadyConfirmed = ! empty($this->postcard->tanggal_terima) && $this->postcard->tanggal_terima != '0000-00-00';
         $this->isSwap = ! Str::contains($this->postcard->postcard_id, '-');
@@ -72,8 +79,9 @@ class ReceiveConfirm extends Component
         $this->targetLat = (float) ($this->postcard->contact?->lat ?? 0);
         $this->targetLng = (float) ($this->postcard->contact?->lng ?? 0);
 
+        // Public page: coarse distance only (see Place::publicDistanceTo)
         if ($this->targetLat && $this->targetLng) {
-            $this->distance = $this->calculateDistance($this->myLat, $this->myLng, $this->targetLat, $this->targetLng);
+            $this->distance = $origin->publicDistanceTo($this->targetLat, $this->targetLng);
         }
     }
 
@@ -114,27 +122,45 @@ class ReceiveConfirm extends Component
         $this->alreadyConfirmed = true;
         $this->justConfirmed = true;
 
-        // Send Email - Using beautiful HTML template
+        $this->notifyOwner();
+    }
+
+    /**
+     * Email the owner that a card arrived. Recipient and sender come only
+     * from OWNER_EMAIL and MAIL_FROM_*; when either is missing the email is
+     * skipped with a warning instead of going to a hardcoded address.
+     */
+    protected function notifyOwner(): void
+    {
+        $ownerEmail = config('app.owner_email');
+        $context = ['postcard_id' => $this->postcard->id];
+
+        if (blank($ownerEmail)) {
+            Log::warning('Arrival email not sent: OWNER_EMAIL is not set.', $context);
+
+            return;
+        }
+
+        if (blank(config('mail.from.address'))) {
+            Log::warning('Arrival email not sent: MAIL_FROM_ADDRESS is not set.', $context);
+
+            return;
+        }
+
+        $subject = '📬 Postcard Arrived! ['.($this->postcard->country?->display_name ?? 'Unknown').']';
+
         try {
-            $ownerName = config('app.owner_name', 'Owner');
-            $ownerEmail = config('app.owner_email', 'lintangmaulanazulfan@gmail.com');
-            $fromAddress = config('mail.from.address', 'noreply@postcrossing.mlintangmz.my.id');
-            $fromName = config('mail.from.name', 'Postcard Tracker');
-
-            $subject = '📬 Postcard Arrived! ['.($this->postcard->country?->nama_indonesia ?? 'Unknown').']';
-            $senderMessage = $this->message;
-
+            // The sender is the mailer's global "from" (MAIL_FROM_ADDRESS / MAIL_FROM_NAME).
             Mail::send('emails.postcard-arrived', [
-                'ownerName' => $ownerName,
+                'ownerName' => config('app.owner_name'),
                 'postcard' => $this->postcard,
-                'senderMessage' => $senderMessage,
-            ], function ($message) use ($ownerEmail, $fromAddress, $fromName, $subject) {
-                $message->to($ownerEmail)
-                    ->from($fromAddress, $fromName)
-                    ->subject($subject);
+                'senderMessage' => $this->message,
+            ], function ($message) use ($ownerEmail, $subject) {
+                $message->to($ownerEmail)->subject($subject);
             });
-        } catch (\Exception $e) {
-            // Silently fail or handle error without telemetry
+        } catch (\Throwable $e) {
+            // The recipient's confirmation is already saved; don't fail their request.
+            Log::error('Arrival email failed: '.$e->getMessage(), $context);
         }
     }
 

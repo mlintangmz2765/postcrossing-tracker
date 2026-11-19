@@ -2,16 +2,21 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\PicksOrigin;
 use App\Models\Contact;
+use App\Models\Country;
+use App\Models\Origin;
 use App\Models\Postcard;
 use App\Models\PostcardStamp;
+use App\Support\Money;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 class EditPostcard extends Component
 {
-    use WithFileUploads;
+    use PicksOrigin, WithFileUploads;
 
     public $id;
 
@@ -37,9 +42,17 @@ class EditPostcard extends Component
 
     public $nilai_asal;
 
-    public $mata_uang = 'IDR';
+    public $mata_uang;
 
-    public $kurs_idr = 1;
+    public $exchange_rate = 1;
+
+    /**
+     * Currency this card's cost was recorded in. Edits recalculate in this
+     * currency, not the current APP_BASE_CURRENCY, so the stored total and
+     * rate stay consistent with each other.
+     */
+    #[Locked]
+    public $base_currency;
 
     public $currentFotoDepan;
 
@@ -67,7 +80,7 @@ class EditPostcard extends Component
         $this->type = $data->type;
         $this->postcard_id = $data->postcard_id;
         $this->nama_kontak = $data->contact?->nama_kontak;
-        $this->negara = $data->country?->nama_indonesia;
+        $this->negara = $data->country?->display_name;
         $this->nomor_telepon = $data->contact?->nomor_telepon;
         $this->alamat = $data->contact?->alamat;
         $this->tanggal_kirim = $data->tanggal_kirim?->format('Y-m-d');
@@ -75,8 +88,10 @@ class EditPostcard extends Component
         $this->biaya_prangko = $data->biaya_prangko;
         $this->deskripsi_gambar = $data->deskripsi_gambar;
         $this->nilai_asal = $data->nilai_asal;
-        $this->mata_uang = $data->mata_uang ?? 'IDR';
-        $this->kurs_idr = $data->kurs_idr ?? 1;
+        $this->base_currency = $data->base_currency ?: Money::base();
+        $this->mata_uang = $data->mata_uang ?: $this->base_currency;
+        $this->exchange_rate = $data->exchange_rate ?? 1;
+        $this->origin_choice = $data->origin_id ? (string) $data->origin_id : 'home';
 
         $this->currentFotoDepan = $data->foto_depan;
         $this->currentFotoBelakang = $data->foto_belakang;
@@ -178,7 +193,7 @@ class EditPostcard extends Component
             'negara' => 'required',
             'alamat' => 'required',
             'tanggal_kirim' => 'required|date',
-        ]);
+        ] + $this->originRules());
 
         // Check for contact changes
         $postcard = Postcard::where('id', $this->id)->where('user_id', auth()->id())->firstOrFail();
@@ -214,11 +229,12 @@ class EditPostcard extends Component
         $postcard = Postcard::where('id', $this->id)->where('user_id', auth()->id())->firstOrFail();
 
         if ($this->type === 'received') {
-            if ($this->mata_uang === 'IDR') {
-                $this->biaya_prangko = round((float) ($this->nilai_asal ?? 0));
-                $this->kurs_idr = 1;
+            $base = $this->base_currency ?: Money::base();
+            if (empty($this->mata_uang) || strtoupper($this->mata_uang) === $base) {
+                $this->biaya_prangko = Money::round($this->nilai_asal ?? 0, $base);
+                $this->exchange_rate = 1;
             } else {
-                $this->biaya_prangko = round((float) ($this->nilai_asal ?? 0) * (float) ($this->kurs_idr ?? 1));
+                $this->biaya_prangko = Money::round((float) ($this->nilai_asal ?? 0) * (float) ($this->exchange_rate ?? 1), $base);
             }
         }
 
@@ -244,9 +260,7 @@ class EditPostcard extends Component
             ]);
         }
 
-        $country = \App\Models\Country::where('nama_indonesia', $this->negara)
-            ->orWhere('nama_inggris', $this->negara)
-            ->first();
+        $country = Country::findByName($this->negara);
         $country_id = $country?->id;
 
         // Geocoding Logic
@@ -255,7 +269,7 @@ class EditPostcard extends Component
 
         // Check if address actually changed from what is currently in DB (not just what is in form)
         // Note: We use the FORM data ($this->alamat) vs DB data for geocoding trigger
-        $addressChanged = ($postcard->contact?->alamat !== $this->alamat) || ($postcard->country?->nama_indonesia !== $this->negara);
+        $addressChanged = ($postcard->contact?->alamat !== $this->alamat) || ($postcard->country_id != $country_id);
         $isZeroCoords = ($lat == 0 && $lng == 0);
 
         if ($addressChanged || $isZeroCoords) {
@@ -309,7 +323,8 @@ class EditPostcard extends Component
             'deskripsi_gambar' => $this->deskripsi_gambar,
             'nilai_asal' => $this->nilai_asal,
             'mata_uang' => $this->mata_uang,
-            'kurs_idr' => $this->kurs_idr,
+            'exchange_rate' => $this->exchange_rate,
+            'origin_id' => $this->resolveOriginId(false),
             'foto_depan' => $this->currentFotoDepan,
             'foto_belakang' => $this->currentFotoBelakang,
         ]);
@@ -361,6 +376,14 @@ class EditPostcard extends Component
 
     public function render()
     {
-        return view('livewire.edit-postcard')->layout('components.layouts.app', ['title' => 'Edit Postcard']);
+        $recentOrigins = Origin::recentFor(auth()->id());
+        if (is_numeric($this->origin_choice) && ! $recentOrigins->contains('id', (int) $this->origin_choice)) {
+            $current = Origin::where('user_id', auth()->id())->find((int) $this->origin_choice);
+            if ($current) {
+                $recentOrigins->push($current);
+            }
+        }
+
+        return view('livewire.edit-postcard', ['recentOrigins' => $recentOrigins])->layout('components.layouts.app', ['title' => 'Edit Postcard']);
     }
 }

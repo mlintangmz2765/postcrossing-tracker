@@ -26,9 +26,12 @@ return [
     */
 
     'owner_name' => env('OWNER_NAME', 'Site Owner'),
-    'owner_email' => env('OWNER_EMAIL', 'owner@example.com'),
+    'owner_email' => env('OWNER_EMAIL'), // arrival alerts are skipped when unset
     'owner_username' => env('OWNER_USERNAME', 'postcrossing'),
-    'owner_contact_email' => env('OWNER_CONTACT_EMAIL', env('OWNER_EMAIL', 'owner@example.com')),
+    'owner_contact_email' => env('OWNER_CONTACT_EMAIL', env('OWNER_EMAIL')),
+
+    // Where your postcards are sent from, shown to recipients (e.g. "Portland, Oregon, USA").
+    'owner_location' => env('OWNER_LOCATION'),
 
     /*
     |--------------------------------------------------------------------------
@@ -106,7 +109,10 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'UTC'),
+
+    // How dates are shown and typed in the UI (PHP letters d, m, Y), e.g. m/d/Y for the US.
+    'date_format' => env('APP_DATE_FORMAT', 'd/m/Y'),
 
     /*
     |--------------------------------------------------------------------------

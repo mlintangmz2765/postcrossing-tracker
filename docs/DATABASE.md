@@ -20,7 +20,7 @@
                        │ biaya_prangko    │        │  │ ┌──────────────────┐
                        │ nilai_asal       │        │  │ │    contacts      │
                        │ mata_uang        │        │  │ ├──────────────────┤
-                       │ kurs_idr         │        │  └►│ id (PK)          │
+                       │ exchange_rate    │        │  └►│ id (PK)          │
                        │ foto_depan       │        │    │ user_id (FK)     │
                        │ foto_belakang    │        │    │ nama_kontak 🔒   │
                        │ notif_read       │        │    │ alamat 🔒        │
@@ -63,13 +63,27 @@
 | tanggal_terima | DATE | Receive date (null if not arrived) |
 | deskripsi_gambar | TEXT | Image description |
 | pesan_penerima | TEXT | Message from recipient |
-| biaya_prangko | DECIMAL(15,2) | Stamp cost in IDR |
+| biaya_prangko | DECIMAL(15,2) | Stamp cost in the card's base currency |
 | nilai_asal | DECIMAL(15,2) | Original value in foreign currency |
 | mata_uang | VARCHAR(5) | Currency code |
-| kurs_idr | DECIMAL(15,2) | Exchange rate to IDR |
+| base_currency | VARCHAR(3) | Base currency `biaya_prangko` is in (APP_BASE_CURRENCY when recorded; IDR for rows created before it existed) |
+| exchange_rate | DECIMAL(20,10) | Exchange rate from `mata_uang` to `base_currency` (formerly `kurs_idr`) |
 | foto_depan | VARCHAR(255) | Front image path |
 | foto_belakang | VARCHAR(255) | Back image path |
 | notif_read | TINYINT(1) | Notification read status |
+
+### origins
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT (PK) | Auto-increment ID |
+| user_id | INT (FK) | References users.id |
+| name | VARCHAR(150) | Place name, shown to recipients |
+| lat | TEXT | Latitude **🔒 Encrypted at rest** |
+| lng | TEXT | Longitude **🔒 Encrypted at rest** |
+| last_used_at | TIMESTAMP | For the "recent places" list |
+| created_at | TIMESTAMP | |
+
+`postcards.origin_id` (nullable, references origins.id, set to NULL if the origin is deleted) records where a **sent** card was mailed from; NULL means home (`HOME_LAT` / `HOME_LNG`).
 
 ### postcard_stamps
 | Column | Type | Description |

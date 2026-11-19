@@ -2,9 +2,12 @@
 
 namespace App\Livewire;
 
+use App\Models\Country;
+use App\Models\Origin;
 use App\Models\Postcard;
 use App\Services\CurrencyService;
 use App\Services\GeocodingService;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -41,10 +44,13 @@ class ImportPostcards extends Component
         fgetcsv($handle, 1000, ';');
 
         $count = 0;
+        $line = 1;
+        $base = Money::base();
 
         DB::beginTransaction();
         try {
             while (($data = fgetcsv($handle, 0, ';', '"')) !== false) {
+                $line++;
                 if (empty($data) || ! isset($data[0]) || empty(trim($data[0]))) {
                     continue;
                 }
@@ -52,22 +58,9 @@ class ImportPostcards extends Component
                 $type = strtolower(trim($data[0]));
                 $pc_id = trim($data[1] ?? '');
 
-                // Date conversion DD/MM/YYYY -> YYYY-MM-DD (explicit format to avoid day/month swap)
-                $tgl_k_raw = trim($data[2] ?? '');
-                $tgl_k = null;
-                if (! empty($tgl_k_raw)) {
-                    $parsed = \DateTime::createFromFormat('d/m/Y', $tgl_k_raw)
-                           ?? \DateTime::createFromFormat('Y-m-d', $tgl_k_raw);
-                    $tgl_k = $parsed ? $parsed->format('Y-m-d') : null;
-                }
-
-                $tgl_t_raw = trim($data[3] ?? '');
-                $tgl_t = null;
-                if (! empty($tgl_t_raw)) {
-                    $parsed = \DateTime::createFromFormat('d/m/Y', $tgl_t_raw)
-                           ?? \DateTime::createFromFormat('Y-m-d', $tgl_t_raw);
-                    $tgl_t = $parsed ? $parsed->format('Y-m-d') : null;
-                }
+                // Dates: DD/MM/YYYY or YYYY-MM-DD -> YYYY-MM-DD
+                $tgl_k = $this->parseDate($data[2] ?? '', $line);
+                $tgl_t = $this->parseDate($data[3] ?? '', $line);
 
                 $desc = trim($data[4] ?? '');
                 $nama = trim($data[5] ?? '');
@@ -79,29 +72,35 @@ class ImportPostcards extends Component
                     $neg = trim($data[7] ?? '');
                     $telp = trim($data[8] ?? '');
                     $raw_cost = $data[9] ?? 0;
-                    $curr_code = ! empty($data[10]) ? strtoupper(trim($data[10])) : 'IDR';
+                    $curr_code = ! empty($data[10]) ? strtoupper(trim($data[10])) : $base;
+                    // Optional columns 12-14: where the card was sent from (blank = home)
+                    $origin_id = $this->importOrigin($data[11] ?? '', $data[12] ?? '', $data[13] ?? '', $line);
                 } else {
                     // RECEIVED structure (no phone)
                     $neg = trim($data[7] ?? '');
                     $telp = '';
                     $raw_cost = $data[8] ?? 0;
-                    $curr_code = ! empty($data[9]) ? strtoupper(trim($data[9])) : 'IDR';
+                    $curr_code = ! empty($data[9]) ? strtoupper(trim($data[9])) : $base;
+                    $origin_id = null;
                 }
 
                 $clean_cost = preg_replace('/[^0-9.]/', '', str_replace(',', '.', $raw_cost));
                 $cost = (float) $clean_cost;
 
-                // Historical rate
-                $kurs = 1;
-                if ($type === 'received' && $curr_code !== 'IDR' && $tgl_k) {
-                    $kurs = $currencyService->getHistoricalRate($curr_code, $tgl_k);
+                // Convert to the base currency at the rate for the send date
+                $rate = 1.0;
+                if ($curr_code !== $base) {
+                    $rate = $currencyService->getHistoricalRate($curr_code, $tgl_k ?: date('Y-m-d'), $base);
+                    if ($rate === null) {
+                        throw new \RuntimeException("CSV row $line: no exchange rate available for $curr_code to $base.");
+                    }
                 }
 
-                $biaya_idr = $cost * $kurs;
+                $biaya = Money::round($cost * $rate, $base);
                 $coords = $geoService->getCoordinates($almt, $neg);
 
-                // Fetch Country ID
-                $country = \App\Models\Country::where('nama_indonesia', $neg)->first();
+                // Fetch Country ID (English name, Indonesian name, or ISO code)
+                $country = Country::findByName($neg);
                 $country_id = $country?->id;
 
                 // Sync with Contacts master data (to get contact_id and save pii)
@@ -126,12 +125,14 @@ class ImportPostcards extends Component
                     'type' => $type,
                     'contact_id' => $contact?->id,
                     'country_id' => $country_id,
+                    'origin_id' => $origin_id,
                     'tanggal_kirim' => $tgl_k,
                     'tanggal_terima' => $tgl_t,
-                    'biaya_prangko' => round($biaya_idr),
+                    'biaya_prangko' => $biaya,
                     'nilai_asal' => $cost,
                     'mata_uang' => $curr_code,
-                    'kurs_idr' => $kurs,
+                    'base_currency' => $base,
+                    'exchange_rate' => $rate,
                     'deskripsi_gambar' => $desc,
                     'notif_read' => 1,
                 ]);
@@ -152,6 +153,52 @@ class ImportPostcards extends Component
             fclose($handle);
             $this->file_csv = null;
         }
+    }
+
+    /**
+     * Resolve the optional origin columns of a sent row to a saved origin
+     * (null = sent from home).
+     */
+    protected function importOrigin(string $name, string $lat, string $lng, int $line): ?int
+    {
+        $name = trim($name);
+        $lat = str_replace(',', '.', trim($lat));
+        $lng = str_replace(',', '.', trim($lng));
+
+        if ($name === '' && $lat === '' && $lng === '') {
+            return null;
+        }
+
+        if ($name === '' || ! is_numeric($lat) || ! is_numeric($lng) || abs((float) $lat) > 90 || abs((float) $lng) > 180) {
+            throw new \RuntimeException("CSV row $line: origin needs a name, latitude (-90..90) and longitude (-180..180).");
+        }
+
+        return Origin::remember(auth()->id(), $name, (float) $lat, (float) $lng)->id;
+    }
+
+    /**
+     * Parse a CSV date as DD/MM/YYYY or YYYY-MM-DD.
+     *
+     * createFromFormat() silently rolls invalid dates over (a US-style
+     * "03/15/2024" read as day 3 of month 15 becomes 2025-03-03), so any
+     * parse warning is treated as an error rather than stored.
+     */
+    protected function parseDate(string $raw, int $line): ?string
+    {
+        $raw = trim($raw);
+        if ($raw === '') {
+            return null;
+        }
+
+        foreach (['!d/m/Y', '!Y-m-d'] as $format) {
+            $parsed = \DateTime::createFromFormat($format, $raw);
+            $errors = \DateTime::getLastErrors();
+            if ($parsed && ($errors === false || ($errors['warning_count'] === 0 && $errors['error_count'] === 0))) {
+                return $parsed->format('Y-m-d');
+            }
+        }
+
+        throw new \RuntimeException("CSV row $line: invalid date \"$raw\" (use DD/MM/YYYY or YYYY-MM-DD).");
     }
 
     public function render()

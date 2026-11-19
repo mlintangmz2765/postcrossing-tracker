@@ -46,7 +46,16 @@ HOME_LNG=0.000000
 
 > 💡 **Tip:** Find your coordinates at [latlong.net](https://www.latlong.net/)
 
-> ⚠️ **Privacy:** These values are in `.env` which is git-ignored, so your exact location won't be exposed in the public repository.
+> ⚠️ **Privacy:** These values are in `.env` which is git-ignored, so your exact location won't be exposed in the public repository. The public arrival page only shows the origin rounded to one decimal (about 11 km).
+
+### Sending from somewhere else (per-card origin)
+
+Each **sent** card has a "Sent From" place. It defaults to home (`HOME_LAT` / `HOME_LNG`, named by `OWNER_LOCATION`); when you post cards while travelling, pick a recent place or add a new one (name + latitude/longitude, or "Use my current location", which needs HTTPS or localhost). Distances, the postcard map and the dashboard totals are measured from the card's own origin. A non-home pick stays selected for the rest of your login session, so a batch of cards from one trip needs one pick.
+
+- Saved places live in the `origins` table (coordinates encrypted at rest); `postcards.origin_id` is empty for cards sent from home, so changing `HOME_*` moves those cards' origin too.
+- The place name is shown to the recipient on the arrival page; the exact coordinates are not.
+- CSV import accepts optional columns 12-14 on sent rows: `origin_name;origin_lat;origin_lng`.
+- Received cards are always measured from home.
 
 ---
 
@@ -80,12 +89,17 @@ AMAP_WEB_KEY=your_web_service_key
 
 ## Tracking Costs & Currency
 
-When you get a card, you can record exactly what the stamp cost in the sender's currency.
+Costs are recorded in a **base currency** set by `APP_BASE_CURRENCY` (default `IDR`; use `USD`, `EUR`, ... as needed). Display formats per currency live in `config/currency.php`.
+
+When you get a card, you can record exactly what the stamp cost in the sender's currency; it is converted to the base currency using the rate for the send date (Frankfurter / ECB rates, falling back to open.er-api.com; neither needs an API key).
 
 - `nilai_asal`: The price on the stamp (e.g., 5.00).
 - `mata_uang`: The currency code (USD, EUR, CNY, etc.).
-- `kurs_idr`: The exchange rate you used at that time.
-- `biaya_prangko`: The final cost in IDR (calculated as `nilai_asal × kurs_idr`).
+- `exchange_rate`: The rate from `mata_uang` to the base currency at that time.
+- `biaya_prangko`: The final cost in the base currency (`nilai_asal × exchange_rate`).
+- `base_currency`: The base currency the card was recorded in.
+
+> Set `APP_BASE_CURRENCY` before entering data. Changing it later does not convert existing cards: each card keeps its own `base_currency`, and totals/statistics only include cards recorded in the current base currency (the UI says how many were left out).
 
 ---
 
@@ -103,7 +117,7 @@ Since Google Maps doesn't work in mainland China, we have to detect those visito
 
 ### Adding New Countries
 Edit `countries` table in database. Required fields:
-- `nama_indonesia` - Country name in Indonesian
+- `nama_indonesia` - Country name in Indonesian (imports and forms also accept the English name or ISO code)
 - `nama_inggris` - Country name in English  
 - `kode_iso` - ISO 3166-1 alpha-2 code
 - `benua` - Continent
@@ -150,7 +164,8 @@ The database structure is designed with strict relational normalization (3rd Nor
 The app implements **Encryption at Rest** for Personal Identifiable Information (PII).
 
 ### Encrypted Fields:
-- **Contacts**: `nama_kontak`, `alamat`, `nomor_telepon`, `lat`, `lng`
+- **Contacts**: `alamat`, `nomor_telepon`, `lat`, `lng`
+- **Origins** (per-card "sent from" places): `lat`, `lng`
 
 ### Architectural Impact:
 Because fields are encrypted in the database, SQL-level operations like `WHERE alamat LIKE '%...%'` are no longer possible directly in the database.

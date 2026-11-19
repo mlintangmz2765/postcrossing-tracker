@@ -2,10 +2,14 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\PicksOrigin;
 use App\Models\Contact;
+use App\Models\Country;
+use App\Models\Origin;
 use App\Models\Postcard;
 use App\Models\PostcardStamp;
 use App\Services\GeocodingService;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -13,6 +17,8 @@ use Livewire\Component;
 
 class RegisterPostcard extends Component
 {
+    use PicksOrigin;
+
     public $type = 'sent';
 
     public $postcard_id;
@@ -33,9 +39,9 @@ class RegisterPostcard extends Component
 
     public $nilai_asal;
 
-    public $mata_uang = 'IDR';
+    public $mata_uang;
 
-    public $kurs_idr = 1;
+    public $exchange_rate = 1;
 
     public $biaya_prangko;
 
@@ -50,6 +56,8 @@ class RegisterPostcard extends Component
     public function mount()
     {
         $this->tanggal_kirim = date('Y-m-d');
+        $this->mata_uang = Money::base();
+        $this->restoreSessionOrigin();
 
         $userId = auth()->id();
         abort_unless($userId, 403);
@@ -73,7 +81,7 @@ class RegisterPostcard extends Component
 
         if ($contact) {
             $this->alamat = $contact->alamat;
-            $this->negara = $contact->country?->nama_indonesia;
+            $this->negara = $contact->country?->display_name;
             $this->nomor_telepon = $contact->nomor_telepon;
 
             $this->detectCurrency($this->negara);
@@ -90,7 +98,7 @@ class RegisterPostcard extends Component
         $this->calculateBiaya();
     }
 
-    public function updatedKursIdr($value)
+    public function updatedExchangeRate($value)
     {
         $this->calculateBiaya();
     }
@@ -102,13 +110,15 @@ class RegisterPostcard extends Component
             return;
         }
 
-        if ($this->mata_uang === 'IDR') {
-            $this->biaya_prangko = round((float) ($this->nilai_asal ?? 0));
-            $this->kurs_idr = 1;
+        $base = Money::base();
+
+        if (empty($this->mata_uang) || strtoupper($this->mata_uang) === $base) {
+            $this->biaya_prangko = Money::round($this->nilai_asal ?? 0, $base);
+            $this->exchange_rate = 1;
 
             return;
         }
-        $this->biaya_prangko = round((float) ($this->nilai_asal ?? 0) * (float) ($this->kurs_idr ?? 1));
+        $this->biaya_prangko = Money::round((float) ($this->nilai_asal ?? 0) * (float) ($this->exchange_rate ?? 1), $base);
     }
 
     protected function saveImage($base64Data, $prefix)
@@ -134,7 +144,7 @@ class RegisterPostcard extends Component
             'tanggal_kirim' => 'required|date',
             'img_d_data' => 'nullable', // Optional but handled
             'img_b_data' => 'nullable',
-        ]);
+        ] + $this->originRules());
 
         $coords = $geoService->getCoordinates($this->alamat, $this->negara);
         $lat = $coords['lat'];
@@ -146,10 +156,12 @@ class RegisterPostcard extends Component
             $foto_depan = $this->saveImage($this->img_d_data, 'f');
             $foto_belakang = $this->saveImage($this->img_b_data, 'b');
 
-            $country = \App\Models\Country::where('nama_indonesia', $this->negara)
-                ->orWhere('nama_inggris', $this->negara)
-                ->first();
+            $country = Country::findByName($this->negara);
             $country_id = $country?->id;
+
+            // Sent-card postage is entered directly in the base currency.
+            $isSent = $this->type === 'sent';
+            $originId = $this->resolveOriginId(true);
 
             $contact = null;
             if ($this->nama_kontak) {
@@ -170,14 +182,16 @@ class RegisterPostcard extends Component
                 'uid' => Str::ulid(),
                 'contact_id' => $contact?->id,
                 'country_id' => $country_id,
+                'origin_id' => $originId,
                 'postcard_id' => $this->postcard_id,
                 'type' => $this->type,
                 'tanggal_kirim' => $this->tanggal_kirim,
                 'tanggal_terima' => $this->tanggal_terima ?: null,
                 'biaya_prangko' => $this->biaya_prangko,
                 'nilai_asal' => $this->nilai_asal ?? 0,
-                'mata_uang' => $this->mata_uang ?? 'IDR',
-                'kurs_idr' => $this->kurs_idr ?? 1,
+                'mata_uang' => $isSent ? Money::base() : ($this->mata_uang ?: Money::base()),
+                'base_currency' => Money::base(),
+                'exchange_rate' => $isSent ? 1 : ($this->exchange_rate ?? 1),
                 'deskripsi_gambar' => $this->deskripsi_gambar,
                 'foto_depan' => $foto_depan,
                 'foto_belakang' => $foto_belakang,
@@ -213,6 +227,8 @@ class RegisterPostcard extends Component
 
     public function render()
     {
-        return view('livewire.register-postcard')->layout('components.layouts.app', ['title' => 'Register New Postcard - Archive']);
+        return view('livewire.register-postcard', [
+            'recentOrigins' => Origin::recentFor(auth()->id()),
+        ])->layout('components.layouts.app', ['title' => 'Register New Postcard - Archive']);
     }
 }

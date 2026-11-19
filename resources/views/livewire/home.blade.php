@@ -369,7 +369,7 @@
     </nav>
 
     <header class="hero">
-        <h1 id="hero-title">Hello from Indonesia!</h1>
+        <h1 id="hero-title">{{ config('app.owner_location') ? 'Hello from '.config('app.owner_location').'!' : 'Hello from my mailbox!' }}</h1>
         <p id="hero-desc">Menjelajahi dunia, satu kartu pos dalam satu waktu.</p>
         
         <div style="margin-top: 30px;">
@@ -430,7 +430,7 @@
         const translations = {
             id: {
                 navAdmin: "Admin Login",
-                heroTitle: "Hello from Indonesia!",
+                heroTitle: @js(config('app.owner_location') ? 'Hello from '.config('app.owner_location').'!' : 'Hello from my mailbox!'),
                 heroDesc: "Menjelajahi dunia, satu kartu pos dalam satu waktu.",
                 btnGallery: "Lihat Koleksi Saya",
                 titleWhat: "Apa itu Postcrossing?",
@@ -446,7 +446,7 @@
             },
             en: {
                 navAdmin: "Admin Login",
-                heroTitle: "Hello from Indonesia!",
+                heroTitle: @js(config('app.owner_location') ? 'Hello from '.config('app.owner_location').'!' : 'Hello from my mailbox!'),
                 heroDesc: "Exploring the world, one postcard at a time.",
                 btnGallery: "View My Collection",
                 titleWhat: "What is Postcrossing?",
@@ -462,7 +462,7 @@
             },
             zh: {
                 navAdmin: "管理员登录",
-                heroTitle: "来自印尼的问候！",
+                heroTitle: @js(config('app.owner_location') ? '来自'.config('app.owner_location').'的问候！' : '来自我的信箱的问候！'),
                 heroDesc: "探索世界，一次一张明信片。",
                 btnGallery: "查看我的收藏",
                 titleWhat: "什么是 Postcrossing？",
@@ -516,7 +516,8 @@
             localStorage.setItem('preferredLang', lang);
         }
 
-        const savedLang = localStorage.getItem('preferredLang') || 'en';
+        const defaultLang = @js(in_array(substr(app()->getLocale(), 0, 2), ['id', 'en', 'zh']) ? substr(app()->getLocale(), 0, 2) : 'en');
+        const savedLang = localStorage.getItem('preferredLang') || defaultLang;
         setTimeout(() => setLang(savedLang), 100);
     </script>
 </div>

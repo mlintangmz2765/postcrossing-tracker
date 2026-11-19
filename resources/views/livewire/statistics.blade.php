@@ -80,6 +80,9 @@
         <div class="stats-actions">
         
         <h1 class="stats-header">Detailed Statistics</h1>
+        @if($otherCurrencyCount > 0)
+            <p class="text-center text-sm text-gray-500 mb-4">Costs are in {{ \App\Support\Money::base() }} and exclude {{ $otherCurrencyCount }} card(s) recorded in another currency.</p>
+        @endif
 
         <!-- Tabs Navigation -->
         <div class="flex space-x-1 rounded-xl bg-gray-200 p-1 mb-6 w-full font-bold shadow-inner" style="font-family: 'Special Elite', cursive;">
@@ -129,7 +132,7 @@
                                     <span class="text-green-600">{{ $s->min_days ?? '-' }}</span> / 
                                     <span class="text-red-600">{{ $s->max_days ?? '-' }}</span>
                                 </td>
-                                <td class="font-bold text-right">IDR {{ number_format($s->total_biaya, 0, ',', '.') }}</td>
+                                <td class="font-bold text-right">{{ \App\Support\Money::format($s->total_biaya) }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -171,8 +174,8 @@
                                     <span class="text-green-600">{{ $r->min_days ?? '-' }}</span> / 
                                     <span class="text-red-600">{{ $r->max_days ?? '-' }}</span>
                                 </td>
-                                <td class="font-bold text-right text-gray-600">IDR {{ number_format($r->avg_nilai, 0, ',', '.') }}</td>
-                                <td class="font-bold text-right">IDR {{ number_format($r->total_nilai, 0, ',', '.') }}</td>
+                                <td class="font-bold text-right text-gray-600">{{ \App\Support\Money::format($r->avg_nilai) }}</td>
+                                <td class="font-bold text-right">{{ \App\Support\Money::format($r->total_nilai) }}</td>
                             </tr>
                             @endforeach
                         </tbody>
