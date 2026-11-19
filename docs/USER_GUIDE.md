@@ -57,7 +57,7 @@ For migrating existing postcard data, use the **Import** feature:
 4. Upload the file and review the preview
 5. Click **"Import"**
 
-> ⚠️ **Note:** Date format must be DD/MM/YYYY
+> ⚠️ **Note:** Dates must be DD/MM/YYYY or YYYY-MM-DD (YYYY-MM-DD is unambiguous; a US-style 03/15/2024 is rejected). `negara` accepts the English or Indonesian country name or the ISO code. A blank `mata_uang` means the base currency.
 
 ---
 
