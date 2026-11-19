@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Livewire\DashboardTable;
 use App\Livewire\EditPostcard;
 use App\Livewire\ImportPostcards;
+use App\Livewire\ReceiveConfirm;
 use App\Livewire\RegisterPostcard;
 use App\Models\Contact;
 use App\Models\Country;
@@ -233,7 +234,13 @@ class PostcardOriginTest extends TestCase
             ->assertSee('from Lisbon, Portugal');
     }
 
-    public function test_public_arrival_page_shows_only_rounded_coordinates(): void
+    /**
+     * The arrival page is public. A recipient knows their own address, so
+     * neither the exact origin nor an exact distance may reach it: the
+     * origin is rounded to 1 decimal and the distance is measured from that
+     * rounded point and rounded to 10 km (exact: 344 km and 1,453 km).
+     */
+    public function test_public_arrival_page_never_shows_a_precise_origin_or_distance(): void
     {
         $home = $this->sentCard();
         $travel = $this->sentCard(['postcard_id' => 'GB-999', 'origin_id' => $this->lisbon()->id]);
@@ -245,7 +252,8 @@ class PostcardOriginTest extends TestCase
             ->assertSee('const myLng = -0.1;', false)
             ->assertDontSee('51.507412')
             ->assertDontSee('0.127758')
-            ->assertSee('~344 km');
+            ->assertSee('~340 km')
+            ->assertDontSee('344');
 
         $this->get(route('receive.confirm', ['uid' => $travel->uid]))
             ->assertOk()
@@ -253,7 +261,32 @@ class PostcardOriginTest extends TestCase
             ->assertSee('const myLat = 38.7;', false)
             ->assertDontSee('38.7223')
             ->assertDontSee('9.1393')
-            ->assertSee('~1,453 km');
+            ->assertSee('~1,450 km')
+            ->assertDontSee('1,453');
+
+        // The Livewire payload (serialized into the page) carries the same coarse values.
+        Livewire::test(ReceiveConfirm::class, ['uid' => $home->uid])
+            ->assertSet('myLat', 51.5)
+            ->assertSet('myLng', -0.1)
+            ->assertSet('distance', 340.0);
+
+        // After confirming, the "Distance Traveled" line is still the coarse value.
+        Livewire::test(ReceiveConfirm::class, ['uid' => $travel->uid])->call('confirm');
+        $this->get(route('receive.confirm', ['uid' => $travel->uid]))
+            ->assertSee('1,450 km')
+            ->assertDontSee('1,453');
+    }
+
+    public function test_public_gallery_map_markers_are_rounded(): void
+    {
+        $this->sentCard(['type' => 'received', 'postcard_id' => 'FR-1', 'foto_depan' => 'storage/uploads/front.jpg']);
+
+        $this->get(route('gallery'))
+            ->assertOk()
+            ->assertSee('"lat":48.9', false)
+            ->assertSee('"lng":2.4', false)
+            ->assertDontSee('48.8566')
+            ->assertDontSee('2.3522');
     }
 
     public function test_csv_import_accepts_optional_origin_columns(): void

@@ -133,8 +133,8 @@ class PublicGallery extends Component
                     'pid' => $p->id,
                     'display_country' => $cName,
                     'deskripsi_gambar' => $p->deskripsi_gambar,
-                    'lat' => $p->contact?->lat,
-                    'lng' => $p->contact?->lng,
+                    'lat' => self::publicCoordinate($p->contact?->lat),
+                    'lng' => self::publicCoordinate($p->contact?->lng),
                     'type' => $p->type,
                     'ratio_style' => $imgRatioStyle,
                 ];
@@ -175,8 +175,8 @@ class PublicGallery extends Component
                     'pid' => $p->id,
                     'display_country' => $cName,
                     'deskripsi_gambar' => $p->deskripsi_gambar,
-                    'lat' => $p->contact?->lat,
-                    'lng' => $p->contact?->lng,
+                    'lat' => self::publicCoordinate($p->contact?->lat),
+                    'lng' => self::publicCoordinate($p->contact?->lng),
                     'type' => $p->type,
                     'ratio_style' => $imgRatioStyle, // Pass to view
                 ];
@@ -187,8 +187,8 @@ class PublicGallery extends Component
                     $mapMarkers[$p->id] = [
                         'id' => $p->id,
                         'postcard_id' => $p->postcard_id,
-                        'lat' => (float) $p->contact?->lat,
-                        'lng' => (float) $p->contact?->lng,
+                        'lat' => self::publicCoordinate($p->contact?->lat),
+                        'lng' => self::publicCoordinate($p->contact?->lng),
                         'country' => $cName,
                         'color' => '#e63946',
                     ];
@@ -223,5 +223,14 @@ class PublicGallery extends Component
             'stampsByCard' => $stampsByCard,
             'isChina' => $this->isChina,
         ])->layout('components.layouts.app', ['title' => 'Postcard Public Gallery - Virtual Trip']);
+    }
+
+    /**
+     * This page is public: map markers get coordinates rounded to one decimal
+     * (about 11 km) instead of the recipient's geocoded street address.
+     */
+    private static function publicCoordinate($value): ?float
+    {
+        return is_numeric($value) ? round((float) $value, 1) : null;
     }
 }

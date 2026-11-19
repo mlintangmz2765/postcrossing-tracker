@@ -3,12 +3,15 @@
 namespace App\Support;
 
 use App\Models\Origin;
+use App\Traits\CalculatesDistance;
 
 /**
  * A named point: home (from config) or a saved origin.
  */
 final class Place
 {
+    use CalculatesDistance;
+
     public function __construct(
         public readonly string $name,
         public readonly float $lat,
@@ -51,5 +54,17 @@ final class Place
     public function coarse(int $decimals = 1): array
     {
         return ['lat' => round($this->lat, $decimals), 'lng' => round($this->lng, $decimals)];
+    }
+
+    /**
+     * Distance for public pages: measured from the coarse point and rounded
+     * to the nearest 10 km. An exact distance would let a recipient, who
+     * knows their own address, narrow the coarse point back down.
+     */
+    public function publicDistanceTo(float $lat, float $lng): float
+    {
+        $from = $this->coarse();
+
+        return round($this->calculateDistance($from['lat'], $from['lng'], $lat, $lng) / 10) * 10;
     }
 }

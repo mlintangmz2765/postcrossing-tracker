@@ -79,8 +79,10 @@ class ReceiveConfirm extends Component
         $this->targetLat = (float) ($this->postcard->contact?->lat ?? 0);
         $this->targetLng = (float) ($this->postcard->contact?->lng ?? 0);
 
-        // Distance uses the exact origin, server-side
-        $this->distance = $this->postcard->distanceKm() ?? 0;
+        // Public page: coarse distance only (see Place::publicDistanceTo)
+        if ($this->targetLat && $this->targetLng) {
+            $this->distance = $origin->publicDistanceTo($this->targetLat, $this->targetLng);
+        }
     }
 
     public function detectChinaViewer()
