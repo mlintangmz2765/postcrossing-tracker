@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\Money;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Postcard extends Model
@@ -17,9 +19,28 @@ class Postcard extends Model
         'tanggal_terima' => 'date',
         'biaya_prangko' => 'decimal:2',
         'nilai_asal' => 'decimal:2',
-        'kurs_idr' => 'decimal:2',
+        'exchange_rate' => 'decimal:10',
         'notif_read' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        // Record which currency biaya_prangko is in, so a later change of
+        // APP_BASE_CURRENCY cannot relabel this card's cost.
+        static::creating(function (Postcard $postcard) {
+            if (empty($postcard->base_currency)) {
+                $postcard->base_currency = Money::base();
+            }
+        });
+    }
+
+    /**
+     * Limit to cards whose cost was recorded in the given (default: configured) base currency.
+     */
+    public function scopeInBaseCurrency(Builder $query, ?string $currency = null): Builder
+    {
+        return $query->where('base_currency', $currency ?: Money::base());
+    }
 
     public function user()
     {

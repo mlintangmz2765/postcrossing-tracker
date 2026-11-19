@@ -132,7 +132,7 @@
                             const fp = flatpickr($refs.input, {
                                 defaultDate: dateValue,
                                 altInput: true,
-                                altFormat: 'd/m/Y',
+                                altFormat: {{ \Illuminate\Support\Js::from($dateFormat) }},
                                 dateFormat: 'Y-m-d',
                                 allowInput: true,
                                 onChange: function(selectedDates, dateStr, instance) {
@@ -159,7 +159,7 @@
                          ">
                         <label class="vintage-label">Sent Date</label>
                         <input x-ref="input" type="text" class="vintage-input" id="tgl_kirim">
-                        <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
+                        <small class="text-xs text-gray-400 block mt-1">({{ $dateFormatHint }})</small>
                         @error('tanggal_kirim') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
                     <div class="form-group" wire:ignore
@@ -168,7 +168,7 @@
                             const fp = flatpickr($refs.input, {
                                 defaultDate: dateValue,
                                 altInput: true,
-                                altFormat: 'd/m/Y',
+                                altFormat: {{ \Illuminate\Support\Js::from($dateFormat) }},
                                 dateFormat: 'Y-m-d',
                                 allowInput: true,
                                 onChange: function(selectedDates, dateStr, instance) {
@@ -193,22 +193,22 @@
                          ">
                         <label class="vintage-label">Received Date</label>
                         <input x-ref="input" type="text" class="vintage-input" id="tgl_terima">
-                        <small class="text-xs text-gray-400 block mt-1">(DD/MM/YYYY)</small>
+                        <small class="text-xs text-gray-400 block mt-1">({{ $dateFormatHint }})</small>
                     </div>
 
                     @if($type == 'received')
                     <div class="form-group full" wire:ignore>
                         <label class="vintage-label">Currency & Rate</label>
                         <div style="display:flex; gap:10px;">
-                            <input type="number" id="nilai_asli" class="vintage-input" wire:model="nilai_asal" value="{{ $nilai_asal }}" step="0.01" placeholder="0.00" oninput="hitungIDR()">
+                            <input type="number" id="nilai_asli" class="vintage-input" wire:model="nilai_asal" value="{{ $nilai_asal }}" step="any" placeholder="0.00" oninput="calculateTotal()">
                             <input type="text" id="mata_uang" class="vintage-input uppercase" wire:model="mata_uang" value="{{ $mata_uang }}" style="width:150px" @blur="getAutoKurs()" placeholder="USD/EUR/etc">
-                            <input type="number" id="kurs_idr" class="vintage-input" wire:model="kurs_idr" value="{{ $kurs_idr }}" step="0.01" oninput="hitungIDR()">
+                            <input type="number" id="exchange_rate" class="vintage-input" wire:model="exchange_rate" value="{{ $exchange_rate }}" step="any" placeholder="Rate to {{ $base_currency }}" title="Exchange rate to {{ $base_currency }}" oninput="calculateTotal()">
                         </div>
 
                     </div>
                     @endif
 
-                    <div class="form-group full"><label class="vintage-label">Total Postage (IDR)</label><input type="number" id="biaya_prangko" class="vintage-input" wire:model="biaya_prangko" value="{{ $biaya_prangko }}" step="any" placeholder="0"></div>
+                    <div class="form-group full"><label class="vintage-label">Total Postage ({{ $base_currency }})</label><input type="number" id="biaya_prangko" class="vintage-input" wire:model="biaya_prangko" value="{{ $biaya_prangko }}" step="any" placeholder="0"></div>
                     <div class="form-group full"><label class="vintage-label">Archive Description</label><textarea class="vintage-input" wire:model="deskripsi_gambar" rows="3" placeholder="Write a short memory about this postcard...">{{ $deskripsi_gambar }}</textarea></div>
 
                     <div class="form-group relative">
@@ -347,6 +347,19 @@
     <script src="/js/opencv.js"></script>
     <script src="/js/jscanify.min.js"></script>
     <script>
+    // Base currency for this form (config/currency.php via App\Support\Money)
+    window.PC_CURRENCY = @js(\App\Support\Money::formatFor($base_currency));
+    window.roundMoney = function (n) {
+        const f = Math.pow(10, PC_CURRENCY.decimals);
+        return Math.round((Number(n) || 0) * f) / f;
+    };
+    window.formatMoney = function (n) {
+        const v = Number(n) || 0;
+        const parts = Math.abs(v).toFixed(PC_CURRENCY.decimals).split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, PC_CURRENCY.thousands_separator);
+        return (v < 0 ? '-' : '') + PC_CURRENCY.symbol + parts.join(PC_CURRENCY.decimal_separator);
+    };
+
     let activeMode = '';
     let originalImage = new Image();
     const defaultPoints = [{x: 0.15, y: 0.15}, {x: 0.85, y: 0.15}, {x: 0.85, y: 0.85}, {x: 0.15, y: 0.85}];
@@ -617,12 +630,12 @@
             if(!component) return;
             
             const cur = document.getElementById('mata_uang')?.value || component.get('mata_uang');
-            const inp = document.getElementById('kurs_idr');
+            const inp = document.getElementById('exchange_rate');
 
-            if (!cur || cur === 'IDR') {
+            if (!cur || String(cur).toUpperCase() === PC_CURRENCY.code) {
                 if(inp) inp.value = "1.00";
-                if(component) component.set('kurs_idr', 1);
-                hitungIDR();
+                if(component) component.set('exchange_rate', 1);
+                calculateTotal();
                 return;
             }
 
@@ -639,26 +652,26 @@
                     const res = await fetch(url);
                     if (!res.ok) return null;
                     const data = await res.json();
-                    if (data.rates && data.rates.IDR) return data.rates.IDR;
+                    if (data.rates && data.rates[PC_CURRENCY.code]) return data.rates[PC_CURRENCY.code];
                 } catch (e) {}
                 return null;
             };
 
             let rate = null;
-            rate = await tryFetch(`https://api.frankfurter.app/${tgl}?from=${cur}&to=IDR`);
-            if (!rate) rate = await tryFetch(`https://api.frankfurter.app/latest?from=${cur}&to=IDR`);
+            rate = await tryFetch(`https://api.frankfurter.dev/v1/${tgl}?from=${cur}&to=${PC_CURRENCY.code}`);
+            if (!rate) rate = await tryFetch(`https://api.frankfurter.dev/v1/latest?from=${cur}&to=${PC_CURRENCY.code}`);
             if (!rate) rate = await tryFetch(`https://open.er-api.com/v6/latest/${cur}`);
 
             if (inp) inp.classList.remove('animate-pulse', 'bg-yellow-50');
 
             if (rate) {
-                if(inp) inp.value = rate.toFixed(2);
-                component.set('kurs_idr', rate);
-                hitungIDR();
+                if(inp) inp.value = Number(rate.toPrecision(8));
+                component.set('exchange_rate', rate);
+                calculateTotal();
             }
         }
 
-        function hitungIDR() {
+        function calculateTotal() {
            const component = getComponent();
            if(!component) return;
            
@@ -666,17 +679,17 @@
            if (!nilaiInput) return;
            
            const val = parseFloat(nilaiInput.value || 0);
-           const cur = document.getElementById('mata_uang')?.value || 'IDR';
+           const cur = document.getElementById('mata_uang')?.value || PC_CURRENCY.code;
            
            let total;
-           if (cur === 'IDR') {
-               total = Math.round(val);
-               const rateInput = document.getElementById('kurs_idr');
+           if (String(cur).toUpperCase() === PC_CURRENCY.code) {
+               total = roundMoney(val);
+               const rateInput = document.getElementById('exchange_rate');
                if (rateInput) rateInput.value = "1.00";
-               component.set('kurs_idr', 1, true);
+               component.set('exchange_rate', 1, true);
            } else {
-               const rate = parseFloat(document.getElementById('kurs_idr')?.value || 1);
-               total = Math.round(val * rate);
+               const rate = parseFloat(document.getElementById('exchange_rate')?.value || 1);
+               total = roundMoney(val * rate);
            }
            
            const totalDisplay = document.getElementById('biaya_prangko');

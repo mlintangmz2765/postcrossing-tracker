@@ -150,11 +150,16 @@ class DashboardTable extends Component
             });
         }
 
-        $totalCost = Postcard::where('user_id', $user_id)->where('type', $this->type)->sum('biaya_prangko');
+        // Only sum costs recorded in the current base currency; mixing currencies
+        // would make the total meaningless.
+        $totalCost = Postcard::where('user_id', $user_id)->where('type', $this->type)->inBaseCurrency()->sum('biaya_prangko');
+        $otherCurrencyCount = Postcard::where('user_id', $user_id)->where('type', $this->type)->count()
+            - Postcard::where('user_id', $user_id)->where('type', $this->type)->inBaseCurrency()->count();
 
         return view('livewire.dashboard-table', [
             'rows' => $rows,
             'totalCost' => $totalCost,
+            'otherCurrencyCount' => $otherCurrencyCount,
         ]);
     }
 

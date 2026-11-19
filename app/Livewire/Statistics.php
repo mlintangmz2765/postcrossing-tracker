@@ -2,6 +2,8 @@
 
 namespace App\Livewire;
 
+use App\Models\Postcard;
+use App\Support\Money;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -12,9 +14,16 @@ class Statistics extends Component
 
     public $receivedStats = [];
 
+    /**
+     * Cards whose cost was recorded in a different base currency; excluded
+     * from the cost columns rather than summed as if they were comparable.
+     */
+    public $otherCurrencyCount = 0;
+
     public function mount()
     {
         $user_id = Auth::id();
+        $base = Money::base();
 
         $this->sentStats = DB::table('postcards')
             ->leftJoin('countries', 'postcards.country_id', '=', 'countries.id')
@@ -27,8 +36,8 @@ class Statistics extends Component
                 DB::raw("AVG(CASE WHEN tanggal_terima IS NOT NULL AND tanggal_terima > '2000-01-01' THEN DATEDIFF(tanggal_terima, tanggal_kirim) END) as avg_days"),
                 DB::raw("MIN(CASE WHEN tanggal_terima IS NOT NULL AND tanggal_terima > '2000-01-01' THEN DATEDIFF(tanggal_terima, tanggal_kirim) END) as min_days"),
                 DB::raw("MAX(CASE WHEN tanggal_terima IS NOT NULL AND tanggal_terima > '2000-01-01' THEN DATEDIFF(tanggal_terima, tanggal_kirim) END) as max_days"),
-                DB::raw('SUM(biaya_prangko) as total_biaya')
             )
+            ->selectRaw('SUM(CASE WHEN postcards.base_currency = ? THEN biaya_prangko END) as total_biaya', [$base])
             ->where('postcards.user_id', $user_id)
             ->where('postcards.type', 'sent')
             ->groupBy(DB::raw('COALESCE(countries.nama_inggris, countries.nama_indonesia)'))
@@ -46,15 +55,18 @@ class Statistics extends Component
                 DB::raw('AVG(CASE WHEN tanggal_terima IS NOT NULL AND tanggal_kirim IS NOT NULL THEN DATEDIFF(tanggal_terima, tanggal_kirim) END) as avg_days'),
                 DB::raw('MIN(CASE WHEN tanggal_terima IS NOT NULL AND tanggal_kirim IS NOT NULL THEN DATEDIFF(tanggal_terima, tanggal_kirim) END) as min_days'),
                 DB::raw('MAX(CASE WHEN tanggal_terima IS NOT NULL AND tanggal_kirim IS NOT NULL THEN DATEDIFF(tanggal_terima, tanggal_kirim) END) as max_days'),
-                DB::raw('SUM(biaya_prangko) as total_nilai'),
-                DB::raw('AVG(biaya_prangko) as avg_nilai')
             )
+            ->selectRaw('SUM(CASE WHEN postcards.base_currency = ? THEN biaya_prangko END) as total_nilai', [$base])
+            ->selectRaw('AVG(CASE WHEN postcards.base_currency = ? THEN biaya_prangko END) as avg_nilai', [$base])
             ->where('postcards.user_id', $user_id)
             ->where('postcards.type', 'received')
             ->groupBy(DB::raw('COALESCE(countries.nama_inggris, countries.nama_indonesia)'))
             ->orderByDesc('total_diterima')
             ->get()
             ->toArray();
+
+        $this->otherCurrencyCount = Postcard::where('user_id', $user_id)->count()
+            - Postcard::where('user_id', $user_id)->inBaseCurrency()->count();
     }
 
     public function render()

@@ -182,12 +182,12 @@
                 </div>
                 <div class="stat-row">
                     <i class="bi bi-geo-alt text-blue-500 text-xl"></i>
-                    <span class="stat-value">{{ number_format($statsSent['km'], 0, ',', '.') }}</span>
+                    <span class="stat-value">{{ \App\Support\Money::number($statsSent['km']) }}</span>
                     <span class="stat-label">km traveled</span>
                 </div>
                 <div class="stat-row">
                     <i class="bi bi-arrow-repeat text-blue-500 text-xl"></i>
-                    <span class="stat-value">{{ number_format($statsSent['laps'], 2, ',', '.') }}</span>
+                    <span class="stat-value">{{ \App\Support\Money::number($statsSent['laps'], 2) }}</span>
                     <span class="stat-label">laps around the world</span>
                 </div>
             </div>
@@ -214,12 +214,12 @@
                 </div>
                 <div class="stat-row">
                     <i class="bi bi-geo-alt text-red-500 text-xl"></i>
-                    <span class="stat-value">{{ number_format($statsReceived['km'], 0, ',', '.') }}</span>
+                    <span class="stat-value">{{ \App\Support\Money::number($statsReceived['km']) }}</span>
                     <span class="stat-label">km traveled</span>
                 </div>
                 <div class="stat-row">
                     <i class="bi bi-arrow-repeat text-red-500 text-xl"></i>
-                    <span class="stat-value">{{ number_format($statsReceived['laps'], 2, ',', '.') }}</span>
+                    <span class="stat-value">{{ \App\Support\Money::number($statsReceived['laps'], 2) }}</span>
                     <span class="stat-label">laps around the world</span>
                 </div>
             </div>

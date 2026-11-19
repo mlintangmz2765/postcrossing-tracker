@@ -114,7 +114,7 @@
                     <p class="text-gray-600 mb-4">This postcard has already been registered in our system.</p>
                     <div class="pc-info-card">
                         <div class="pc-info-item"><span>Registered on:</span> <b>{{ \Carbon\Carbon::parse($postcard->tanggal_terima)->format('M d, Y') }}</b></div>
-                        <div class="pc-info-item"><span>Distance Traveled:</span> <b>{{ number_format($distance) }} km</b></div>
+                        <div class="pc-info-item"><span>Distance Traveled:</span> <b>{{ \App\Support\Money::number($distance) }} km</b></div>
                     </div>
                     
                     <a href="{{ route('gallery') }}" class="btn-action block text-center no-underline" style="margin-top: 15px; background: #2c3e50;">View My Postcard Gallery</a>
@@ -125,15 +125,17 @@
                         <strong style="font-size:22px; color:#1e293b;">{{ $postcard->contact?->nama_kontak ?? 'Friend' }}</strong>
                     </div>
                     <p style="font-size: 14px; color: #6b7280; margin-bottom: 20px;">
-                        Greetings! A postcard from Indonesia has reached you. Please confirm to notify the sender.
+                        Greetings! A postcard{{ config('app.owner_location') ? ' from '.config('app.owner_location') : '' }} has reached you. Please confirm to notify the sender.
                     </p>
                     <div class="pc-info-card">
                         @if (!$isSwap)
                             <div class="pc-info-item"><span>Postcard ID:</span> <b>{{ $postcard->postcard_id }}</b></div>
                         @endif
                         <div class="pc-info-item"><span>Sent on:</span> <b>{{ \Carbon\Carbon::parse($postcard->tanggal_kirim)->format('F d, Y') }}</b></div>
-                        <div class="pc-info-item"><span>Est. Distance:</span> <b>~{{ number_format($distance) }} km</b></div>
-                        <div class="pc-info-item"><span>Origin:</span> <b>Yogyakarta, Indonesia 🇮🇩</b></div>
+                        <div class="pc-info-item"><span>Est. Distance:</span> <b>~{{ \App\Support\Money::number($distance) }} km</b></div>
+                        @if (config('app.owner_location'))
+                            <div class="pc-info-item"><span>Origin:</span> <b>{{ config('app.owner_location') }}</b></div>
+                        @endif
                     </div>
 
                     <div id="map-confirm" wire:ignore></div> 

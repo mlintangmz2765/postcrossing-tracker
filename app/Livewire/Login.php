@@ -44,7 +44,7 @@ class Login extends Component
             return redirect()->route('dashboard'); // Redirect to dashboard logic (index)
         }
 
-        $this->error = 'Akses ditolak. Silakan periksa kembali kredensial Anda.';
+        $this->error = 'Access denied. Please check your credentials.';
     }
 
     public function render()
